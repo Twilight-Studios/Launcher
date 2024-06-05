@@ -1,0 +1,196 @@
+<html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Twilight Launcher</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+    @import url('https://cdn-uicons.flaticon.com/2.4.0/uicons-bold-rounded/css/uicons-bold-rounded.css');
+
+  * {
+    margin: 0;
+    padding: 0;
+    font-family: "Poppins", sans-serif;
+    font-weight: 300;
+    letter-spacing: -0.25px;
+    word-spacing: -0.25px;
+  }
+
+  .container {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: black;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  h1 {
+    color: white;
+    margin: 20px;
+    margin-left: 30px;
+    margin-bottom: 0;
+    font-weight: 700;
+  }
+
+  .iconcase {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    color: white;
+    background-color: #DF39BC;
+    box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
+    width: 20px;
+    height: 20px;
+    font-size: 16px;
+    border-radius: 6px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 10px;
+    padding-top: 30px;
+    padding-left: 20px;
+    overflow-y: auto;
+  }
+
+  .grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .game {
+    width: 380px;
+    height: 230px;
+    margin-bottom: 35px;
+  }
+
+  .thumbnail {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 200px;
+    border-radius: 5px;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    transition: box-shadow ease-in-out 0.2s;
+    box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  .thumbnail:hover {
+    box-shadow: 0px 0px 30px 5px rgba(255,0,0,0.8);
+  }
+
+  .thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: all ease-in-out 0.2s;
+  }
+
+  .thumbnail:hover img {
+    filter: blur(4px) brightness(0.8);
+    transform: scale(1.2);
+  }
+
+  .game > h3 {
+    margin-top: 10px;
+    color: white;
+    font-weight: 600;
+    pointer-events: none;
+  }
+
+  .open {
+    position: absolute;
+    padding: 15px;
+    border-radius: 10px;
+    background-color: black;
+    z-index: 2;
+    opacity: 0;
+    transition: all ease-in-out 0.2s;
+    cursor: pointer;
+    font-weight: 800;
+  }
+
+  .thumbnail:hover .open {
+    opacity: 1;
+    color: white;
+  }
+
+</style>
+<div class="container">
+  <div class="header">
+    <h1>All Games</h1>
+    <div class="iconcase" style="margin-top: 20px; margin-right: 30px;"><i class="fi fi-br-sign-out-alt"></i></div>
+  </div>
+  <div class="grid">
+    <div class="game">
+        <div class="thumbnail">
+            <div class="open">Open</div>
+            <img src="voyage.png">
+        </div>
+        <h3>Project Voyage</h3>
+    </div>
+    <div class="game">
+        <div class="thumbnail">
+            <div class="open">Open</div>
+            <img src="https://cdn.akamai.steamstatic.com/apps/csgo/images/csgo_react/social/cs2.jpg">
+        </div>
+        <h3>Counter-Strike 2</h3>
+    </div>
+    <div class="game">
+        <div class="thumbnail">
+            <div class="open">Open</div>
+            <img src="https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1GUGTgi7diwlJlK2bQuD7d/8a1507a205db1a7416ec58881e43f8bf/r6-heroBanner.jpg">
+        </div>
+        <h3>Rainbow Six Siege</h3>
+    </div>
+    <div class="game">
+        <div class="thumbnail">
+            <div class="open">Open</div>
+            <img src="https://www.destinythegame.com/content/dam/destiny/tfs/subclass/tfs-prismatic-bg.jpg">
+        </div>
+        <h3>Destiny 2</h3>
+    </div>
+    <div class="game">
+        <div class="thumbnail">
+            <div class="open">Open</div>
+            <img src="https://www.pockettactics.com/wp-content/sites/pockettactics/2022/03/games-like-hollow-knight-550x309.jpg">
+        </div>
+        <h3>Hollow Knight</h3>
+    </div>
+    <div class="game">
+        <div class="thumbnail">
+            <div class="open">Open</div>
+            <img src="https://www.minecraft.net/content/dam/games/minecraft/key-art/Vanilla-PMP_Collection-Carousel-0_Buzzy-Bees_1280x768.jpg">
+        </div>
+        <h3>Minecraft</h3>
+    </div>
+    <div class="game">
+        <div class="thumbnail">
+            <div class="open">Open</div>
+            <img src="https://media.contentapi.ea.com/content/dam/eacom/en-us/migrated-images/2016/10/articles-tf2-different-shooter-header.jpg.adapt.crop16x9.575p.jpg">
+        </div>
+        <h3>Titanfall 2</h3>
+    </div>
+    <div class="game">
+        <div class="thumbnail">
+            <div class="open">Open</div>
+            <img src="https://gameranx.com/wp-content/uploads/2020/01/Half-Life-Alyx-4K-Wallpaper.jpg">
+        </div>
+        <h3>Half-Life: Alyx</h3>
+    </div>
+  </div>
+</div>
+
+</html>
