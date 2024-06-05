@@ -51,7 +51,7 @@ function createDashboardWindow() {
         height: 720,
         icon: path.join(__dirname, 'twilight.ico'),
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
+            preload: path.join(__dirname, 'dashboard.js'),
             nodeIntegration: false,
             contextIsolation: true,
             enableRemoteModule: false
