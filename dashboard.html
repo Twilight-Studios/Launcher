@@ -24,6 +24,37 @@
     flex-direction: column;
   }
 
+  .notification {
+    position: absolute;
+    height: 80px;
+    width: 100vw;
+    background: #b81de3;
+    background: linear-gradient(90deg, rgb(223, 57, 188) 0%, rgba(184, 29, 227) 100%);
+    box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transition: all ease-in-out 0.25s;
+    z-index: 1000;
+    pointer-events: none;
+  }
+
+  .notification > h1 {
+    margin-top: 10px;
+    margin-left: 15px;
+    color: white;
+    font-weight: 700;
+    font-size: 22px;
+  }
+
+  .notification > span {
+    margin-left: 15px;
+    color: white;
+  }
+
+  .notification.active {
+    pointer-events: all;
+    opacity: 1;
+  }
+
   .header {
     display: flex;
     flex-direction: row;
@@ -31,7 +62,7 @@
     justify-content: space-between;
   }
 
-  h1 {
+  .header > h1 {
     color: white;
     margin: 20px;
     margin-left: 30px;
@@ -141,13 +172,91 @@
     color: white;
   }
 
+  .logout-popout {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: all ease-in-out 0.2s;
+  }
+
+  .logout-popout.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .case {
+    background: #b81de3;
+    background: linear-gradient(90deg, rgb(223, 57, 188) 0%, rgba(184, 29, 227) 100%);
+    box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
+    width: 26%;
+    height: 21%;
+    color: white;
+    padding: 2%;
+    border-radius: 10px;
+  }
+
+  .case > h2 {
+    font-weight: 700;
+  }
+
+  .case > p {
+    margin-top: 10px;
+    font-size: 14px;
+  }
+
+  .buttons {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .button {
+    padding: 10px;
+    width: fit-content;
+    background-color: black;
+    color: white;
+    border-radius: 10px;
+    margin-right: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .button.logout {
+    background-color: red;
+    color: white;
+  }
+
 </style>
+<div class="logout-popout">
+  <div class="case">
+    <h2>Are you sure?</h2>
+    <p>By logging out, all your games will be uninstalled for privacy reasons. This is irrreversible!</p>
+    <div class="buttons">
+      <div class="cancel button">Cancel</div>
+      <div class="logout button">Logout</div>
+    </div>
+  </div>
+</div>
 <div class="container">
+  <div class="notification">
+    <h1>Error</h1>
+    <span>Errror description</span>
+  </div>
   <div class="header">
     <h1>All Games</h1>
     <div class="icons">
-        <div class="iconcase" style="margin-right: 10px;"><i class="fi fi-br-interrogation"></i></div>
-        <div class="iconcase"><i class="fi fi-br-sign-out-alt"></i></div>
+        <div class="iconcase" id="refresh" style="margin-right: 10px;"><i class="fi fi-br-refresh"></i></div>
+        <div class="iconcase" id="help" style="margin-right: 10px;"><i class="fi fi-br-interrogation"></i></div>
+        <div class="iconcase" id="logout"><i class="fi fi-br-sign-out-alt"></i></div>
     </div>
   </div>
   <div class="grid">

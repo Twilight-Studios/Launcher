@@ -168,6 +168,30 @@ ipcMain.on('login-success', () => {
     createDashboardWindow();
 });
 
+ipcMain.on('logout', () => {
+    if (popoutWindow)
+        popoutWindow.close();
+    mainWindow.close();
+    clearCredentials();
+    createLoginWindow();
+    mainWindow.webContents.send('success-logout');
+});
+
+
+ipcMain.on('refresh', () => {
+    if (popoutWindow)
+        popoutWindow.close();
+    mainWindow.close();
+    if (validateCredentials(readCredentials())) {
+        createDashboardWindow();
+        mainWindow.webContents.send('success-refresh');
+    }
+    else {
+        createLoginWindow();
+        mainWindow.webContents.send('lost-access');
+    }
+});
+
 async function validateCredentials(credentials) {
     return true; // change later
     try {
