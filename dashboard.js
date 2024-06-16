@@ -17,6 +17,13 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    document.querySelector('.grid').addEventListener("scroll", (event) => {
+        if (document.querySelector('.grid').scrollTop !== 0)
+            document.querySelector('.header').classList.add('color');
+        else
+            document.querySelector('.header').classList.remove('color');
+    });
+
     document.getElementById("refresh").addEventListener("click", (event) => {
         ipcRenderer.send('refresh');
     });

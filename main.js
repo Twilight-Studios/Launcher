@@ -22,7 +22,7 @@ function createLoginWindow() {
     mainWindow.loadFile('login.html');
     mainWindow.setResizable(false);
 
-    Menu.setApplicationMenu(null);
+    //Menu.setApplicationMenu(null);
 
     const credentials = readCredentials();
     if (credentials) {
@@ -61,7 +61,7 @@ function createDashboardWindow() {
     mainWindow.loadFile('dashboard.html');
     mainWindow.setResizable(false);
 
-    Menu.setApplicationMenu(null);
+    //Menu.setApplicationMenu(null);
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
