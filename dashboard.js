@@ -17,6 +17,12 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    document.querySelectorAll('.open').forEach(openButton => {
+        openButton.addEventListener("click", (event) => {
+            ipcRenderer.send('open-game', 'gameidgoeshere')
+        });
+    });
+
     document.querySelector('.grid').addEventListener("scroll", (event) => {
         if (document.querySelector('.grid').scrollTop !== 0)
             document.querySelector('.header').classList.add('color');
@@ -25,7 +31,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById("refresh").addEventListener("click", (event) => {
-        ipcRenderer.send('refresh');
+        ipcRenderer.send('refresh', true);
     });
 
     ipcRenderer.on('success-refresh', (event) => {

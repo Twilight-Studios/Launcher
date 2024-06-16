@@ -7,6 +7,10 @@ let mainWindow;
 let popoutWindow;
 
 function createLoginWindow() {
+    if (mainWindow) {
+        mainWindow.close();
+    }
+
     mainWindow = new BrowserWindow({
         width: 400,
         height: 600,
@@ -22,7 +26,7 @@ function createLoginWindow() {
     mainWindow.loadFile('login.html');
     mainWindow.setResizable(false);
 
-    //Menu.setApplicationMenu(null);
+    Menu.setApplicationMenu(null);
 
     const credentials = readCredentials();
     if (credentials) {
@@ -61,11 +65,13 @@ function createDashboardWindow() {
     mainWindow.loadFile('dashboard.html');
     mainWindow.setResizable(false);
 
-    //Menu.setApplicationMenu(null);
+    Menu.setApplicationMenu(null);
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
     });
+
+    ipcMain.removeAllListeners('open-game');
 
     ipcMain.on('open-game', (event, gameId) => {
         createGameWindow(gameId);
@@ -76,9 +82,10 @@ function createGameWindow(gameId) {
     if (mainWindow) {
         mainWindow.close();
     }
+
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 1280,
+        height: 720,
         icon: path.join(__dirname, 'twilight.ico'),
         webPreferences: {
             preload: path.join(__dirname, 'game.js'),
@@ -89,19 +96,12 @@ function createGameWindow(gameId) {
     });
 
     mainWindow.loadFile('game.html');
-    mainWindow.webContents.once('did-finish-load', () => {
-        mainWindow.webContents.send('load-game', gameId);
-    });
-    mainWindow.setResizable(true);
-
+    mainWindow.setResizable(false);
+    
     Menu.setApplicationMenu(null);
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
-    });
-    
-    ipcMain.on('open-patchnote', (event, patchnoteId) => {
-        createPopoutWindow(patchnoteId);
     });
 }
 
@@ -150,18 +150,6 @@ app.on('activate', () => {
 ipcMain.handle('login', async (event, { accessKey }) => {
     saveCredentials({ accessKey });
     return { success: true };
-    // Remove later ig
-    try {
-        const resp = await axios.post('https://example.com/api/login', { accessKey });
-        if (resp.status === 200) {
-            saveCredentials({ accessKey });
-            return { success: true };
-        } else {
-            return { success: false, message: resp.data.message };
-        }
-    } catch (error) {
-        return { success: false, message: error.message };
-    }
 });
 
 ipcMain.on('login-success', () => {
@@ -178,13 +166,13 @@ ipcMain.on('logout', () => {
 });
 
 
-ipcMain.on('refresh', () => {
+ipcMain.on('refresh', (event, notify) => {
     if (popoutWindow)
         popoutWindow.close();
-    mainWindow.close();
+
     if (validateCredentials(readCredentials())) {
         createDashboardWindow();
-        mainWindow.webContents.send('success-refresh');
+        if (notify) mainWindow.webContents.send('success-refresh');
     }
     else {
         createLoginWindow();
