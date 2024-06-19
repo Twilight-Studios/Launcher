@@ -19,7 +19,7 @@
     word-spacing: -0.25px;
   }
 
-  .container {
+  .window {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
@@ -32,6 +32,8 @@
 
   .notification {
     position: absolute;
+    padding-top: 4px;
+    padding-bottom: 8px;
     height: 80px;
     width: 100vw;
     background: #b81de3;
@@ -76,7 +78,7 @@
     margin-bottom: 10px;
   }
 
-  .icons {
+  .header-buttons {
     display: flex;
     flex-direction: row;
     margin: 20px;
@@ -84,7 +86,7 @@
     margin-bottom: 10px;
   }
 
-  .iconcase {
+  .header-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -100,12 +102,12 @@
     cursor: pointer;
   }
 
-  .iconcase:hover {
+  .header-button:hover {
     color: black;
     background-color: white;
   }
 
-  .logout-popout {
+  .popout {
     position: fixed;
     width: 100%;
     height: 100%;
@@ -119,12 +121,12 @@
     transition: all ease-in-out 0.2s;
   }
 
-  .logout-popout.active {
+  .popout.active {
     opacity: 1;
     pointer-events: all;
   }
 
-  .case {
+  .popout-case {
     background: #b81de3;
     background: linear-gradient(90deg, rgb(223, 57, 188) 0%, rgba(184, 29, 227) 100%);
     box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
@@ -135,11 +137,11 @@
     border-radius: 10px;
   }
 
-  .case > h2 {
+  .popout-case > h2 {
     font-weight: 700;
   }
 
-  .case > p {
+  .popout-case > p {
     margin-top: 10px;
     font-size: 14px;
   }
@@ -163,7 +165,7 @@
     font-weight: 600;
   }
 
-  .button.logout {
+  .button.remove {
     background-color: red;
     color: white;
   }
@@ -181,7 +183,7 @@
     background-color: rgba(0,0,0,0.8);
   }
 
-  .actionbutton {
+  .action-button {
     width: 150px;
     height: 40px;
     background-color: white;
@@ -196,11 +198,11 @@
     transition: all ease-in-out 0.2s;
   }
 
-  .actionbutton:hover {
+  .action-button:hover {
     background-color: #DF39BC;
   }
 
-  .actionbutton:hover > .text {
+  .action-button:hover > .text {
     color: white;
   }
 
@@ -254,7 +256,7 @@
     font-size: 16px;
   } 
 
-  .section > .iconsection {
+  .section > .logos {
     margin-top: 5px;
     display: flex;
     flex-direction: row;
@@ -262,22 +264,22 @@
     justify-content: start;
   }
 
-  .section > .iconsection > .logocase {
+  .section > .logos > .logo {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
   }
 
-  .section > .iconsection > .logocase > i {
+  .section > .logos > .logo > i {
     font-size: 25px;
   }
 
-  .section > .iconsection > .logocase > i.disabled {
+  .section > .logos > .logo > i.disabled {
     opacity: 0.4;
   }
 
-  .section > .iconsection > .logocase > .tooltip {
+  .section > .logos > .logo > .tooltip {
     pointer-events: none;
     opacity: 0;
     position: absolute;
@@ -293,15 +295,15 @@
     transition: all ease-in-out 0.2s;
   }
 
-  .section > .iconsection > .logocase > .tooltip.disabled {
+  .section > .logos > .logo > .tooltip.disabled {
     background-color: black;
   }
 
-  .section > .iconsection > .logocase:hover > .tooltip {
+  .section > .logos > .logo:hover > .tooltip {
     opacity: 1;
   }
 
-  .patchnote {
+  .news {
     margin-left: 200px;
     width: 450px;
     height: 115%;
@@ -320,11 +322,11 @@
     box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
   }
 
-  .patchnote:hover {
+  .news:hover {
     transform: scale(1.05);
   }
 
-  .patchnote > .tag {
+  .news > .tag {
     padding: 4px;
     padding-left: 8px;
     padding-right: 8px;
@@ -335,38 +337,39 @@
     font-weight: 500;
   }
 
-  .patchnote > h3 {
+  .news > h3 {
     font-weight: 600;
     color: white;
     font-size: 20px;
     margin-left: 4px;
   }
+
 </style>
-<div class="logout-popout">
-  <div class="case">
-    <h2>Are you sure?</h2>
-    <p>By logging out, all your games will be uninstalled for privacy reasons. This is irrreversible!</p>
+<div class="popout">
+  <div class="popout-case">
+    <h2>Popout Title</h2>
+    <p>Popout text and description</p>
     <div class="buttons">
+      <div class="primary button">Confirm</div>
       <div class="cancel button">Cancel</div>
-      <div class="logout button">Logout</div>
     </div>
   </div>
 </div>
-<div class="container">
+<div class="window">
   <div class="notification">
-    <h1>Error</h1>
-    <span>Error description</span>
+    <h1>Notification</h1>
+    <span>Description</span>
   </div>
   <div class="header">
     <img src="unnamedgame.png">
-    <div class="icons">
-        <div class="iconcase" id="home" style="margin-right: 10px;"><i class='bx bx-home-alt'></i></div>
-        <div class="iconcase" id="uninstall" style="margin-right: 10px;"><i class='bx bx-trash'></i></div>
-        <div class="iconcase" id="help" style="margin-right: 10px;"><i class='bx bx-help-circle'></i></div>
-        <div class="iconcase" id="logout"><i class='bx bx-log-out'></i></div>
+    <div class="header-buttons">
+        <div class="header-button" id="home" style="margin-right: 10px;"><i class='bx bx-home-alt'></i></div>
+        <div class="header-button" id="uninstall" style="margin-right: 10px;"><i class='bx bx-trash'></i></div>
+        <div class="header-button" id="help" style="margin-right: 10px;"><i class='bx bx-help-circle'></i></div>
+        <div class="header-button" id="logout"><i class='bx bx-log-out'></i></div>
     </div>
     <div class="footer">
-      <div class="actionbutton">
+      <div class="action-button">
         <div class="status">
           <i class='bx bxs-download'></i>
         </div>
@@ -376,16 +379,16 @@
       </div>
       <div class="section">
         <h1>Available Platforms</h1>
-        <div class="iconsection">
-          <div class="logocase">
+        <div class="logos">
+          <div class="logo">
             <i class='bx bxl-windows'></i>
             <div class="tooltip">Compatible with Windows 10/11</div>
           </div>
-          <div class="logocase">
+          <div class="logo">
             <i class='bx bxl-apple disabled'></i>
             <div class="tooltip disabled">No MacOS support</div>
           </div>
-          <div class="logocase">
+          <div class="logo">
             <i class='bx bxl-tux disabled'></i>
             <div class="tooltip disabled">No Linux support</div>
           </div>
@@ -393,14 +396,14 @@
       </div>
       <div class="section">
         <h1>Dependencies</h1>
-        <div class="iconsection">
-          <div class="logocase">
+        <div class="logos">
+          <div class="logo">
             <i class='bx bxl-steam'></i>
             <div class="tooltip">Multiplayer needs Steam</div>
           </div>
         </div>
       </div>
-      <div class="patchnote">
+      <div class="news">
         <div class="tag">Small Update</div>
         <h3>Bug fixes & more!</h3>
       </div>

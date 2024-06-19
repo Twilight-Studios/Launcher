@@ -19,7 +19,7 @@
     word-spacing: -0.25px;
   }
 
-  .container {
+  .window {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
@@ -30,6 +30,8 @@
 
   .notification {
     position: absolute;
+    padding-top: 4px;
+    padding-bottom: 8px;
     height: 80px;
     width: 100vw;
     background: #b81de3;
@@ -96,7 +98,7 @@
     font-weight: 700;
   }
 
-  .icons {
+  .header-buttons {
     display: flex;
     flex-direction: row;
     margin: 20px;
@@ -104,7 +106,7 @@
     margin-bottom: 10px;
   }
 
-  .iconcase {
+  .header-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -120,7 +122,7 @@
     cursor: pointer;
   }
 
-  .iconcase:hover {
+  .header-button:hover {
     color: black;
     background-color: white;
   }
@@ -204,7 +206,7 @@
     opacity: 1;
   }
 
-  .logout-popout {
+  .popout {
     position: fixed;
     width: 100%;
     height: 100%;
@@ -218,12 +220,12 @@
     transition: all ease-in-out 0.2s;
   }
 
-  .logout-popout.active {
+  .popout.active {
     opacity: 1;
     pointer-events: all;
   }
 
-  .case {
+  .popout-case {
     background: #b81de3;
     background: linear-gradient(90deg, rgb(223, 57, 188) 0%, rgba(184, 29, 227) 100%);
     box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
@@ -234,11 +236,11 @@
     border-radius: 10px;
   }
 
-  .case > h2 {
+  .popout-case > h2 {
     font-weight: 700;
   }
 
-  .case > p {
+  .popout-case > p {
     margin-top: 10px;
     font-size: 14px;
   }
@@ -262,32 +264,33 @@
     font-weight: 600;
   }
 
-  .button.logout {
+  .button.remove {
     background-color: red;
     color: white;
   }
+  
 </style>
-<div class="logout-popout">
-  <div class="case">
-    <h2>Are you sure?</h2>
-    <p>By logging out, all your games will be uninstalled for privacy reasons. This is irrreversible!</p>
+<div class="popout">
+  <div class="popout-case">
+    <h2>Popout Title</h2>
+    <p>Popout text and description</p>
     <div class="buttons">
+      <div class="primary button">Confirm</div>
       <div class="cancel button">Cancel</div>
-      <div class="logout button">Logout</div>
     </div>
   </div>
 </div>
-<div class="container">
+<div class="window">
   <div class="notification">
-    <h1>Error</h1>
-    <span>Error description</span>
+    <h1>Notification</h1>
+    <span>Description</span>
   </div>
   <div class="header">
     <h1>All Games</h1>
-    <div class="icons">
-        <div class="iconcase" id="refresh" style="margin-right: 10px;"><i class='bx bx-refresh'></i></div>
-        <div class="iconcase" id="help" style="margin-right: 10px;"><i class='bx bx-help-circle'></i></div>
-        <div class="iconcase" id="logout"><i class='bx bx-log-out'></i></div>
+    <div class="header-buttons">
+        <div class="header-button" id="refresh" style="margin-right: 10px;"><i class='bx bx-refresh'></i></div>
+        <div class="header-button" id="help" style="margin-right: 10px;"><i class='bx bx-help-circle'></i></div>
+        <div class="header-button" id="logout"><i class='bx bx-log-out'></i></div>
     </div>
   </div>
   <div class="grid">
