@@ -1,7 +1,7 @@
 <html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css' rel='stylesheet'>
 <title>Twilight Launcher</title>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
@@ -19,11 +19,50 @@
     word-spacing: -0.25px;
   }
 
+  .loader-wrapper {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: black;
+    opacity: 0;
+    pointer-events: none;
+    transition: all ease-in-out 0.25s;
+    z-index: 100000;
+  }
+
+  .loader-wrapper.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loader::before {
+    content: "";
+    width: 50px;
+    height: 50px;
+    border: 5px solid #fff;
+    border-top: 5px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
   .window {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background: url('unnamedcover.png');
     background-size: cover;
     background-position: center;
     display: flex;
@@ -96,7 +135,7 @@
     box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
     width: 20px;
     height: 20px;
-    font-size: 20px;
+    font-size: 16px;
     border-radius: 6px;
     transition: all ease-in-out 0.2s;
     cursor: pointer;
@@ -265,6 +304,7 @@
   }
 
   .section > .logos > .logo {
+    margin-right: 7.5px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -272,7 +312,7 @@
   }
 
   .section > .logos > .logo > i {
-    font-size: 25px;
+    font-size: 20px;
   }
 
   .section > .logos > .logo > i.disabled {
@@ -308,7 +348,6 @@
     width: 450px;
     height: 115%;
     margin-bottom: 100px;
-    background: url('unnamedpatchnote.png');
     background-size: cover;
     background-position: center;
     border-radius: 20px;
@@ -345,6 +384,9 @@
   }
 
 </style>
+<div class="loader-wrapper active">
+  <div class="loader"></div>
+</div>
 <div class="popout">
   <div class="popout-case">
     <h2>Popout Title</h2>
@@ -361,17 +403,17 @@
     <span>Description</span>
   </div>
   <div class="header">
-    <img src="unnamedgame.png">
+    <img src="">
     <div class="header-buttons">
-        <div class="header-button" id="home" style="margin-right: 10px;"><i class='bx bx-home-alt'></i></div>
-        <div class="header-button" id="uninstall" style="margin-right: 10px;"><i class='bx bx-trash'></i></div>
-        <div class="header-button" id="help" style="margin-right: 10px;"><i class='bx bx-help-circle'></i></div>
-        <div class="header-button" id="logout"><i class='bx bx-log-out'></i></div>
+        <div class="header-button" id="home" style="margin-right: 10px;"><i class="fa-solid fa-house"></i></div>
+        <div class="header-button" id="uninstall" style="margin-right: 10px;"><i class="fa-solid fa-trash"></i></div>
+        <div class="header-button" id="help" style="margin-right: 10px;"><i class="fa-solid fa-circle-info"></i></div>
+        <div class="header-button" id="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
     </div>
     <div class="footer">
       <div class="action-button">
         <div class="status">
-          <i class='bx bxs-download'></i>
+          <i class="fa-solid fa-cloud-arrow-down"></i>
         </div>
         <div class="text">
           <h2>Install</h2>
@@ -381,16 +423,16 @@
         <h1>Available Platforms</h1>
         <div class="logos">
           <div class="logo">
-            <i class='bx bxl-windows'></i>
-            <div class="tooltip">Compatible with Windows 10/11</div>
+            <i class='fa-brands fa-windows' id="windows"></i>
+            <div class="tooltip" id="windows-tooltip"></div>
           </div>
           <div class="logo">
-            <i class='bx bxl-apple disabled'></i>
-            <div class="tooltip disabled">No MacOS support</div>
+            <i class='fa-brands fa-apple' id="macos"></i>
+            <div class="tooltip" id="macos-tooltip"></div>
           </div>
           <div class="logo">
-            <i class='bx bxl-tux disabled'></i>
-            <div class="tooltip disabled">No Linux support</div>
+            <i class='fa-brands fa-linux' id="linux"></i>
+            <div class="tooltip" id="linux-tooltip"></div>
           </div>
         </div>
       </div>
@@ -398,10 +440,17 @@
         <h1>Dependencies</h1>
         <div class="logos">
           <div class="logo">
-            <i class='bx bxl-steam'></i>
-            <div class="tooltip">Multiplayer needs Steam</div>
+            <i class='fa-solid fa-globe' id="online"></i>
+            <div class="tooltip" id="online-tooltip"></div>
           </div>
-          <!--Add support for epic and xbox later-->
+          <div class="logo">
+            <i class='fa-brands fa-steam' id="steam"></i>
+            <div class="tooltip" id="steam-tooltip"></div>
+          </div>
+          <div class="logo">
+            <i class='fa-brands fa-xbox' id="xbox"></i>
+            <div class="tooltip" id="xbox-tooltip"></div>
+          </div>
         </div>
       </div>
       <div class="news">

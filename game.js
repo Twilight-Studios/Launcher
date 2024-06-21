@@ -84,14 +84,73 @@ window.addEventListener('DOMContentLoaded', () => {
     // GAME DATA INIT
     // --------------------------------------------------------------------------------------
     ipcRenderer.on('game-id', async (event, gameId, gameState) => {
-        
         let game = await ipcRenderer.invoke('get-game', gameId, gameState);
         fillGame(game);
     })
 
     function fillGame(game) {
+        document.getElementsByClassName("loader-wrapper")[0].classList.remove("active");
+
         logo = document.getElementsByTagName("img")[0];
         logo.src = "data:image/png;base64, " + game.art.logo;
+        document.getElementsByClassName("window")[0].style.backgroundImage = `url('data:image/png;base64, ${game.art.background}')`;
+
+        const gameStateSettings = game.settings.game_states[game.state]
+        const version = gameStateSettings.latest_version;
+        document.getElementsByClassName("news")[0].style.backgroundImage = `url('data:image/png;base64, ${game.art.patch}')`;
+        document.getElementsByClassName("tag")[0].textContent = game.notes.titles[version].type;
+        document.getElementsByTagName("h3")[0].textContent = game.notes.titles[version].title;
+
+        platforms = ['windows', 'linux', 'macos']
+        platformAliases = ['Windows 10/11', "Linux", "MacOS"]
+
+        for (let i = 0; i < platforms.length; i++) {
+            let platform = platforms[i];
+            let p_alias = platformAliases[i];
+
+            let icon = document.getElementById(platform);
+            let tooltip = document.getElementById(`${platform}-tooltip`);
+
+            if (!gameStateSettings.platforms.includes(platform)) {
+                icon.classList.add("disabled");
+                tooltip.classList.add("disabled");
+                tooltip.textContent = `No ${p_alias} support`
+            }
+            else {
+                tooltip.textContent = `Compatible with ${p_alias}`
+            }
+        }
+
+        let onlineIcon = document.getElementById("online");
+        let onlineTooltip = document.getElementById("online-tooltip");
+        if (!gameStateSettings.requires_online) {
+            onlineIcon.classList.add("disabled");
+            onlineTooltip.classList.add("disabled");
+            onlineTooltip.textContent = "Can be played offline";
+        }
+        else {
+            onlineTooltip.textContent = "Requires an internet connection";
+        }
+
+        requirements = ['steam', "xbox"]
+        requirementAliases = ['Steam', "Xbox Launcher"]
+
+        for (let i = 0; i < platforms.length; i++) {
+            let requirement = requirements[i];
+            let r_alias = requirementAliases[i];
+
+            let icon = document.getElementById(requirement);
+            let tooltip = document.getElementById(`${requirement}-tooltip`);
+
+            if (!gameStateSettings.requirements.includes(requirement)) {
+                icon.classList.add("disabled");
+                tooltip.classList.add("disabled");
+                tooltip.textContent = `${r_alias} is not required`
+            }
+            else {
+                tooltip.textContent = `${r_alias} must be launched`
+            }
+        }
     }
     // --------------------------------------------------------------------------------------
     

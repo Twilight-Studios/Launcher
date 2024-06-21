@@ -48,7 +48,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     
     ipcRenderer.on('lost-access', (event) => {
-        notify("Uh-oh!", "Your access has been revoked. You've been logged out!", 3000, null);
+        notify("Uh-oh!", "Your access has been revoked!", 3000, null);
     });
 
     ipcRenderer.on('failed-to-validate', (event) => {

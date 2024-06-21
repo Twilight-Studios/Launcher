@@ -3,10 +3,12 @@ const path = require('path');
 const axios = require('axios');
 const fs = require('fs');
 
+const serverUrl = "http://127.0.0.1:5000";
+
 let mainWindow;
 let popoutWindow;
 
-function createLoginWindow() {
+function createLoginWindow(autofill=true) {
     if (mainWindow) {
         mainWindow.close();
     }
@@ -26,10 +28,10 @@ function createLoginWindow() {
     mainWindow.loadFile('login.html');
     mainWindow.setResizable(false);
 
-    //Menu.setApplicationMenu(null);
+    Menu.setApplicationMenu(null);
 
     const credentials = readCredentials();
-    if (credentials) {
+    if (credentials && autofill) {
         validateCredentials(credentials.accessKey).then(valid => {
             if (valid) {
                 createDashboardWindow();
@@ -65,7 +67,7 @@ function createDashboardWindow() {
     mainWindow.loadFile('dashboard.html');
     mainWindow.setResizable(false);
 
-    //Menu.setApplicationMenu(null);
+    Menu.setApplicationMenu(null);
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
@@ -102,7 +104,7 @@ function createGameWindow(gameId, gameState) {
 
     mainWindow.setResizable(false);
     
-    //Menu.setApplicationMenu(null);
+    Menu.setApplicationMenu(null);
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
@@ -130,7 +132,7 @@ function createPopoutWindow(patchnoteId) {
         popoutWindow.webContents.send('load-patchnote', patchnoteId);
     });
 
-    //Menu.setApplicationMenu(null);
+    Menu.setApplicationMenu(null);
 
     popoutWindow.once('ready-to-show', () => {
         popoutWindow.show();
@@ -152,7 +154,8 @@ app.on('activate', () => {
 });
 
 ipcMain.handle('login', async (event, { accessKey }) => {
-    if (validateCredentials(accessKey)) {
+    let valid = await validateCredentials(accessKey);
+    if (valid) {
         saveCredentials({ accessKey });
         return { success: true };
     }
@@ -174,7 +177,7 @@ ipcMain.on('logout', () => {
 
 async function getGame(gameId, gameState) {
     try {
-        const resp = await axios.post('http://127.0.0.1:5000/api/get-game', { key: readCredentials().accessKey, id: gameId, state: gameState });
+        const resp = await axios.post(serverUrl+'/api/get-game', { key: readCredentials().accessKey, id: gameId, state: gameState });
         return resp.data
     } catch (error) {
         return {};
@@ -183,7 +186,7 @@ async function getGame(gameId, gameState) {
 
 async function getGames() {
     try {
-        const resp = await axios.post('http://127.0.0.1:5000/api/get-all-games', { key: readCredentials().accessKey });
+        const resp = await axios.post(serverUrl+'/api/get-all-games', { key: readCredentials().accessKey });
         return resp.data
     } catch (error) {
         return {};
@@ -201,23 +204,24 @@ ipcMain.handle('get-games', async (event) => {
 });
 
 
-ipcMain.on('refresh', (event, notify) => {
+ipcMain.on('refresh',  async (event, notify) => {
     if (popoutWindow)
         popoutWindow.close();
 
-    if (validateCredentials(readCredentials().accessKey)) {
+    const resp = await validateCredentials(readCredentials().accessKey);
+    if (resp) {
         createDashboardWindow();
         if (notify) mainWindow.webContents.send('success-refresh');
     }
     else {
-        createLoginWindow();
+        createLoginWindow(autofill=false);
         mainWindow.webContents.send('lost-access');
     }
 });
 
 async function validateCredentials(credentials) {
     try {
-        const resp = await axios.post('http://127.0.0.1:5000/api/validate-access', { key: credentials });
+        const resp = await axios.post(serverUrl+'/api/validate-access', { key: credentials });
         return resp.status === 200;
     } catch (error) {
         return false;

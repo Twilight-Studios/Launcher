@@ -101,9 +101,9 @@ window.addEventListener('DOMContentLoaded', () => {
             let game = document.createElement("div");
             game.classList.add("game");
     
-            rgba = "255, 0, 0, 0.8"; // LOAD COLOR FROM IMAGE
+            rgba = "255, 255, 255, 0.8"; // LOAD COLOR FROM IMAGE
             thumbnail = "data:image/png;base64, " + game_info.art.cover;
-            title = game_info.settings.name;
+            title =  game_info.settings.name + ` - ${game_info.state}`;
     
             const gameHtml = `<div class="thumbnail" data-shadow="rgba(${rgba})">\
             <div class="open">Open</div>\
@@ -136,7 +136,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // OTHER UI EVENTS
     // --------------------------------------------------------------------------------------
-
     document.querySelector('.grid').addEventListener("scroll", (event) => {
         if (document.querySelector('.grid').scrollTop !== 0)
             document.querySelector('.header').classList.add('color');
