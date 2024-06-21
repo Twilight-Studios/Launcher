@@ -26,11 +26,11 @@ function createLoginWindow() {
     mainWindow.loadFile('login.html');
     mainWindow.setResizable(false);
 
-    Menu.setApplicationMenu(null);
+    //Menu.setApplicationMenu(null);
 
     const credentials = readCredentials();
     if (credentials) {
-        validateCredentials(credentials).then(valid => {
+        validateCredentials(credentials.accessKey).then(valid => {
             if (valid) {
                 createDashboardWindow();
             } else {
@@ -65,7 +65,7 @@ function createDashboardWindow() {
     mainWindow.loadFile('dashboard.html');
     mainWindow.setResizable(false);
 
-    Menu.setApplicationMenu(null);
+    //Menu.setApplicationMenu(null);
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
@@ -73,12 +73,12 @@ function createDashboardWindow() {
 
     ipcMain.removeAllListeners('open-game');
 
-    ipcMain.on('open-game', (event, gameId) => {
-        createGameWindow(gameId);
+    ipcMain.on('open-game', (event, gameId, gameState) => {
+        createGameWindow(gameId, gameState);
     });
 }
 
-function createGameWindow(gameId) {
+function createGameWindow(gameId, gameState) {
     if (mainWindow) {
         mainWindow.close();
     }
@@ -96,9 +96,13 @@ function createGameWindow(gameId) {
     });
 
     mainWindow.loadFile('game.html');
+    mainWindow.webContents.once('did-finish-load', async () => {
+        mainWindow.webContents.send('game-id', gameId, gameState);
+    });
+
     mainWindow.setResizable(false);
     
-    Menu.setApplicationMenu(null);
+    //Menu.setApplicationMenu(null);
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
@@ -126,7 +130,7 @@ function createPopoutWindow(patchnoteId) {
         popoutWindow.webContents.send('load-patchnote', patchnoteId);
     });
 
-    Menu.setApplicationMenu(null);
+    //Menu.setApplicationMenu(null);
 
     popoutWindow.once('ready-to-show', () => {
         popoutWindow.show();
@@ -148,8 +152,11 @@ app.on('activate', () => {
 });
 
 ipcMain.handle('login', async (event, { accessKey }) => {
-    saveCredentials({ accessKey });
-    return { success: true };
+    if (validateCredentials(accessKey)) {
+        saveCredentials({ accessKey });
+        return { success: true };
+    }
+    return { success: false, message: "Invalid access key!" };
 });
 
 ipcMain.on('login-success', () => {
@@ -165,12 +172,40 @@ ipcMain.on('logout', () => {
     mainWindow.webContents.send('success-logout');
 });
 
+async function getGame(gameId, gameState) {
+    try {
+        const resp = await axios.post('http://127.0.0.1:5000/api/get-game', { key: readCredentials().accessKey, id: gameId, state: gameState });
+        return resp.data
+    } catch (error) {
+        return {};
+    }
+}
+
+async function getGames() {
+    try {
+        const resp = await axios.post('http://127.0.0.1:5000/api/get-all-games', { key: readCredentials().accessKey });
+        return resp.data
+    } catch (error) {
+        return {};
+    }
+}
+
+ipcMain.handle('get-game', async (event, gameId, gameState) => {
+    const game =  await getGame(gameId, gameState);
+    return game;
+});
+
+ipcMain.handle('get-games', async (event) => {
+    const games =  await getGames();
+    return games;
+});
+
 
 ipcMain.on('refresh', (event, notify) => {
     if (popoutWindow)
         popoutWindow.close();
 
-    if (validateCredentials(readCredentials())) {
+    if (validateCredentials(readCredentials().accessKey)) {
         createDashboardWindow();
         if (notify) mainWindow.webContents.send('success-refresh');
     }
@@ -181,9 +216,8 @@ ipcMain.on('refresh', (event, notify) => {
 });
 
 async function validateCredentials(credentials) {
-    return true; // change later
     try {
-        const resp = await axios.post('https://example.com/api/login', credentials);
+        const resp = await axios.post('http://127.0.0.1:5000/api/validate-access', { key: credentials });
         return resp.status === 200;
     } catch (error) {
         return false;

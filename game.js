@@ -80,4 +80,19 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     // --------------------------------------------------------------------------------------
 
+
+    // GAME DATA INIT
+    // --------------------------------------------------------------------------------------
+    ipcRenderer.on('game-id', async (event, gameId, gameState) => {
+        
+        let game = await ipcRenderer.invoke('get-game', gameId, gameState);
+        fillGame(game);
+    })
+
+    function fillGame(game) {
+        logo = document.getElementsByTagName("img")[0];
+        logo.src = "data:image/png;base64, " + game.art.logo;
+    }
+    // --------------------------------------------------------------------------------------
+    
 });

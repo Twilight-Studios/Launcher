@@ -1,9 +1,4 @@
-// Retrieve games
-// Populate dashboard
-// Register logout click
-// Register open clicks
-
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, ipcMain } = require('electron');
 
 window.addEventListener('DOMContentLoaded', () => {
 
@@ -90,28 +85,57 @@ window.addEventListener('DOMContentLoaded', () => {
     // --------------------------------------------------------------------------------------
 
 
-    // GAME OPENING
+    // GAME LOGIC
     // --------------------------------------------------------------------------------------
-    document.querySelectorAll('.open').forEach(openButton => {
-        openButton.addEventListener("click", (event) => {
-            ipcRenderer.send('open-game', 'gameidgoeshere')
+    async function getGames() {
+        let games = await ipcRenderer.invoke('get-games');
+        fillGames(games)
+    }
+
+    function fillGames(games) {
+        const grid = document.getElementsByClassName("grid")[0];
+        
+        document.getElementsByClassName("loader")[0].classList.remove("active");
+    
+        for (const [game_id, game_info] of Object.entries(games)) {
+            let game = document.createElement("div");
+            game.classList.add("game");
+    
+            rgba = "255, 0, 0, 0.8"; // LOAD COLOR FROM IMAGE
+            thumbnail = "data:image/png;base64, " + game_info.art.cover;
+            title = game_info.settings.name;
+    
+            const gameHtml = `<div class="thumbnail" data-shadow="rgba(${rgba})">\
+            <div class="open">Open</div>\
+            <img src="${thumbnail}">\
+            </div>\
+            <h3>${title}</h3>`;
+    
+            game.innerHTML = gameHtml;
+    
+            grid.appendChild(game).querySelector('.open').addEventListener("click", (event) => {
+                ipcRenderer.send('open-game', game_id, game_info.state)
+            });
+        }
+
+        document.querySelectorAll('.thumbnail').forEach(thumbnail => {
+            thumbnail.addEventListener('mouseover', (event) => {
+                const shadowColor = event.currentTarget.dataset.shadow;
+                event.currentTarget.style.boxShadow = `0px 0px 30px 5px ${shadowColor}`;
+            });
+    
+            thumbnail.addEventListener('mouseout', (event) => {
+                event.currentTarget.style.boxShadow = 'none';
+            });
         });
-    });
+    }
+
+    getGames();
     // --------------------------------------------------------------------------------------
 
 
-    // UI EVENTS
+    // OTHER UI EVENTS
     // --------------------------------------------------------------------------------------
-    document.querySelectorAll('.thumbnail').forEach(thumbnail => {
-        thumbnail.addEventListener('mouseover', (event) => {
-            const shadowColor = event.currentTarget.dataset.shadow;
-            event.currentTarget.style.boxShadow = `0px 0px 30px 5px ${shadowColor}`;
-        });
-
-        thumbnail.addEventListener('mouseout', (event) => {
-            event.currentTarget.style.boxShadow = 'none';
-        });
-    });
 
     document.querySelector('.grid').addEventListener("scroll", (event) => {
         if (document.querySelector('.grid').scrollTop !== 0)
