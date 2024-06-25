@@ -145,11 +145,17 @@ function createPopoutWindow(patchnoteId) {
 
 app.whenReady().then(createLoginWindow);
 
+app.on("ready", (event) => {
+    if (process.platform == 'win32') {
+      app.setAppUserModelId('TwilightStudiosLauncher');
+    }
+});
+
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         if (inDownload) {
             if (fs.existsSync(path.join(app.getPath('userData'), `/games/${inDownload}`))) {
-                fs.rmSync(path.join(app.getPath('userData'), `/games/${inDownload}`, { recursive: true }))
+                fs.rmSync(path.join(app.getPath('userData'), `/games/${inDownload}`), { recursive: true });
             }
         }
         app.quit();
@@ -233,7 +239,13 @@ ipcMain.handle('get-games', async (event) => {
 
 ipcMain.on('notify', (event, title, description) => {
     if (mainWindow.isVisible()) return;
-    new Notification({ title: title, body: description }).show();
+    let notification = new Notification({ title: title, body: description, icon: path.join(__dirname, 'twilight.ico') });
+
+    notification.show();
+
+    notification.on('click', (event, arg) => {
+        mainWindow.show();
+    });
 });
 
 ipcMain.on('refresh',  async (event, notify) => {
@@ -298,7 +310,7 @@ ipcMain.on('start-download', (event, id, state, platform, title, version) => {
     let outputPath = path.join(app.getPath('userData'), "game.zip");
 
     if (fs.existsSync(path.join(app.getPath('userData'), `/games/${id}_${state}`))) {
-        fs.rmSync(path.join(app.getPath('userData'), `/games/${id}_${state}`, { recursive: true }))
+        fs.rmSync(path.join(app.getPath('userData'), `/games/${id}_${state}`), { recursive: true });
     }
 
     downloadProcess = fork(path.join(__dirname, 'download-worker.js'));
@@ -389,6 +401,6 @@ function uninstallAllGames() {
     }
 
     if (fs.existsSync(path.join(app.getPath('userData'), "games"))) {
-        fs.rmSync(path.join(app.getPath('userData'), "games"), { recursive: true })
+        fs.rmSync(path.join(app.getPath('userData'), "games"), { recursive: true });
     }
 }

@@ -274,6 +274,12 @@ window.addEventListener('DOMContentLoaded', () => {
             updateActionButton();
             ipcRenderer.send('cancel-download');
         }
+        else if (actionState == "req_update") {
+            actionState = "installing";
+            hovering = false;
+            updateActionButton();
+            ipcRenderer.send('start-download', id, state, platform, title, globalGameVersion);
+        }
     }
 
     ipcRenderer.on('download-progress', (event, gameId, gameState, progress, speed) => {
