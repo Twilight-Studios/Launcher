@@ -85,6 +85,54 @@ window.addEventListener('DOMContentLoaded', () => {
     // --------------------------------------------------------------------------------------
 
 
+    // UI UTILS
+    // --------------------------------------------------------------------------------------
+    function getAverageRGB(imgEl) {
+        // SOURCE: https://stackoverflow.com/questions/2541481/get-average-color-of-image-via-javascript
+        var blockSize = 5,
+            defaultRGB = {r:255,g:255,b:255},
+            canvas = document.createElement('canvas'),
+            context = canvas.getContext('2d'),
+            data, width, height,
+            i = -4,
+            length,
+            rgb = {r:0,g:0,b:0},
+            count = 0;
+
+        if (!context) {
+            return defaultRGB;
+        }
+
+        height = canvas.height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;
+        width = canvas.width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;
+
+        context.drawImage(imgEl, 0, 0);
+
+        try {
+            data = context.getImageData(0, 0, width, height);
+        } catch(e) {
+            console.error("Error accessing the pixel data: ", e);
+            return defaultRGB;
+        }
+
+        length = data.data.length;
+
+        while ( (i += blockSize * 4) < length ) {
+            ++count;
+            rgb.r += data.data[i];
+            rgb.g += data.data[i+1];
+            rgb.b += data.data[i+2];
+        }
+
+        rgb.r = ~~(rgb.r/count);
+        rgb.g = ~~(rgb.g/count);
+        rgb.b = ~~(rgb.b/count);
+
+        return rgb;
+    }
+    // --------------------------------------------------------------------------------------
+
+
     // GAME LOGIC
     // --------------------------------------------------------------------------------------
     async function getGames() {
@@ -100,34 +148,46 @@ window.addEventListener('DOMContentLoaded', () => {
         for (const [game_id, game_info] of Object.entries(games)) {
             let game = document.createElement("div");
             game.classList.add("game");
-    
-            rgba = "255, 255, 255, 0.8"; // LOAD COLOR FROM IMAGE
-            thumbnail = "data:image/png;base64, " + game_info.art.cover;
-            title =  game_info.settings.name + ` - ${game_info.state}`;
-    
-            const gameHtml = `<div class="thumbnail" data-shadow="rgba(${rgba})">\
-            <div class="open">Open</div>\
-            <img src="${thumbnail}">\
-            </div>\
-            <h3>${title}</h3>`;
-    
-            game.innerHTML = gameHtml;
-    
-            grid.appendChild(game).querySelector('.open').addEventListener("click", (event) => {
-                ipcRenderer.send('open-game', game_id, game_info.state)
-            });
-        }
 
-        document.querySelectorAll('.thumbnail').forEach(thumbnail => {
-            thumbnail.addEventListener('mouseover', (event) => {
-                const shadowColor = event.currentTarget.dataset.shadow;
-                event.currentTarget.style.boxShadow = `0px 0px 30px 5px ${shadowColor}`;
-            });
+            var thumbnail = "data:image/png;base64," + game_info.art.cover;
+            var thumbanailColorLoadElement = document.createElement("img");
+            var rgba =  null;
+        
+            thumbanailColorLoadElement.onload = function() {
+                var averageRGB = getAverageRGB(thumbanailColorLoadElement);
+                rgba = `rgba(${averageRGB.r}, ${averageRGB.g}, ${averageRGB.b}, 0.8)`;
+        
+                thumbanailColorLoadElement.remove();
+
+                title = game_info.settings.name + ` - ${game_info.state}`;
     
-            thumbnail.addEventListener('mouseout', (event) => {
-                event.currentTarget.style.boxShadow = 'none';
-            });
-        });
+                const gameHtml = `<div class="thumbnail">\
+                <div class="open">Open</div>\
+                <img src="${thumbnail}">\
+                </div>\
+                <h3>${title}</h3>`;
+        
+                game.innerHTML = gameHtml;
+        
+                var game_obj = grid.appendChild(game)
+                
+                game_obj.querySelector('.open').addEventListener("click", (event) => {
+                    ipcRenderer.send('open-game', game_id, game_info.state)
+                });
+
+                game_obj.querySelector('.thumbnail').addEventListener('mouseover', (event) => {
+                    console.log(rgba);
+                    event.currentTarget.style.boxShadow = `0px 0px 30px 5px ${rgba}`;
+                });
+
+                game_obj.querySelector('.thumbnail').addEventListener('mouseout', (event) => {
+                    event.currentTarget.style.boxShadow = 'none';
+                });
+            };
+        
+            thumbanailColorLoadElement.src = thumbnail;
+            document.body.append(thumbanailColorLoadElement);
+        }
     }
 
     getGames();
@@ -143,5 +203,5 @@ window.addEventListener('DOMContentLoaded', () => {
             document.querySelector('.header').classList.remove('color');
     });
     // --------------------------------------------------------------------------------------
-    
+
 });
