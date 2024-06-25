@@ -124,7 +124,7 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementsByTagName("h3")[0].textContent = game.notes.titles[globalGameVersion].title;
 
         document.getElementsByClassName("news")[0].addEventListener("click", (event) => {
-            notify("Come back later", "Patch notes are not ready yet!", 3000, null);
+            notify("Come Back Later", "Patch notes are not ready yet!", 3000, null);
         });
 
         platforms = ['windows', 'linux', 'macos'];
@@ -279,6 +279,9 @@ window.addEventListener('DOMContentLoaded', () => {
             hovering = false;
             updateActionButton();
             ipcRenderer.send('start-download', id, state, platform, title, globalGameVersion);
+        }
+        else if (actionState == "installed") {
+            notify("Come Back Later", "Game launching is not ready yet!", 3000, null);
         }
     }
 
