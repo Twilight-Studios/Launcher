@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, Notification } = require('electron');
 const path = require('path');
 const axios = require('axios');
 const fs = require('fs');
@@ -6,7 +6,6 @@ const { fork } = require('child_process');
 const extract = require('extract-zip');
 
 const serverUrl = "http://127.0.0.1:5000";
-const gameCollectionPath = path.join(app.getPath('userData'), 'gameCollection.json');
 
 let mainWindow;
 let popoutWindow;
@@ -33,7 +32,7 @@ function createLoginWindow(autofill=true) {
     mainWindow.loadFile('login.html');
     mainWindow.setResizable(false);
 
-    //Menu.setApplicationMenu(null);
+    Menu.setApplicationMenu(null);
 
     const credentials = readCredentials();
     if (credentials && autofill) {
@@ -72,7 +71,7 @@ function createDashboardWindow() {
     mainWindow.loadFile('dashboard.html');
     mainWindow.setResizable(false);
 
-    //Menu.setApplicationMenu(null);
+    Menu.setApplicationMenu(null);
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
@@ -109,7 +108,7 @@ function createGameWindow(gameId, gameState, gameGlobalVersion) {
 
     mainWindow.setResizable(false);
     
-    //Menu.setApplicationMenu(null);
+    Menu.setApplicationMenu(null);
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
@@ -137,7 +136,7 @@ function createPopoutWindow(patchnoteId) {
         popoutWindow.webContents.send('load-patchnote', patchnoteId);
     });
 
-    //Menu.setApplicationMenu(null);
+    Menu.setApplicationMenu(null);
 
     popoutWindow.once('ready-to-show', () => {
         popoutWindow.show();
@@ -148,6 +147,11 @@ app.whenReady().then(createLoginWindow);
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
+        if (inDownload) {
+            if (fs.existsSync(path.join(app.getPath('userData'), `/games/${inDownload}`))) {
+                fs.rmSync(path.join(app.getPath('userData'), `/games/${inDownload}`, { recursive: true }))
+            }
+        }
         app.quit();
     }
 });
@@ -176,6 +180,7 @@ ipcMain.on('logout', () => {
         popoutWindow.close();
     mainWindow.close();
     clearCredentials();
+    uninstallAllGames();
     createLoginWindow();
     mainWindow.webContents.send('success-logout');
 });
@@ -226,6 +231,10 @@ ipcMain.handle('get-games', async (event) => {
     return games;
 });
 
+ipcMain.on('notify', (event, title, description) => {
+    if (mainWindow.isVisible()) return;
+    new Notification({ title: title, body: description }).show();
+});
 
 ipcMain.on('refresh',  async (event, notify) => {
     if (popoutWindow)
@@ -289,7 +298,7 @@ ipcMain.on('start-download', (event, id, state, platform, title, version) => {
     let outputPath = path.join(app.getPath('userData'), "game.zip");
 
     if (fs.existsSync(path.join(app.getPath('userData'), `/games/${id}_${state}`))) {
-        fs.rmdirSync(path.join(app.getPath('userData'), `/games/${id}_${state}`, { recursive: true }))
+        fs.rmSync(path.join(app.getPath('userData'), `/games/${id}_${state}`, { recursive: true }))
     }
 
     downloadProcess = fork(path.join(__dirname, 'download-worker.js'));
@@ -373,3 +382,13 @@ ipcMain.on('uninstall-game', (event, gameId, gameState, gameTitle) => {
     fs.rmSync(path.join(app.getPath('userData'), `/games/${gameId}_${gameState}`), { recursive: true });
     mainWindow.webContents.send('game-uninstalled', gameId, gameState, gameTitle);
 });
+
+function uninstallAllGames() {
+    if (inDownload) {
+        downloadProcess.send({ action: 'cancel' });
+    }
+
+    if (fs.existsSync(path.join(app.getPath('userData'), "games"))) {
+        fs.rmSync(path.join(app.getPath('userData'), "games"), { recursive: true })
+    }
+}

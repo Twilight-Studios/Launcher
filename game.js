@@ -52,10 +52,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // NOTIFICATION INIT
     // --------------------------------------------------------------------------------------
-    function notify(title, description, length, callback) {
+    function notify(title, description, length, callback, notify_os = false) {
         document.querySelector('h1').textContent = title;
         document.querySelector('span').textContent = description;
         document.querySelector('.notification').classList.add('active');
+
+        if (notify_os) {
+            ipcRenderer.send("notify", title, description);
+        }
+
         setTimeout(() => {
             if (callback)
                 callback();
@@ -118,8 +123,12 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementsByClassName("tag")[0].textContent = game.notes.titles[globalGameVersion].type;
         document.getElementsByTagName("h3")[0].textContent = game.notes.titles[globalGameVersion].title;
 
-        platforms = ['windows', 'linux', 'macos']
-        platformAliases = ['Windows 10/11', "Linux", "MacOS"]
+        document.getElementsByClassName("news")[0].addEventListener("click", (event) => {
+            notify("Come back later", "Patch notes are not ready yet!", 3000, null);
+        });
+
+        platforms = ['windows', 'linux', 'macos'];
+        platformAliases = ['Windows 10/11', "Linux", "MacOS"];
 
         for (let i = 0; i < platforms.length; i++) {
             let platform = platforms[i];
@@ -274,7 +283,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     ipcRenderer.on('download-success', (event, gameId, gameState, gameTitle) => {
-        notify("Game Installed", `${gameTitle} - ${gameState} has finished installing!`, 3000, null);
+        notify("Game Installed", `${gameTitle} - ${gameState} has finished installing!`, 3000, null, true);
         if (gameId !== id || gameState !== state) return;
 
         actionState = "installed";
@@ -297,7 +306,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     ipcRenderer.on('download-error', (event, errorMessage, gameId, gameState, gameTitle) => {
-        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during install: ${errorMessage}`, 3000, null);
+        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during install: ${errorMessage}`, 3000, null, true);
         if (gameId !== id || gameState !== state) return;
 
         actionState = "not_installed";

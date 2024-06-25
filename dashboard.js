@@ -159,6 +159,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
             var thumbnail = "data:image/png;base64," + game_info.art.cover;
             var thumbanailColorLoadElement = document.createElement("img");
+            thumbanailColorLoadElement.style.display = 'none';
             var rgba =  null;
         
             thumbanailColorLoadElement.onload = function() {
