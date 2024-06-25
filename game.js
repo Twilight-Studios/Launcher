@@ -1,5 +1,16 @@
 const { ipcRenderer } = require('electron');
 
+let id;
+let state;
+let title;
+let platform = "windows";
+let hovering = false;
+let lastSpeed = 0;
+let lastProgress = 0;
+let actionState;
+let localGameVersion;
+let globalGameVersion;
+
 window.addEventListener('DOMContentLoaded', () => {
 
     // POPOUT INIT
@@ -62,7 +73,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById("uninstall").addEventListener("click", (event) => {
-        notify("Not Ready Yet", "Game installation is still being worked on!", 3000, null)
+        ipcRenderer.send('uninstall-game', id, state, title);
     });
 
     document.getElementById("help").addEventListener("click", (event) => {
@@ -83,23 +94,29 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // GAME DATA INIT
     // --------------------------------------------------------------------------------------
-    ipcRenderer.on('game-id', async (event, gameId, gameState) => {
-        let game = await ipcRenderer.invoke('get-game', gameId, gameState);
-        fillGame(game);
+    ipcRenderer.on('game-id', async (event, gameId, gameState, gameVersion) => {
+        id = gameId;
+        state = gameState;
+        globalGameVersion = gameVersion;
+
+        let { game, localVersion, installing } = await ipcRenderer.invoke('get-game', gameId, gameState, gameVersion);
+        localGameVersion = localVersion;
+
+        fillGame(game, installing);
     })
 
-    function fillGame(game) {
-        document.getElementsByClassName("loader-wrapper")[0].classList.remove("active");
-
+    function fillGame(game, installing) {
         logo = document.getElementsByTagName("img")[0];
         logo.src = "data:image/png;base64, " + game.art.logo;
         document.getElementsByClassName("window")[0].style.backgroundImage = `url('data:image/png;base64, ${game.art.background}')`;
 
         const gameStateSettings = game.settings.game_states[game.state]
-        const version = gameStateSettings.latest_version;
+        globalGameVersion = gameStateSettings.latest_version;
+        title = game.settings.name;
+
         document.getElementsByClassName("news")[0].style.backgroundImage = `url('data:image/png;base64, ${game.art.patch}')`;
-        document.getElementsByClassName("tag")[0].textContent = game.notes.titles[version].type;
-        document.getElementsByTagName("h3")[0].textContent = game.notes.titles[version].title;
+        document.getElementsByClassName("tag")[0].textContent = game.notes.titles[globalGameVersion].type;
+        document.getElementsByTagName("h3")[0].textContent = game.notes.titles[globalGameVersion].title;
 
         platforms = ['windows', 'linux', 'macos']
         platformAliases = ['Windows 10/11', "Linux", "MacOS"]
@@ -135,7 +152,7 @@ window.addEventListener('DOMContentLoaded', () => {
         requirements = ['steam', "xbox"]
         requirementAliases = ['Steam', "Xbox Launcher"]
 
-        for (let i = 0; i < platforms.length; i++) {
+        for (let i = 0; i < requirements.length; i++) {
             let requirement = requirements[i];
             let r_alias = requirementAliases[i];
 
@@ -151,7 +168,161 @@ window.addEventListener('DOMContentLoaded', () => {
                 tooltip.textContent = `${r_alias} must be launched`
             }
         }
+
+        let actionButton = document.querySelector('.action-button');
+
+        if (installing === "installing") {
+            actionState = "installing";
+        }
+        else if (localGameVersion === null) {
+            actionState = "not_installed";
+        }
+        else if (localGameVersion !== globalGameVersion) {
+            actionState = "req_update";
+        }
+        else {
+            actionState = "installed";
+        }
+
+        updateActionButton();
+
+        actionButton.addEventListener('click', (event) => {
+           actionButtonClick();
+        });
+
+        actionButton.addEventListener('mouseover', (event) => {
+            hovering = true;
+            if (actionState === "installing") {
+                actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-x"></i>';
+                actionButton.querySelector('.text').innerHTML = "<h2>Stop</h2>";
+            }
+        });
+
+        actionButton.addEventListener('mouseout', (event) => {
+            hovering = false;
+            updateActionButton(lastProgress, lastSpeed);
+        });
+
+        document.getElementsByClassName("loader-wrapper")[0].classList.remove("active");
     }
     // --------------------------------------------------------------------------------------
-    
+
+    // GAME MANAGEMENT
+    // --------------------------------------------------------------------------------------
+    function updateActionButton(localInstallProgress = 0, localInstallSpeed = 0) {
+        let actionButton = document.querySelector('.action-button');
+
+        if (actionState == "not_installed") {
+            lastProgress = 0;
+            lastSpeed = 0;
+            localGameVersion = null;
+            actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i>';
+            actionButton.querySelector('.text').innerHTML = "<h2>Install</h2>";
+        }
+        else if (actionState == "installing") {
+            lastProgress = localInstallProgress;
+            lastSpeed = localInstallSpeed;
+            localGameVersion = null;
+            if (!hovering) {
+                actionButton.querySelector('.status').innerHTML = `<span>${localInstallProgress}</span>`;
+                actionButton.querySelector('.text').innerHTML = `<h2>Installing</h2><p>${localInstallSpeed} Mb/s</p>`;
+            }
+        } 
+        else if (actionState == "extracting") {
+            localGameVersion = null;
+            actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-file-zipper"></i>';
+            actionButton.querySelector('.text').innerHTML = "<h2>Extracting</h2>";
+        }
+        else if (actionState == "stopping") {
+            localGameVersion = null;
+            actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-hourglass-start"></i>';
+            actionButton.querySelector('.text').innerHTML = "<h2>Stop</h2>";
+        }
+        else if (actionState == "req_update") {
+            lastProgress = 0;
+            lastSpeed = 0;
+            actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
+            actionButton.querySelector('.text').innerHTML = "<h2>Update</h2>";
+        }
+        else {
+            lastProgress = 0;
+            lastSpeed = 0;
+            localGameVersion = globalGameVersion;
+            actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-play"></i>';
+            actionButton.querySelector('.text').innerHTML = "<h2>Play</h2>";
+        }
+    }
+
+    function actionButtonClick() {
+        if (actionState == "not_installed") {
+            actionState = "installing";
+            hovering = false;
+            updateActionButton();
+            ipcRenderer.send('start-download', id, state, platform, title, globalGameVersion);
+        }
+        else if (actionState == "installing") {
+            actionState = "stopping";
+            updateActionButton();
+            ipcRenderer.send('cancel-download');
+        }
+    }
+
+    ipcRenderer.on('download-progress', (event, gameId, gameState, progress, speed) => {
+        if (gameId !== id || gameState !== state) return;
+        actionState = "installing";
+        updateActionButton(progress, speed)
+    });
+
+    ipcRenderer.on('download-success', (event, gameId, gameState, gameTitle) => {
+        notify("Game Installed", `${gameTitle} - ${gameState} has finished installing!`, 3000, null);
+        if (gameId !== id || gameState !== state) return;
+
+        actionState = "installed";
+        updateActionButton();
+    });
+
+    ipcRenderer.on('download-cancelled', (event, gameId, gameState, gameTitle) => {
+        notify("Installation Cancelled", `${gameTitle} - ${gameState} installation has been cancelled.`, 3000, null);
+        if (gameId !== id || gameState !== state) return;
+
+        actionState = "not_installed";
+        updateActionButton();
+    });
+
+    ipcRenderer.on('download-extracting', (event, gameId, gameState) => {
+        if (gameId !== id || gameState !== state) return;
+
+        actionState = "extracting";
+        updateActionButton();
+    });
+
+    ipcRenderer.on('download-error', (event, errorMessage, gameId, gameState, gameTitle) => {
+        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during install: ${errorMessage}`, 3000, null);
+        if (gameId !== id || gameState !== state) return;
+
+        actionState = "not_installed";
+        updateActionButton();
+    });
+
+    ipcRenderer.on('game-uninstalled', (event, gameId, gameState, gameTitle) => {
+        if (gameId !== id || gameState !== state) return;
+
+        notify("Game Uninstalled", `${gameTitle} - ${gameState} was uninstalled!`, 3000, null);
+        actionState = "not_installed";
+        updateActionButton();
+    });
+
+    ipcRenderer.on('cant-uninstall-download', (event, gameId, gameState, gameTitle) => {
+        if (gameId !== id || gameState !== state) return;
+        notify("Waiting for Download", `${gameTitle} - ${gameState} cannot be uninstalled while installing a game.`, 3000, null);
+    });
+
+    ipcRenderer.on('game-uninstalled', (event, gameId, gameState, gameTitle) => {
+        if (gameId !== id || gameState !== state) return;
+
+        notify("Game Uninstalled", `${gameTitle} - ${gameState} was uninstalled!`, 3000, null);
+        actionState = "not_installed";
+        updateActionButton();
+    });
+    // --------------------------------------------------------------------------------------
 });

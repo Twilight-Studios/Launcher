@@ -82,6 +82,14 @@ window.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.on('success-refresh', (event) => {
         notify("Success", "Refreshed your access and catalog!", 3000, null);
     });
+
+    ipcRenderer.on('download-success', (event, gameId, gameState, title) => {
+        notify("Game Installed!", `${title} - ${gameState} has finished installing!`, 3000, null);
+    });
+
+    ipcRenderer.on('download-error', (event, errorMessage, gameId, gameState, gameTitle) => {
+        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during install: ${errorMessage}`, 3000, null);
+    });
     // --------------------------------------------------------------------------------------
 
 
@@ -172,11 +180,10 @@ window.addEventListener('DOMContentLoaded', () => {
                 var game_obj = grid.appendChild(game)
                 
                 game_obj.querySelector('.open').addEventListener("click", (event) => {
-                    ipcRenderer.send('open-game', game_id, game_info.state)
+                    ipcRenderer.send('open-game', game_id, game_info.state, game_info.settings.game_states[game_info.state].latest_version)
                 });
 
                 game_obj.querySelector('.thumbnail').addEventListener('mouseover', (event) => {
-                    console.log(rgba);
                     event.currentTarget.style.boxShadow = `0px 0px 30px 5px ${rgba}`;
                 });
 
