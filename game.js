@@ -201,6 +201,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-x"></i>';
                 actionButton.querySelector('.text').innerHTML = "<h2>Stop</h2>";
             }
+            else {
+                hovering = false;
+            }
         });
 
         actionButton.addEventListener('mouseout', (event) => {

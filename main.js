@@ -336,11 +336,15 @@ ipcMain.on('start-download', (event, id, state, platform, title, version) => {
         mainWindow.webContents.send('download-progress', id, state, message.progress, message.downloadSpeed);
     } else if (message.status === 'error') {
         inDownload = null;
-        fs.unlinkSync(outputPath);
+        if (fs.existsSync(outputPath)) {
+            fs.unlinkSync(outputPath);
+        }
         mainWindow.webContents.send('download-error', message.error, id, state, title);
       } else if (message.status === 'cancelled') {
         inDownload = null;
-        fs.unlinkSync(outputPath);
+        if (fs.existsSync(outputPath)) {
+            fs.unlinkSync(outputPath);
+        }
         mainWindow.webContents.send('download-cancelled', id, state, title);
       }
     });
@@ -348,7 +352,9 @@ ipcMain.on('start-download', (event, id, state, platform, title, version) => {
     downloadProcess.on('error', (error) => {
       inDownload = null;
       console.error('Error in download process:', error);
-      fs.unlinkSync(outputPath);
+      if (fs.existsSync(outputPath)) {
+        fs.unlinkSync(outputPath);
+    }
       mainWindow.webContents.send('download-error', 'Error in download process', id, state, title);
     });
   });
@@ -369,7 +375,9 @@ ipcMain.on('start-download', (event, id, state, platform, title, version) => {
         if (err) {
             inDownload = null;
             extractionActive = false;
-            fs.unlinkSync(outputPath);
+            if (fs.existsSync(outputPath)) {
+                fs.unlinkSync(outputPath);
+            }
             console.error(err);
             mainWindow.webContents.send('extract-error', err, gameId, gameState, gameTitle);
         } else {
@@ -395,17 +403,22 @@ function extractZip(zipPath, extractTo, gameId, gameState, callback) {
     });
 
     writeStream.on('close', () => {
+        readStream.destroy();
         if (extractionActive) {
-            fs.unlinkSync(zipPath);
+            if (fs.existsSync(zipPath)) {;
+                fs.unlinkSync(zipPath);
+            }
             callback();
         }
     });
 
     readStream.on('error', err => {
+        readStream.destroy();
         callback(err);
     });
 
     writeStream.on('error', err => {
+        readStream.destroy();
         callback(err);
     });
 }
@@ -436,7 +449,7 @@ function forceStopDownload() {
         }
 
         if (fs.existsSync(path.join(app.getPath('userData'), "game.zip"))) {
-            fs.rmSync(path.join(app.getPath('userData'), "game.zip"), { recursive: true });
+            fs.unlinkSync(path.join(app.getPath('userData'), "game.zip"), { recursive: true });
         }
     }
 }
