@@ -8,7 +8,7 @@ const { autoUpdater } = require("electron-updater");
 const { type } = require('os');
 
 autoUpdater.autoDownload = false;
-const serverUrl = "http://127.0.0.1:5000";
+const serverUrl = "https://twilightdev.replit.app";
 
 let mainWindow;
 let popoutWindow;
