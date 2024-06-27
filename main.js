@@ -47,6 +47,9 @@ function createLoginWindow(autofill=true) {
             }
         });
     } else {
+        if (!credentials) {
+            uninstallAllGames();
+        }
         mainWindow.once('ready-to-show', () => {
             mainWindow.show();
         });
@@ -148,7 +151,7 @@ app.whenReady().then(createLoginWindow);
 
 app.on("ready", (event) => {
     if (process.platform == 'win32') {
-      app.setAppUserModelId('TwilightStudiosLauncher');
+      app.setAppUserModelId('twilightstudioslauncher');
     }
 });
 
