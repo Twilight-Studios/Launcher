@@ -1,6 +1,6 @@
 {
   "name": "twilightstudioslauncher",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Game Launcher for Twilight Studios",
   "main": "main.js",
   "scripts": {

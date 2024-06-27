@@ -504,8 +504,10 @@ ipcMain.on('uninstall-game', (event, gameId, gameState, gameTitle) => {
 });
 
 function forceStopDownload() {
-    downloadProcess.kill();
-    downloadProcess = null;
+    if (downloadProcess) {
+        downloadProcess.kill();
+        downloadProcess = null;
+    }
     if (inDownload) {
         if (extractionActive) {
             if (readStream) readStream.destroy();
