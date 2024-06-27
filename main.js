@@ -5,7 +5,9 @@ const fs = require('fs');
 const { fork } = require('child_process');
 const unzipper = require('unzipper');
 const { autoUpdater } = require("electron-updater");
+const { type } = require('os');
 
+autoUpdater.autoDownload = false;
 const serverUrl = "http://127.0.0.1:5000";
 
 let mainWindow;
@@ -13,6 +15,46 @@ let popoutWindow;
 let downloadProcess;
 let inDownload;
 let extractionActive = false;
+
+function createUpdateWindow() {
+    if (mainWindow) {
+        mainWindow.close();
+    }
+
+    mainWindow = new BrowserWindow({
+        width: 400,
+        height: 600,
+        icon: path.join(__dirname, 'twilight.ico'),
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            enableRemoteModule: false
+        }
+    });
+    
+    mainWindow.loadFile('update.html');
+    mainWindow.setResizable(false);
+
+    Menu.setApplicationMenu(null);
+
+    mainWindow.once('ready-to-show', () => {
+        mainWindow.show();
+
+        autoUpdater.checkForUpdates().then((result) => {
+            if (result) {
+                if (result.cancellationToken) {
+                    autoUpdater.downloadUpdate();
+                }
+                else {
+                    createLoginWindow();
+                }
+            }
+            else {
+                createLoginWindow();
+            }
+        })
+    });
+}
 
 function createLoginWindow(autofill=true) {
     if (mainWindow) {
@@ -148,13 +190,12 @@ function createPopoutWindow(patchnoteId) {
     });
 }
 
-app.whenReady().then(createLoginWindow);
+app.whenReady().then(createUpdateWindow);
 
 app.on("ready", () => {
     if (process.platform == 'win32') {
         app.setAppUserModelId('com.twilightstudios.twilightstudioslauncher');
     }
-    autoUpdater.checkForUpdatesAndNotify();
 });
 
 app.on('window-all-closed', () => {

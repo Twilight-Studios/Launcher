@@ -266,7 +266,7 @@ window.addEventListener('DOMContentLoaded', () => {
             lastSpeed = 0;
             localGameVersion = globalGameVersion;
             actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-play"></i>';
-            actionButton.querySelector('.text').innerHTML = "<h2>Play</h2>";
+            actionButton.querySelector('.text').innerHTML = "<h2>Launch</h2>";
         }
     }
 
