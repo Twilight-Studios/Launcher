@@ -8,7 +8,7 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },
-  "build" : {
+  "build": {
     "appId": "com.twilightstudios.twilightstudioslauncher",
     "productName": "Twilight Studios Launcher",
     "copyright": "Twilight Studios Ltd.",
@@ -19,8 +19,8 @@
       "background": null,
       "backgroundColor": "#ffffff",
       "window": {
-        "width": "400",
-        "height": "300"
+        "width": 400,
+        "height": 300
       },
       "contents": [
         {
@@ -44,7 +44,13 @@
     "linux": {
       "target": "AppImage",
       "category": "Utility"
-    }
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "http://127.0.0.1:5000/updates"
+      }
+    ]
   },
   "author": "Twilight Studios",
   "license": "ISC",
@@ -54,6 +60,7 @@
   },
   "dependencies": {
     "axios": "^1.7.2",
+    "electron-updater": "^6.2.1",
     "unzipper": "^0.12.1"
   }
 }

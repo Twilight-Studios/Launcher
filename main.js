@@ -4,6 +4,7 @@ const axios = require('axios');
 const fs = require('fs');
 const { fork } = require('child_process');
 const unzipper = require('unzipper');
+const { autoUpdater } = require("electron-updater");
 
 const serverUrl = "http://127.0.0.1:5000";
 
@@ -149,10 +150,11 @@ function createPopoutWindow(patchnoteId) {
 
 app.whenReady().then(createLoginWindow);
 
-app.on("ready", (event) => {
+app.on("ready", () => {
     if (process.platform == 'win32') {
-      app.setAppUserModelId('twilightstudioslauncher');
+        app.setAppUserModelId('com.twilightstudios.twilightstudioslauncher');
     }
+    autoUpdater.checkForUpdatesAndNotify();
 });
 
 app.on('window-all-closed', () => {
@@ -169,6 +171,10 @@ app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         createLoginWindow();
     }
+});
+
+autoUpdater.on("update-downloaded", () => {
+    autoUpdater.quitAndInstall();
 });
 
 ipcMain.handle('login', async (event, { accessKey }) => {
@@ -443,6 +449,8 @@ ipcMain.on('uninstall-game', (event, gameId, gameState, gameTitle) => {
 
 function forceStopDownload() {
     if (inDownload) {
+        downloadProcess.kill();
+        downloadProcess = null;
         if (extractionActive) {
             if (readStream) readStream.destroy();
         }
