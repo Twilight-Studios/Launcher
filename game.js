@@ -81,10 +81,6 @@ window.addEventListener('DOMContentLoaded', () => {
         ipcRenderer.send('uninstall-game', id, state, title);
     });
 
-    document.getElementById("help").addEventListener("click", (event) => {
-        window.open("https://github.com/Twilight-Studios"); // FIX TO PREVENT NAVIGATION
-    });
-
     document.getElementById("logout").addEventListener("click", (event) => {
         activatePopout(
             "Are you sure?",
@@ -187,7 +183,7 @@ window.addEventListener('DOMContentLoaded', () => {
             actionState = "not_installed";
         }
         else if (localGameVersion !== globalGameVersion) {
-            actionState = "req_update";
+            actionState = "req-update";
         }
         else {
             actionState = "installed";
@@ -218,7 +214,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // GAME MANAGEMENT
     // --------------------------------------------------------------------------------------
-    function updateActionButton(localInstallProgress = 0, localInstallSpeed = 0) {
+    function updateActionButton(localProgress = 0, localSpeed = 0) {
         let actionButton = document.querySelector('.action-button');
 
         if (actionState == "not_installed") {
@@ -228,18 +224,27 @@ window.addEventListener('DOMContentLoaded', () => {
             actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i>';
             actionButton.querySelector('.text').innerHTML = "<h2>Install</h2>";
         }
+        else if (actionState == "preparing") {
+            lastProgress = 0;
+            lastSpeed = 0;
+            localGameVersion = null;
+            actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-hourglass-start"></i>';
+            actionButton.querySelector('.text').innerHTML = "<h2>Preparing</h2>";
+        } 
         else if (actionState == "installing") {
-            lastProgress = localInstallProgress;
-            lastSpeed = localInstallSpeed;
+            lastProgress = localProgress;
+            lastSpeed = localSpeed;
             localGameVersion = null;
             if (!hovering) {
-                actionButton.querySelector('.status').innerHTML = `<span>${localInstallProgress}</span>`;
-                actionButton.querySelector('.text').innerHTML = `<h2>Installing</h2><p>${localInstallSpeed} Mb/s</p>`;
+                actionButton.querySelector('.status').innerHTML = `<span>${localProgress}</span>`;
+                actionButton.querySelector('.text').innerHTML = `<h2>Installing</h2><p>${localSpeed} Mb/s</p>`;
             }
         } 
-        else if (actionState == "extracting") {
+        else if (actionState == "extract-progress") {
+            lastProgress = 0;
+            lastSpeed = 0
             localGameVersion = null;
-            actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-file-zipper"></i>';
+            actionButton.querySelector('.status').innerHTML = `<span>${localProgress}</span>`;
             actionButton.querySelector('.text').innerHTML = "<h2>Extracting</h2>";
         }
         else if (actionState == "stopping") {
@@ -247,7 +252,7 @@ window.addEventListener('DOMContentLoaded', () => {
             actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-hourglass-start"></i>';
             actionButton.querySelector('.text').innerHTML = "<h2>Stop</h2>";
         }
-        else if (actionState == "req_update") {
+        else if (actionState == "req-update") {
             lastProgress = 0;
             lastSpeed = 0;
             actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
@@ -264,7 +269,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     function actionButtonClick() {
         if (actionState == "not_installed") {
-            actionState = "installing";
+            actionState = "preparing";
             hovering = false;
             updateActionButton();
             ipcRenderer.send('start-download', id, state, platform, title, globalGameVersion);
@@ -274,7 +279,7 @@ window.addEventListener('DOMContentLoaded', () => {
             updateActionButton();
             ipcRenderer.send('cancel-download');
         }
-        else if (actionState == "req_update") {
+        else if (actionState == "req-update") {
             actionState = "installing";
             hovering = false;
             updateActionButton();
@@ -307,15 +312,30 @@ window.addEventListener('DOMContentLoaded', () => {
         updateActionButton();
     });
 
-    ipcRenderer.on('download-extracting', (event, gameId, gameState) => {
+    ipcRenderer.on('download-error', (event, errorMessage, gameId, gameState, gameTitle) => {
+        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during download: ${errorMessage}`, 3000, null, true);
         if (gameId !== id || gameState !== state) return;
 
-        actionState = "extracting";
+        actionState = "not_installed";
         updateActionButton();
     });
 
-    ipcRenderer.on('download-error', (event, errorMessage, gameId, gameState, gameTitle) => {
-        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during install: ${errorMessage}`, 3000, null, true);
+    ipcRenderer.on('extract-start', (event, gameId, gameState) => {
+        if (gameId !== id || gameState !== state) return;
+
+        actionState = "preparing";
+        updateActionButton();
+    });
+
+    ipcRenderer.on('extract-progress', (event, gameId, gameState, progress) => {
+        if (gameId !== id || gameState !== state) return;
+
+        actionState = "extract-progress";
+        updateActionButton(progress);
+    });
+
+    ipcRenderer.on('extract-error', (event, errorMessage, gameId, gameState, gameTitle) => {
+        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during extraction: ${errorMessage}`, 3000, null, true);
         if (gameId !== id || gameState !== state) return;
 
         actionState = "not_installed";

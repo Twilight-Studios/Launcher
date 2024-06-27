@@ -61,10 +61,6 @@ window.addEventListener('DOMContentLoaded', () => {
         ipcRenderer.send('refresh', true);
     });
 
-    document.getElementById("help").addEventListener("click", (event) => {
-        window.open("https://github.com/Twilight-Studios"); // FIX TO PREVENT NAVIGATION
-    });
-
     document.getElementById("logout").addEventListener("click", (event) => {
         activatePopout(
             "Are you sure?",
@@ -88,7 +84,11 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     ipcRenderer.on('download-error', (event, errorMessage, gameId, gameState, gameTitle) => {
-        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during install: ${errorMessage}`, 3000, null);
+        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during download: ${errorMessage}`, 3000, null);
+    });
+
+    ipcRenderer.on('extract-error', (event, errorMessage, gameId, gameState, gameTitle) => {
+        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during extraction: ${errorMessage}`, 3000, null);
     });
     // --------------------------------------------------------------------------------------
 

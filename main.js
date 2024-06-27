@@ -3,7 +3,7 @@ const path = require('path');
 const axios = require('axios');
 const fs = require('fs');
 const { fork } = require('child_process');
-const extract = require('extract-zip');
+const unzipper = require('unzipper');
 
 const serverUrl = "http://127.0.0.1:5000";
 
@@ -11,6 +11,7 @@ let mainWindow;
 let popoutWindow;
 let downloadProcess;
 let inDownload;
+let extractionActive = false;
 
 function createLoginWindow(autofill=true) {
     if (mainWindow) {
@@ -153,13 +154,12 @@ app.on("ready", (event) => {
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
-        if (inDownload) {
-            if (fs.existsSync(path.join(app.getPath('userData'), `/games/${inDownload}`))) {
-                fs.rmSync(path.join(app.getPath('userData'), `/games/${inDownload}`), { recursive: true });
-            }
-        }
         app.quit();
     }
+});
+
+app.on('before-quit', () => {
+    forceStopDownload();
 });
 
 app.on('activate', () => {
@@ -186,6 +186,7 @@ ipcMain.on('logout', () => {
         popoutWindow.close();
     mainWindow.close();
     clearCredentials();
+    forceStopDownload();
     uninstallAllGames();
     createLoginWindow();
     mainWindow.webContents.send('success-logout');
@@ -238,7 +239,6 @@ ipcMain.handle('get-games', async (event) => {
 });
 
 ipcMain.on('notify', (event, title, description) => {
-    if (mainWindow.isVisible()) return;
     let notification = new Notification({ title: title, body: description, icon: path.join(__dirname, 'twilight.ico') });
 
     notification.show();
@@ -266,6 +266,12 @@ ipcMain.on('refresh',  async (event, notify) => {
 async function validateCredentials(credentials) {
     try {
         const resp = await axios.post(serverUrl+'/api/validate-access', { key: credentials });
+
+        if (resp.status !== 200) {
+            forceStopDownload();
+            uninstallAllGames();
+        }
+
         return resp.status === 200;
     } catch (error) {
         return false;
@@ -320,9 +326,10 @@ ipcMain.on('start-download', (event, id, state, platform, title, version) => {
   
     downloadProcess.on('message', (message) => {
       if (message.status === 'success') {
-        mainWindow.webContents.send('download-extracting', id, state);
+        mainWindow.webContents.send('extract-start', id, state);
         handleGameInstall(outputPath, id, state, version, title, () => {
             inDownload = null;
+            extractionActive = false;
             mainWindow.webContents.send('download-success', id, state, title);
         });
     } else if (message.status === 'in_progress') {
@@ -358,26 +365,49 @@ ipcMain.on('start-download', (event, id, state, platform, title, version) => {
         fs.mkdirSync(gameDir, { recursive: true });
     }
 
-    extractZip(outputPath, gameDir, (err) => {
+    extractZip(outputPath, gameDir, gameId, gameState, (err) => {
         if (err) {
             inDownload = null;
+            extractionActive = false;
             fs.unlinkSync(outputPath);
             console.error(err);
-            mainWindow.webContents.send('download-error', err, gameId, gameState, gameTitle);
+            mainWindow.webContents.send('extract-error', err, gameId, gameState, gameTitle);
         } else {
             callback();
         }
     });
 }
 
-async function extractZip(zipPath, extractTo, callback) {
-    try {
-        await extract(zipPath, { dir: extractTo });
-        fs.unlinkSync(zipPath);
-        callback(null);
-      } catch (err) {
+function extractZip(zipPath, extractTo, gameId, gameState, callback) {
+    extractionActive = true;
+
+    const readStream = fs.createReadStream(zipPath);
+    const writeStream = unzipper.Extract({ path: extractTo });
+
+    const totalBytes = fs.statSync(zipPath).size;
+    let processedBytes = 0;
+
+    readStream.pipe(writeStream);
+
+    readStream.on('data', chunk => {
+        processedBytes += chunk.length;
+        mainWindow.webContents.send('extract-progress', gameId, gameState, Math.round((processedBytes / totalBytes) * 100));
+    });
+
+    writeStream.on('close', () => {
+        if (extractionActive) {
+            fs.unlinkSync(zipPath);
+            callback();
+        }
+    });
+
+    readStream.on('error', err => {
         callback(err);
-      }
+    });
+
+    writeStream.on('error', err => {
+        callback(err);
+    });
 }
 
 ipcMain.on('uninstall-game', (event, gameId, gameState, gameTitle) => {
@@ -394,6 +424,22 @@ ipcMain.on('uninstall-game', (event, gameId, gameState, gameTitle) => {
     fs.rmSync(path.join(app.getPath('userData'), `/games/${gameId}_${gameState}`), { recursive: true });
     mainWindow.webContents.send('game-uninstalled', gameId, gameState, gameTitle);
 });
+
+function forceStopDownload() {
+    if (inDownload) {
+        if (extractionActive) {
+            if (readStream) readStream.destroy();
+        }
+
+        if (fs.existsSync(path.join(app.getPath('userData'), `/games/${inDownload}`))) {
+            fs.rmSync(path.join(app.getPath('userData'), `/games/${inDownload}`), { recursive: true });
+        }
+
+        if (fs.existsSync(path.join(app.getPath('userData'), "game.zip"))) {
+            fs.rmSync(path.join(app.getPath('userData'), "game.zip"), { recursive: true });
+        }
+    }
+}
 
 function uninstallAllGames() {
     if (inDownload) {
