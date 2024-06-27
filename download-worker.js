@@ -80,6 +80,7 @@ process.on('message', (message) => {
         clearInterval(intervalId);
         if (!cancelling) {
           process.send({ status: 'success' });
+          process.exit(0);
         }
       });
 
@@ -99,5 +100,6 @@ process.on('message', (message) => {
     })
     .catch((error) => {
       process.send({ status: 'error', error: error.message });
+      process.exit(0);
     });
 });

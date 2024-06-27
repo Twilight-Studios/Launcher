@@ -200,12 +200,9 @@ app.on("ready", () => {
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
+        forceStopDownload();
         app.quit();
     }
-});
-
-app.on('before-quit', () => {
-    forceStopDownload();
 });
 
 app.on('activate', () => {
@@ -471,6 +468,7 @@ function extractZip(zipPath, extractTo, gameId, gameState, callback) {
 
     writeStream.on('close', () => {
         readStream.destroy();
+        writeStream.destroy();
         if (extractionActive) {
             if (fs.existsSync(zipPath)) {;
                 fs.unlinkSync(zipPath);
@@ -506,11 +504,12 @@ ipcMain.on('uninstall-game', (event, gameId, gameState, gameTitle) => {
 });
 
 function forceStopDownload() {
+    downloadProcess.kill();
+    downloadProcess = null;
     if (inDownload) {
-        downloadProcess.kill();
-        downloadProcess = null;
         if (extractionActive) {
             if (readStream) readStream.destroy();
+            if (writeStream) writeStream.destroy();
         }
 
         if (fs.existsSync(path.join(app.getPath('userData'), `/games/${inDownload}`))) {
