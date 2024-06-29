@@ -1,3 +1,6 @@
+//  PACKAGE IMPORTS
+// --------------------------------------------------------------------------------------
+
 const { app, BrowserWindow, ipcMain, Menu, Notification } = require('electron');
 const path = require('path');
 const axios = require('axios');
@@ -5,9 +8,12 @@ const fs = require('fs');
 const { fork } = require('child_process');
 const unzipper = require('unzipper');
 const { autoUpdater } = require("electron-updater");
-const { type } = require('os');
 
-autoUpdater.autoDownload = false;
+// --------------------------------------------------------------------------------------
+
+// GLOBAL VARIABLES
+// --------------------------------------------------------------------------------------
+
 const serverUrl = "https://twilightdev.replit.app";
 
 let mainWindow;
@@ -15,6 +21,22 @@ let popoutWindow;
 let downloadProcess;
 let inDownload;
 let extractionActive = false;
+
+// --------------------------------------------------------------------------------------
+
+//  ELECTRON-UPDATER
+// --------------------------------------------------------------------------------------
+
+autoUpdater.autoDownload = false;
+
+autoUpdater.on("update-downloaded", () => {
+    autoUpdater.quitAndInstall();
+});
+
+// --------------------------------------------------------------------------------------
+
+// WINDOW MANAGEMENT
+// --------------------------------------------------------------------------------------
 
 function createUpdateWindow() {
     if (mainWindow) {
@@ -80,7 +102,7 @@ function createLoginWindow(autofill=true) {
 
     const credentials = readCredentials();
     if (credentials && autofill) {
-        validateCredentials(credentials.accessKey).then(valid => {
+        validateCredentials(credentials).then(valid => {
             if (valid) {
                 createDashboardWindow();
             } else {
@@ -190,6 +212,11 @@ function createPopoutWindow(patchnoteId) {
     });
 }
 
+// --------------------------------------------------------------------------------------
+
+// APP INIT AND CLOSE
+// --------------------------------------------------------------------------------------
+
 app.whenReady().then(createUpdateWindow);
 
 app.on("ready", () => {
@@ -211,9 +238,10 @@ app.on('activate', () => {
     }
 });
 
-autoUpdater.on("update-downloaded", () => {
-    autoUpdater.quitAndInstall();
-});
+// --------------------------------------------------------------------------------------
+
+// GLOBAL IPC CALLBACKS
+// --------------------------------------------------------------------------------------
 
 ipcMain.handle('login', async (event, { accessKey }) => {
     let valid = await validateCredentials(accessKey);
@@ -238,24 +266,6 @@ ipcMain.on('logout', () => {
     createLoginWindow();
     mainWindow.webContents.send('success-logout');
 });
-
-async function getGame(gameId, gameState) {
-    try {
-        const resp = await axios.post(serverUrl+'/api/get-game', { key: readCredentials().accessKey, id: gameId, state: gameState });
-        return resp.data
-    } catch (error) {
-        return {};
-    }
-}
-
-async function getGames() {
-    try {
-        const resp = await axios.post(serverUrl+'/api/get-all-games', { key: readCredentials().accessKey });
-        return resp.data
-    } catch (error) {
-        return {};
-    }
-}
 
 ipcMain.handle('get-game', async (event, gameId, gameState, version) => {
     let localVersion = null;
@@ -316,7 +326,7 @@ ipcMain.on('refresh',  async (event, notify) => {
     if (popoutWindow)
         popoutWindow.close();
 
-    const resp = await validateCredentials(readCredentials().accessKey);
+    const resp = await validateCredentials(readCredentials());
     if (resp) {
         createDashboardWindow();
         if (notify) mainWindow.webContents.send('success-refresh');
@@ -326,6 +336,44 @@ ipcMain.on('refresh',  async (event, notify) => {
         mainWindow.webContents.send('lost-access');
     }
 });
+
+ipcMain.on('uninstall-game', (event, gameId, gameState, gameTitle) => {
+    if (inDownload) {
+        mainWindow.webContents.send('cant-uninstall-download', gameId, gameState, gameTitle);
+        return;
+    }
+
+    if (!fs.existsSync(path.join(app.getPath('userData'), `/games/${gameId}_${gameState}`))) {
+        mainWindow.webContents.send('game-already-uninstalled', gameId, gameState, gameTitle);
+        return;
+    }
+
+    fs.rmSync(path.join(app.getPath('userData'), `/games/${gameId}_${gameState}`), { recursive: true });
+    mainWindow.webContents.send('game-uninstalled', gameId, gameState, gameTitle);
+});
+
+// --------------------------------------------------------------------------------------
+
+// UTILITY FUNCTIONS
+// --------------------------------------------------------------------------------------
+
+async function getGame(gameId, gameState) {
+    try {
+        const resp = await axios.post(serverUrl+'/api/get-game', { key: readCredentials(), id: gameId, state: gameState });
+        return resp.data
+    } catch (error) {
+        return {};
+    }
+}
+
+async function getGames() {
+    try {
+        const resp = await axios.post(serverUrl+'/api/get-all-games', { key: readCredentials() });
+        return resp.data
+    } catch (error) {
+        return {};
+    }
+}
 
 async function validateCredentials(credentials) {
     try {
@@ -353,7 +401,7 @@ function saveCredentials(credentials) {
 function readCredentials() {
     try {
         if (fs.existsSync('credentials.json')) {
-            return JSON.parse(fs.readFileSync('credentials.json', 'utf8'));
+            return JSON.parse(fs.readFileSync('credentials.json', 'utf8')).accessKey;
         }
     } catch (err) {
         console.error('An error occurred while reading credentials', err);
@@ -367,11 +415,47 @@ function clearCredentials() {
     }
 }
 
+function forceStopDownload() {
+    if (downloadProcess) {
+        downloadProcess.kill();
+        downloadProcess = null;
+    }
+    if (inDownload) {
+        if (extractionActive) {
+            if (readStream) readStream.destroy();
+            if (writeStream) writeStream.destroy();
+        }
+
+        if (fs.existsSync(path.join(app.getPath('userData'), `/games/${inDownload}`))) {
+            fs.rmSync(path.join(app.getPath('userData'), `/games/${inDownload}`), { recursive: true });
+        }
+
+        if (fs.existsSync(path.join(app.getPath('userData'), "game.zip"))) {
+            fs.unlinkSync(path.join(app.getPath('userData'), "game.zip"), { recursive: true });
+        }
+    }
+}
+
+function uninstallAllGames() {
+    if (inDownload) {
+        downloadProcess.send({ action: 'cancel' });
+    }
+
+    if (fs.existsSync(path.join(app.getPath('userData'), "games"))) {
+        fs.rmSync(path.join(app.getPath('userData'), "games"), { recursive: true });
+    }
+}
+
+// --------------------------------------------------------------------------------------
+
+// DOWNLOAD MANAGEMENT
+// --------------------------------------------------------------------------------------
+
 ipcMain.on('start-download', (event, id, state, platform, title, version) => {
     let downloadUrl = serverUrl + "/api/download-game";
 
     let payload =  {
-        key: readCredentials().accessKey,
+        key: readCredentials(),
         id: id,
         state: state,
         platform: platform
@@ -423,13 +507,13 @@ ipcMain.on('start-download', (event, id, state, platform, title, version) => {
     });
   });
   
-  ipcMain.on('cancel-download', () => {
+ipcMain.on('cancel-download', () => {
     if (downloadProcess) {
       downloadProcess.send({ action: 'cancel' });
     }
-  });
+});
 
-  function handleGameInstall(outputPath, gameId, gameState, gameVersion, gameTitle, callback) {
+function handleGameInstall(outputPath, gameId, gameState, gameVersion, gameTitle, callback) {
     const gameDir = path.join(app.getPath('userData'), `games/${gameId}_${gameState}/${gameVersion.replaceAll(".", "_")}`);
     if (!fs.existsSync(gameDir)) {
         fs.mkdirSync(gameDir, { recursive: true });
@@ -449,6 +533,11 @@ ipcMain.on('start-download', (event, id, state, platform, title, version) => {
         }
     });
 }
+
+// --------------------------------------------------------------------------------------
+
+// EXTRACTION MANAGEMENT
+// --------------------------------------------------------------------------------------
 
 function extractZip(zipPath, extractTo, gameId, gameState, callback) {
     extractionActive = true;
@@ -488,48 +577,4 @@ function extractZip(zipPath, extractTo, gameId, gameState, callback) {
     });
 }
 
-ipcMain.on('uninstall-game', (event, gameId, gameState, gameTitle) => {
-    if (inDownload) {
-        mainWindow.webContents.send('cant-uninstall-download', gameId, gameState, gameTitle);
-        return;
-    }
-
-    if (!fs.existsSync(path.join(app.getPath('userData'), `/games/${gameId}_${gameState}`))) {
-        mainWindow.webContents.send('game-already-uninstalled', gameId, gameState, gameTitle);
-        return;
-    }
-
-    fs.rmSync(path.join(app.getPath('userData'), `/games/${gameId}_${gameState}`), { recursive: true });
-    mainWindow.webContents.send('game-uninstalled', gameId, gameState, gameTitle);
-});
-
-function forceStopDownload() {
-    if (downloadProcess) {
-        downloadProcess.kill();
-        downloadProcess = null;
-    }
-    if (inDownload) {
-        if (extractionActive) {
-            if (readStream) readStream.destroy();
-            if (writeStream) writeStream.destroy();
-        }
-
-        if (fs.existsSync(path.join(app.getPath('userData'), `/games/${inDownload}`))) {
-            fs.rmSync(path.join(app.getPath('userData'), `/games/${inDownload}`), { recursive: true });
-        }
-
-        if (fs.existsSync(path.join(app.getPath('userData'), "game.zip"))) {
-            fs.unlinkSync(path.join(app.getPath('userData'), "game.zip"), { recursive: true });
-        }
-    }
-}
-
-function uninstallAllGames() {
-    if (inDownload) {
-        downloadProcess.send({ action: 'cancel' });
-    }
-
-    if (fs.existsSync(path.join(app.getPath('userData'), "games"))) {
-        fs.rmSync(path.join(app.getPath('userData'), "games"), { recursive: true });
-    }
-}
+// --------------------------------------------------------------------------------------
