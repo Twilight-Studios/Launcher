@@ -5,7 +5,8 @@ const { app, BrowserWindow, ipcMain, Menu, Notification } = require('electron');
 const path = require('path');
 const axios = require('axios');
 const fs = require('fs');
-const { fork } = require('child_process');
+const os = require('os');
+const { fork, exec, spawn } = require('child_process');
 const unzipper = require('unzipper');
 const { autoUpdater } = require("electron-updater");
 
@@ -21,6 +22,8 @@ let popoutWindow;
 let downloadProcess;
 let inDownload;
 let extractionActive = false;
+let coreGameProcess = null;
+let coreGameProcessPID = null;
 
 // --------------------------------------------------------------------------------------
 
@@ -95,6 +98,7 @@ function createLoginWindow(autofill=true) {
         }
     });
     
+    mainWindow.hide();
     mainWindow.loadFile('login.html');
     mainWindow.setResizable(false);
 
@@ -228,6 +232,7 @@ app.on("ready", () => {
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         forceStopDownload();
+        forceStopCurrentGame();
         app.quit();
     }
 });
@@ -409,6 +414,18 @@ function readCredentials() {
     return null;
 }
 
+function getGameLaunchJSON(gameId, gameState, gameVersion) {
+    const jsonPath = path.join(app.getPath('userData'), `/games/${gameId}_${gameState}/${gameVersion}/launcher.json`);
+    try {
+        if (fs.existsSync(jsonPath)) {
+            return JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+        }
+    } catch (err) {
+        console.error('An error occurred while reading a launcher.json file', err);
+    }
+    return null;
+}
+
 function clearCredentials() {
     if (fs.existsSync('credentials.json')) {
         fs.unlinkSync('credentials.json');
@@ -436,6 +453,30 @@ function forceStopDownload() {
     }
 }
 
+function forceStopCurrentGame() {
+    if (coreGameProcessPID !== null) {
+        try {
+            if (os.platform() === 'win32') {
+                exec(`taskkill /PID ${coreGameProcessPID} /T /F`, (err) => {
+                    coreGameProcess = null;
+                    coreGameProcessPID = null;
+                });
+            } else {
+                try {
+                    process.kill(coreGameProcessPID, 0);
+                    process.kill(coreGameProcessPID, 'SIGKILL');
+                    coreGameProcess = null;
+                    coreGameProcessPID = null;
+                } catch (err) {
+                    // Can't do much here
+                }
+            }
+        } catch (err) {
+            // Can't do much here
+        }
+    }
+}
+
 function uninstallAllGames() {
     if (inDownload) {
         downloadProcess.send({ action: 'cancel' });
@@ -444,6 +485,34 @@ function uninstallAllGames() {
     if (fs.existsSync(path.join(app.getPath('userData'), "games"))) {
         fs.rmSync(path.join(app.getPath('userData'), "games"), { recursive: true });
     }
+}
+
+function executeCommand(commandObj, commandDir, callback) {
+    const command = commandObj.command;
+    exec(command, { cwd: commandDir }, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error: ${stderr}`);
+            if (commandObj.critical) {
+                return callback(new Error(`Critical command failed: ${command}`));
+            }
+        }
+        callback(null);
+    });
+}
+
+function runCommands(commandsArray, commandDir, callback) {
+    let index = 0;
+    function nextCommand(err) {
+        if (err) {
+            return callback(err);
+        }
+        if (index < commandsArray.length) {
+            executeCommand(commandsArray[index++], commandDir, nextCommand);
+        } else {
+            callback(null);
+        }
+    }
+    nextCommand(null);
 }
 
 // --------------------------------------------------------------------------------------
@@ -576,5 +645,117 @@ function extractZip(zipPath, extractTo, gameId, gameState, callback) {
         callback(err);
     });
 }
+
+// --------------------------------------------------------------------------------------
+
+// LAUNCH MANAGEMENT
+// --------------------------------------------------------------------------------------
+
+ipcMain.on('launch-game', (event, gameId, gameState, gameVersion) => {
+    gameVersion = gameVersion.replaceAll(".", "_")
+    let launchJSON = getGameLaunchJSON(gameId, gameState, gameVersion);
+
+    if (launchJSON === null) {
+        mainWindow.webContents.send('launch-error', gameId, gameState, "launcher.json is missing from the game build!");
+        return;
+    }
+
+    try {
+        let coreExecCommand = launchJSON.core_exec_command;
+        let relativeDependencyCommands = launchJSON.relative_dependency_commands;
+        let systemDependencyCommands = launchJSON.system_dependency_commands;
+
+        const userRoot = process.env.HOME || process.env.USERPROFILE;
+        const gameFolder = path.join(app.getPath('userData'), `/games/${gameId}_${gameState}/${gameVersion}/`);
+
+        if (systemDependencyCommands.length !== 0) {
+            mainWindow.webContents.send('launch-progress', gameId, gameState, "Executing System Dependency Commands");
+
+            runCommands(systemDependencyCommands, userRoot, (err) => {
+                if (err) {
+                    mainWindow.webContents.send('launch-error', gameId, gameState, `Failed to execute system dependencies: ${err.message}`);
+                    return;
+                }
+            });
+        }
+
+        if (relativeDependencyCommands.length !== 0) {
+            mainWindow.webContents.send('launch-progress', gameId, gameState, "Executing Relative Dependency Commands");
+
+            runCommands(relativeDependencyCommands, gameFolder, (err) => {
+                if (err) {
+                    mainWindow.webContents.send('launch-error', gameId, gameState, `Failed to execute relative dependencies: ${err.message}`);
+                    return;
+                }
+            });
+        }
+
+        mainWindow.webContents.send('play-start', gameId, gameState);
+
+        coreGameProcess = spawn(coreExecCommand, { cwd: gameFolder, shell: true });
+        coreGameProcessPID = coreGameProcess.pid;
+
+        coreGameProcess.on('close', (code) => {
+            coreGameProcess = null;
+            coreGameProcessPID = null; 
+            if (code === 0) {
+                mainWindow.webContents.send('play-finished', gameId, gameState);
+            } else if (code === 1) {
+                // FORCE STOPPED
+            } else {
+                mainWindow.webContents.send('launch-error', gameId, gameState, `Game exited with code: ${code}`);
+            }
+        });
+
+        coreGameProcess.on('error', (err) => {
+            mainWindow.webContents.send('launch-error', gameId, gameState, `Failed to launch core game: ${err.message}`);
+            coreGameProcess = null;
+            coreGameProcessPID = null;
+        });
+
+    } catch (err) {
+        mainWindow.webContents.send('launch-error', gameId, gameState, err.message);
+    }
+});
+
+ipcMain.on('stop-game', (event, gameId, gameState) => {
+    if (coreGameProcessPID !== null) {
+        mainWindow.webContents.send('stop-start', gameId, gameState);
+        try {
+            if (os.platform() === 'win32') {
+                exec(`taskkill /PID ${coreGameProcessPID} /T /F`, (err) => {
+                    if (err) {
+                        mainWindow.webContents.send('stop-error', gameId, gameState, err.message);
+                    } else {
+                        mainWindow.webContents.send('play-finished', gameId, gameState);
+                    }
+                    coreGameProcess = null;
+                    coreGameProcessPID = null;
+                });
+            } else {
+                try {
+                    process.kill(coreGameProcessPID, 'SIGTERM');
+                    setTimeout(() => {
+                        try {
+                            process.kill(coreGameProcessPID, 0);
+                            process.kill(coreGameProcessPID, 'SIGKILL');
+                        } catch (e) {
+                            // Process is already terminated
+                        }
+                        mainWindow.webContents.send('play-finished', gameId, gameState);
+                        coreGameProcess = null;
+                        coreGameProcessPID = null;
+                    }, 5000); 
+                } catch (err) {
+                    mainWindow.webContents.send('stop-error', gameId, gameState, err.message);
+                    coreGameProcess = null;
+                    coreGameProcessPID = null;
+                }
+            }
+        } catch (err) {
+            mainWindow.webContents.send('stop-error', gameId, gameState, err.message);
+        }
+    }
+});
 
 // --------------------------------------------------------------------------------------

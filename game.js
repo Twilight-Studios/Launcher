@@ -54,7 +54,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // --------------------------------------------------------------------------------------
     function notify(title, description, length, callback, notify_os = false) {
         document.querySelector('h1').textContent = title;
-        document.querySelector('span').textContent = description;
+        document.querySelector('.noti-desc').textContent = description;
         document.querySelector('.notification').classList.add('active');
 
         if (notify_os) {
@@ -195,6 +195,10 @@ window.addEventListener('DOMContentLoaded', () => {
            actionButtonClick();
         });
 
+        document.querySelector('.stop-play').addEventListener('click', (event) => {
+            ipcRenderer.send('stop-game', id, state);
+         });
+
         actionButton.addEventListener('mouseover', (event) => {
             hovering = true;
             if (actionState === "installing") {
@@ -261,6 +265,12 @@ window.addEventListener('DOMContentLoaded', () => {
             actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
             actionButton.querySelector('.text').innerHTML = "<h2>Update</h2>";
         }
+        else if (actionState == "launching") {
+            lastProgress = 0;
+            lastSpeed = 0;
+            actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-rocket"></i>';
+            actionButton.querySelector('.text').innerHTML = "<h2>Playing</h2>";
+        }
         else {
             lastProgress = 0;
             lastSpeed = 0;
@@ -268,6 +278,16 @@ window.addEventListener('DOMContentLoaded', () => {
             actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-play"></i>';
             actionButton.querySelector('.text').innerHTML = "<h2>Launch</h2>";
         }
+    }
+
+    function createLaunchingScreen() {
+        document.querySelector('.launch-text').textContent = "Starting Game Launch";
+        document.querySelector('.stop-play').classList.remove("active");
+        document.querySelector('.launch-screen').classList.add("active");
+    }
+
+    function destroyLaunchingScreen() {
+        document.querySelector('.launch-screen').classList.remove("active");
     }
 
     function actionButtonClick() {
@@ -289,14 +309,58 @@ window.addEventListener('DOMContentLoaded', () => {
             ipcRenderer.send('start-download', id, state, platform, title, globalGameVersion);
         }
         else if (actionState == "installed") {
-            notify("Come Back Later", "Game launching is not ready yet!", 3000, null);
+            actionState = "launching";
+            hovering = false;
+            updateActionButton();
+            createLaunchingScreen();
+            ipcRenderer.send('launch-game', id, state, globalGameVersion);
         }
     }
+
+    ipcRenderer.on('launch-error', (event, gameId, gameState, error) => {
+        if (gameId !== id || gameState !== state) return;
+        actionState = "installed";
+        updateActionButton();
+        destroyLaunchingScreen();
+        notify("Game Launch Failed", `Game couldn't be launched: ${error}`, 3000, null, true);
+    });
+
+    ipcRenderer.on('play-finished', (event, gameId, gameState) => {
+        if (gameId !== id || gameState !== state) return;
+        actionState = "installed";
+        updateActionButton();
+        destroyLaunchingScreen();
+    });
+
+    ipcRenderer.on('play-start', (event, gameId, gameState) => {
+        if (gameId !== id || gameState !== state) return;
+        document.querySelector('.launch-text').textContent = "Playing Game";
+        document.querySelector('.stop-play').classList.add("active");
+    });
+
+    ipcRenderer.on('stop-error', (event, gameId, gameState, error) => {
+        if (gameId !== id || gameState !== state) return;
+        actionState = "installed";
+        updateActionButton();
+        destroyLaunchingScreen();
+        notify("Game Stop Failed", `Game couldn't be stopped: ${error}`, 3000, null, true);
+    });
+
+    ipcRenderer.on('stop-start', (event, gameId, gameState) => {
+        if (gameId !== id || gameState !== state) return;
+        document.querySelector('.launch-text').textContent = "Stopping Game";
+        document.querySelector('.stop-play').classList.remove("active");
+    });
+
+    ipcRenderer.on('launch-progress', (event, gameId, gameState, newMessage) => {
+        if (gameId !== id || gameState !== state) return;
+        document.querySelector('.launch-text').textContent = newMessage;
+    });
 
     ipcRenderer.on('download-progress', (event, gameId, gameState, progress, speed) => {
         if (gameId !== id || gameState !== state) return;
         actionState = "installing";
-        updateActionButton(progress, speed)
+        updateActionButton(progress, speed);
     });
 
     ipcRenderer.on('download-success', (event, gameId, gameState, gameTitle) => {
