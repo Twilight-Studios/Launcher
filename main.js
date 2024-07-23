@@ -98,7 +98,6 @@ function createLoginWindow(autofill=true) {
         }
     });
     
-    mainWindow.hide();
     mainWindow.loadFile('login.html');
     mainWindow.setResizable(false);
 
