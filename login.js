@@ -39,7 +39,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // IPC CALLBACKS
     // --------------------------------------------------------------------------------------
-    ipcRenderer.on('fill-credentials', (event, { accessKey }) => {
+    ipcRenderer.on('fill-credentials', (event, accessKey) => {
         document.getElementById('accesskey').value = accessKey;
     });
 
