@@ -228,10 +228,13 @@ app.on("ready", () => {
     }
 });
 
+app.on('will-quit', () => {
+    forceStopDownload();
+    forceStopCurrentGame();
+});
+
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
-        forceStopDownload();
-        forceStopCurrentGame();
         app.quit();
     }
 });
