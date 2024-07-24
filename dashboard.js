@@ -150,51 +150,54 @@ window.addEventListener('DOMContentLoaded', () => {
 
     function fillGames(games) {
         const grid = document.getElementsByClassName("grid")[0];
-        
         document.getElementsByClassName("loader")[0].classList.remove("active");
     
         for (const [game_id, game_info] of Object.entries(games)) {
             let game = document.createElement("div");
             game.classList.add("game");
-
-            var thumbnail = "data:image/png;base64," + game_info.art.cover;
-            var thumbanailColorLoadElement = document.createElement("img");
-            thumbanailColorLoadElement.style.display = 'none';
-            var rgba =  null;
-        
-            thumbanailColorLoadElement.onload = function() {
-                var averageRGB = getAverageRGB(thumbanailColorLoadElement);
-                rgba = `rgba(${averageRGB.r}, ${averageRGB.g}, ${averageRGB.b}, 0.8)`;
-        
-                thumbanailColorLoadElement.remove();
-
-                title = game_info.settings.name + ` - ${game_info.state}`;
     
-                const gameHtml = `<div class="thumbnail">\
-                <div class="open">Open</div>\
-                <img src="${thumbnail}">\
-                </div>\
-                <h3>${title}</h3>`;
-        
-                game.innerHTML = gameHtml;
-        
-                var game_obj = grid.appendChild(game)
-                
-                game_obj.querySelector('.open').addEventListener("click", (event) => {
-                    ipcRenderer.send('open-game', game_id, game_info.state, game_info.settings.game_states[game_info.state].latest_version)
-                });
-
-                game_obj.querySelector('.thumbnail').addEventListener('mouseover', (event) => {
-                    event.currentTarget.style.boxShadow = `0px 0px 30px 5px ${rgba}`;
-                });
-
-                game_obj.querySelector('.thumbnail').addEventListener('mouseout', (event) => {
-                    event.currentTarget.style.boxShadow = 'none';
-                });
-            };
-        
-            thumbanailColorLoadElement.src = thumbnail;
-            document.body.append(thumbanailColorLoadElement);
+            var thumbnail = "data:image/png;base64," + game_info.art.cover;
+            
+            (function(gameElement, thumbnailSrc, gameInfo) {
+                var thumbanailColorLoadElement = document.createElement("img");
+                thumbanailColorLoadElement.style.display = 'none';
+                var rgba = null;
+    
+                thumbanailColorLoadElement.onload = function() {
+                    var averageRGB = getAverageRGB(thumbanailColorLoadElement);
+                    rgba = `rgba(${averageRGB.r}, ${averageRGB.g}, ${averageRGB.b}, 0.8)`;
+    
+                    thumbanailColorLoadElement.remove();
+    
+                    var title = gameInfo.settings.name + ` - ${gameInfo.state}`;
+    
+                    const gameHtml = `<div class="thumbnail">\
+                    <div class="open">Open</div>\
+                    <img src="${thumbnailSrc}">\
+                    </div>\
+                    <h3>${title}</h3>`;
+    
+                    gameElement.innerHTML = gameHtml;
+    
+                    var game_obj = grid.appendChild(gameElement);
+                    console.log(game_obj);
+    
+                    game_obj.querySelector('.open').addEventListener("click", (event) => {
+                        ipcRenderer.send('open-game', game_id, gameInfo.state, gameInfo.settings.game_states[gameInfo.state].latest_version);
+                    });
+    
+                    game_obj.querySelector('.thumbnail').addEventListener('mouseover', (event) => {
+                        event.currentTarget.style.boxShadow = `0px 0px 30px 5px ${rgba}`;
+                    });
+    
+                    game_obj.querySelector('.thumbnail').addEventListener('mouseout', (event) => {
+                        event.currentTarget.style.boxShadow = 'none';
+                    });
+                };
+    
+                thumbanailColorLoadElement.src = thumbnailSrc;
+                document.body.append(thumbanailColorLoadElement);
+            })(game, thumbnail, game_info);
         }
     }
 
