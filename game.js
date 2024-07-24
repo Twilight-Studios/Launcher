@@ -422,6 +422,13 @@ window.addEventListener('DOMContentLoaded', () => {
         notify("Waiting for Download", `${gameTitle} - ${gameState} cannot be uninstalled while installing a game.`, 3000, null);
     });
 
+    ipcRenderer.on('cant-install-download', (event, gameId, gameState, gameTitle) => {
+        if (gameId !== id || gameState !== state) return;
+        actionState = "not_installed";
+        updateActionButton();
+        notify("Waiting for Download", `${gameTitle} - ${gameState} cannot be installed while installing another game.`, 3000, null);
+    });
+
     ipcRenderer.on('game-uninstalled', (event, gameId, gameState, gameTitle) => {
         if (gameId !== id || gameState !== state) return;
 

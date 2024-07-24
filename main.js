@@ -523,6 +523,13 @@ function runCommands(commandsArray, commandDir, callback) {
 // --------------------------------------------------------------------------------------
 
 ipcMain.on('start-download', (event, id, state, platform, title, version) => {
+    if (inDownload) {
+        if (inDownload !== `${id}_${state}`) {
+            mainWindow.webContents.send('cant-install-download', id, state, title);
+            return;
+        }
+    }
+
     let downloadUrl = serverUrl + "/api/download-game";
 
     let payload =  {
