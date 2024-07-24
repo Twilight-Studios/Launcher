@@ -298,22 +298,24 @@ ipcMain.handle('get-game', async (event, gameId, gameState, version) => {
 });
 
 ipcMain.handle('get-games', async (event) => {
-    const games =  await getGames();
+    const games = await getGames();
 
     let gamesPath = path.join(app.getPath('userData'), "games");
 
     if (fs.existsSync(gamesPath)) {
-        fs.readdirSync(gamesPath, { withFileTypes: true }).filter(dirent => dirent.isDirectory()).map(dirent => dirent.name).forEach(game => {
-            if (!(game.split("_")[0] in games)) {
-                fs.rmSync(path.join(app.getPath('userData'), `/games/${game}`), { recursive: true });
-                return games;
-            }
-            
-            if(game.split("_")[1] !== games[game.split("_")[0]].state) {
-                fs.rmSync(path.join(app.getPath('userData'), `/games/${game}`), { recursive: true });
-                return games;
-            }
-        });
+        fs.readdirSync(gamesPath, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name)
+            .forEach(game => {
+                const [gameId, gameState] = game.split("_");
+                const gameObj = games.find(g => g.id === gameId && g.state === gameState);
+
+                if (!gameObj) {
+                    fs.rmSync(path.join(gamesPath, game), { recursive: true });
+                } else if (gameState !== gameObj.state) {
+                    fs.rmSync(path.join(gamesPath, game), { recursive: true });
+                }
+            });
     }
 
     return games;

@@ -157,7 +157,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const grid = document.getElementsByClassName("grid")[0];
         document.getElementsByClassName("loader")[0].classList.remove("active");
     
-        for (const [game_id, game_info] of Object.entries(games)) {
+        games.forEach((game_info) => {
             let game = document.createElement("div");
             game.classList.add("game");
     
@@ -188,7 +188,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     console.log(game_obj);
     
                     game_obj.querySelector('.open').addEventListener("click", (event) => {
-                        ipcRenderer.send('open-game', game_id, gameInfo.state, gameInfo.settings.game_states[gameInfo.state].latest_version);
+                        ipcRenderer.send('open-game', gameInfo.id, gameInfo.state, gameInfo.settings.game_states[gameInfo.state].latest_version);
                     });
     
                     game_obj.querySelector('.thumbnail').addEventListener('mouseover', (event) => {
@@ -203,7 +203,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 thumbanailColorLoadElement.src = thumbnailSrc;
                 document.body.append(thumbanailColorLoadElement);
             })(game, thumbnail, game_info);
-        }
+        });
     }
 
     getGames();
