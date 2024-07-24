@@ -41,10 +41,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // NOTIFICATION INIT
     // --------------------------------------------------------------------------------------
-    function notify(title, description, length, callback) {
+    function notify(title, description, length, callback, notify_os = false) {
         document.querySelector('h1').textContent = title;
         document.querySelector('span').textContent = description;
         document.querySelector('.notification').classList.add('active');
+
+        if (notify_os) {
+            ipcRenderer.send("notify", title, description);
+        }
+
         setTimeout(() => {
             if (callback)
                 callback();
@@ -80,15 +85,15 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     ipcRenderer.on('download-success', (event, gameId, gameState, title) => {
-        notify("Game Installed!", `${title} - ${gameState} has finished installing!`, 3000, null);
+        notify("Game Installed!", `${title} - ${gameState} has finished installing!`, 3000, null, true);
     });
 
     ipcRenderer.on('download-error', (event, errorMessage, gameId, gameState, gameTitle) => {
-        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during download: ${errorMessage}`, 3000, null);
+        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during download: ${errorMessage}`, 3000, null, true);
     });
 
     ipcRenderer.on('extract-error', (event, errorMessage, gameId, gameState, gameTitle) => {
-        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during extraction: ${errorMessage}`, 3000, null);
+        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during extraction: ${errorMessage}`, 3000, null, true);
     });
     // --------------------------------------------------------------------------------------
 

@@ -6,7 +6,7 @@ const path = require('path');
 const axios = require('axios');
 const fs = require('fs');
 const os = require('os');
-const { fork, exec, spawn } = require('child_process');
+const { fork, execSync, exec, spawn } = require('child_process');
 const unzipper = require('unzipper');
 const { autoUpdater } = require("electron-updater");
 
@@ -491,7 +491,7 @@ function uninstallAllGames() {
 
 function executeCommand(commandObj, commandDir, callback) {
     const command = commandObj.command;
-    exec(command, { cwd: commandDir }, (error, stdout, stderr) => {
+    execSync(command, { cwd: commandDir }, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error: ${stderr}`);
             if (commandObj.critical) {
