@@ -18,7 +18,7 @@ const { autoUpdater } = require("electron-updater");
 const serverUrl = "https://twilightdev.replit.app";
 
 let mainWindow;
-let popoutWindow;
+let patchNotesWindow;
 let downloadProcess;
 let inDownload;
 let extractionActive = false;
@@ -86,6 +86,8 @@ function createLoginWindow(autofill=true) {
         mainWindow.close();
     }
 
+    closePatchNotesWindow();
+
     mainWindow = new BrowserWindow({
         width: 400,
         height: 600,
@@ -96,6 +98,10 @@ function createLoginWindow(autofill=true) {
             contextIsolation: true,
             enableRemoteModule: false
         }
+    });
+
+    mainWindow.on('closed', () => {
+        closePatchNotesWindow();
     });
     
     mainWindow.loadFile('login.html');
@@ -128,6 +134,9 @@ function createDashboardWindow() {
     if (mainWindow) {
         mainWindow.close();
     }
+
+    closePatchNotesWindow();
+
     mainWindow = new BrowserWindow({
         width: 1280,
         height: 720,
@@ -138,6 +147,10 @@ function createDashboardWindow() {
             contextIsolation: true,
             enableRemoteModule: false
         }
+    });
+    
+    mainWindow.on('closed', () => {
+        closePatchNotesWindow();
     });
 
     mainWindow.loadFile('dashboard.html');
@@ -161,6 +174,8 @@ function createGameWindow(gameId, gameState, gameGlobalVersion) {
         mainWindow.close();
     }
 
+    closePatchNotesWindow();
+
     mainWindow = new BrowserWindow({
         width: 1280,
         height: 720,
@@ -171,6 +186,10 @@ function createGameWindow(gameId, gameState, gameGlobalVersion) {
             contextIsolation: true,
             enableRemoteModule: false
         }
+    });
+
+    mainWindow.on('closed', () => {
+        closePatchNotesWindow();
     });
 
     mainWindow.loadFile('game.html');
@@ -187,31 +206,30 @@ function createGameWindow(gameId, gameState, gameGlobalVersion) {
     });
 }
 
-function createPopoutWindow(patchnoteId) {
-    if (popoutWindow) {
-        popoutWindow.close();
-    }
-    popoutWindow = new BrowserWindow({
+function createPatchNotesWindow(patchNotes) {
+    closePatchNotesWindow();
+    
+    patchNotesWindow = new BrowserWindow({
         width: 600,
         height: 400,
         icon: path.join(__dirname, 'twilight.ico'),
         webPreferences: {
-            preload: path.join(__dirname, 'popout.js'),
+            preload: path.join(__dirname, 'patchnotes.js'),
             nodeIntegration: false,
             contextIsolation: true,
             enableRemoteModule: false
         }
     });
 
-    popoutWindow.loadFile('patchnote.html');
-    popoutWindow.webContents.once('did-finish-load', () => {
-        popoutWindow.webContents.send('load-patchnote', patchnoteId);
+    patchNotesWindow.loadFile('patchnotes.html');
+    patchNotesWindow.webContents.once('did-finish-load', () => {
+        patchNotesWindow.webContents.send('load-patchnotes', patchNotes);
     });
 
     Menu.setApplicationMenu(null);
 
-    popoutWindow.once('ready-to-show', () => {
-        popoutWindow.show();
+    patchNotesWindow.once('ready-to-show', () => {
+        patchNotesWindow.show();
     });
 }
 
@@ -264,8 +282,7 @@ ipcMain.on('login-success', () => {
 });
 
 ipcMain.on('logout', () => {
-    if (popoutWindow)
-        popoutWindow.close();
+    closePatchNotesWindow();
     mainWindow.close();
     clearCredentials();
     forceStopDownload();
@@ -274,7 +291,7 @@ ipcMain.on('logout', () => {
     mainWindow.webContents.send('success-logout');
 });
 
-ipcMain.handle('get-game', async (event, gameId, gameState, version) => {
+ipcMain.handle('get-game', async (event, gameId, gameState) => {
     let localVersion = null;
     let installing = false;
 
@@ -290,10 +307,11 @@ ipcMain.handle('get-game', async (event, gameId, gameState, version) => {
     }
 
     const game = await getGame(gameId, gameState);
+
     return {
         game: game,
         localVersion: localVersion,
-        installing: true
+        installing: installing
     };
 });
 
@@ -332,12 +350,25 @@ ipcMain.on('notify', (event, title, description) => {
 });
 
 ipcMain.on('refresh',  async (event, notify) => {
-    if (popoutWindow)
-        popoutWindow.close();
+    closePatchNotesWindow();
 
     const resp = await validateCredentials(readCredentials());
     if (resp) {
         createDashboardWindow();
+        if (notify) mainWindow.webContents.send('success-refresh');
+    }
+    else {
+        createLoginWindow(autofill=false);
+        mainWindow.webContents.send('lost-access');
+    }
+});
+
+ipcMain.on('refresh-game',  async (event, gameId, gameState, gameVersion, notify) => {
+    closePatchNotesWindow();
+
+    const resp = await validateCredentials(readCredentials());
+    if (resp) {
+        createGameWindow(gameId, gameState, gameVersion);
         if (notify) mainWindow.webContents.send('success-refresh');
     }
     else {
@@ -361,10 +392,27 @@ ipcMain.on('uninstall-game', (event, gameId, gameState, gameTitle) => {
     mainWindow.webContents.send('game-uninstalled', gameId, gameState, gameTitle);
 });
 
+ipcMain.on('open-patchnotes', (event, patchNotes) => {
+    createPatchNotesWindow(patchNotes);
+});
+
 // --------------------------------------------------------------------------------------
 
 // UTILITY FUNCTIONS
 // --------------------------------------------------------------------------------------
+
+function closePatchNotesWindow() {
+    if (patchNotesWindow) {
+        try {
+            patchNotesWindow.close();
+        }
+        catch (err) {
+            // It's fine, its probably destroyed anyway
+        }
+    }
+
+    patchNotesWindow = null;
+}
 
 async function getGame(gameId, gameState) {
     try {

@@ -1,0 +1,150 @@
+<html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css' rel='stylesheet'>
+<title>Twilight Studios Launcher - Patch Notes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    font-family: "Poppins", sans-serif;
+    font-weight: 300;
+    letter-spacing: -0.25px;
+    word-spacing: -0.25px;
+    color: white;
+  }
+
+  .window {
+    width: 100vw;
+    height: 100vh;
+    overflow-x: hidden;
+    background: black;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header {
+    width: 100%;
+    height: 50px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    background: #b81de3;
+    background: linear-gradient(90deg, rgb(223, 57, 188) 0%, rgba(184, 29, 227) 100%);
+    box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
+    position: fixed;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .name {
+    font-weight: 700;
+  }
+
+  .version {
+    font-weight: 600;
+  }
+
+  #left-swap, #right-swap {
+    padding: 8px;
+    border-radius: 4px;
+    background-color: white;
+    color: black;
+    margin-left: 40px;
+    margin-right: 40px;
+    cursor: pointer;
+  }
+
+  .content {
+    margin-top: 60px;
+    padding: 10px;
+    width: calc(100% - 20px);
+    height: fit-content;
+  }
+
+  .tag {
+    background-color: #df39bc;
+    padding: 8px;
+    border-radius: 6px;
+    width: fit-content;
+    font-weight: 600;
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+
+  .title {
+    font-weight: 600;
+    font-size: 30px;
+  }
+
+  hr {
+    height: 2px;
+    background-color: white;
+    width: 600px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-left: -10px;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 500;
+    color: #B81DE3;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  h2 {
+    font-size: 16px;
+    font-weight: 500;
+    color: #B81DE3;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+
+  p {
+    font-size: 14px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+  }
+
+  li {
+    margin-left: 20px;
+    font-size: 14px;
+  }
+</style>
+<div class="window">
+    <div class="header">
+        <i id="left-swap" class="fa-solid fa-arrow-left"></i>
+        <div class="text">
+            <span class="name">Game Name</span>
+            <span class="version">vX.Y.Z</span>
+        </div>
+        <i id="right-swap" class="fa-solid fa-arrow-right"></i>
+    </div>
+    <div class="content">
+        <div class="hero">
+            <div class="tag">Patch Note Type</div>
+            <span class="title">Patch Note Title</span>
+            <hr>
+        </div>
+        <div class="notes">
+            <!-- Patch Note Contents Go Here (Supported tags: h1, h2, p, ul, li)-->
+        </div>
+    </div>
+</div>
+</html>

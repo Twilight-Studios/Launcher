@@ -5,7 +5,6 @@ window.addEventListener('DOMContentLoaded', () => {
     // POPOUT INIT
     // --------------------------------------------------------------------------------------
     var current_callback = null;
-    var current_class = null;
     var popout = document.getElementsByClassName('popout')[0];
     var primary_button = document.getElementsByClassName('primary button')[0];
     var cancel_button = document.getElementsByClassName('cancel button')[0];
@@ -174,7 +173,7 @@ window.addEventListener('DOMContentLoaded', () => {
     
                     thumbanailColorLoadElement.remove();
     
-                    var title = gameInfo.settings.name + ` - ${gameInfo.state}`;
+                    var title = `${gameInfo.settings.name} - ${gameInfo.state} [${gameInfo.settings.game_states[gameInfo.state].latest_version}]`;
     
                     const gameHtml = `<div class="thumbnail">\
                     <div class="open">Open</div>\

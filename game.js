@@ -10,13 +10,13 @@ let lastProgress = 0;
 let actionState;
 let localGameVersion;
 let globalGameVersion;
+let globalGame;
 
 window.addEventListener('DOMContentLoaded', () => {
 
     // POPOUT INIT
     // --------------------------------------------------------------------------------------
     var current_callback = null;
-    var current_class = null;
     var popout = document.getElementsByClassName('popout')[0];
     var primary_button = document.getElementsByClassName('primary button')[0];
     var cancel_button = document.getElementsByClassName('cancel button')[0];
@@ -77,6 +77,10 @@ window.addEventListener('DOMContentLoaded', () => {
         ipcRenderer.send('refresh', false);
     });
 
+    document.getElementById("refresh").addEventListener("click", (event) => {
+        ipcRenderer.send('refresh-game', id, state, globalGameVersion, false);
+    });
+
     document.getElementById("uninstall").addEventListener("click", (event) => {
         ipcRenderer.send('uninstall-game', id, state, title);
     });
@@ -90,6 +94,10 @@ window.addEventListener('DOMContentLoaded', () => {
             () => { notify("Logging Out", "Clearing your session...", 1500, () => { ipcRenderer.send("logout"); }) }
         );
     });
+
+    ipcRenderer.on('success-refresh', (event) => {
+        notify("Success", "Refreshed your access and catalog!", 3000, null);
+    });
     // --------------------------------------------------------------------------------------
 
 
@@ -100,11 +108,13 @@ window.addEventListener('DOMContentLoaded', () => {
         state = gameState;
         globalGameVersion = gameVersion;
 
-        let { game, localVersion, installing } = await ipcRenderer.invoke('get-game', gameId, gameState, gameVersion);
+        let { game, localVersion, installing } = await ipcRenderer.invoke('get-game', gameId, gameState);
+
+        globalGame = game;
         localGameVersion = localVersion;
 
         fillGame(game, installing);
-    })
+    });
 
     function fillGame(game, installing) {
         logo = document.getElementsByTagName("img")[0];
@@ -116,11 +126,17 @@ window.addEventListener('DOMContentLoaded', () => {
         title = game.settings.name;
 
         document.getElementsByClassName("news")[0].style.backgroundImage = `url('data:image/png;base64, ${game.art.patch}')`;
-        document.getElementsByClassName("tag")[0].textContent = game.notes.titles[globalGameVersion].type;
+        document.getElementsByClassName("tag")[0].textContent = globalGameVersion;
         document.getElementsByTagName("h3")[0].textContent = game.notes.titles[globalGameVersion].title;
 
         document.getElementsByClassName("news")[0].addEventListener("click", (event) => {
-            notify("Come Back Later", "Patch notes are not ready yet!", 3000, null);
+            let patchNotes = {
+                gameName : game.settings.name,
+                latestVersion : globalGameVersion,
+                notes : game.notes
+            };
+    
+            ipcRenderer.send("open-patchnotes", patchNotes);
         });
 
         platforms = ['windows', 'linux', 'macos'];
