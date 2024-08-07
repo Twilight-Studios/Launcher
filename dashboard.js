@@ -83,16 +83,16 @@ window.addEventListener('DOMContentLoaded', () => {
         notify("Success", "Refreshed your access and catalog!", 3000, null);
     });
 
-    ipcRenderer.on('download-success', (event, gameId, gameState, title) => {
-        notify("Game Installed!", `${title} - ${gameState} has finished installing!`, 3000, null, true);
+    ipcRenderer.on('download-success', (event, gameId, gameBranch, title) => {
+        notify("Game Installed!", `${title} - ${gameBranch} has finished installing!`, 3000, null, true);
     });
 
-    ipcRenderer.on('download-error', (event, errorMessage, gameId, gameState, gameTitle) => {
-        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during download: ${errorMessage}`, 3000, null, true);
+    ipcRenderer.on('download-error', (event, errorMessage, gameId, gameBranch, gameTitle) => {
+        notify("Installation Failed", `${gameTitle} - ${gameBranch} faced an error during download: ${errorMessage}`, 3000, null, true);
     });
 
-    ipcRenderer.on('extract-error', (event, errorMessage, gameId, gameState, gameTitle) => {
-        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during extraction: ${errorMessage}`, 3000, null, true);
+    ipcRenderer.on('extract-error', (event, errorMessage, gameId, gameBranch, gameTitle) => {
+        notify("Installation Failed", `${gameTitle} - ${gameBranch} faced an error during extraction: ${errorMessage}`, 3000, null, true);
     });
     // --------------------------------------------------------------------------------------
 
@@ -173,7 +173,7 @@ window.addEventListener('DOMContentLoaded', () => {
     
                     thumbanailColorLoadElement.remove();
     
-                    var title = `${gameInfo.settings.name} - ${gameInfo.state} [${gameInfo.settings.game_states[gameInfo.state].latest_version}]`;
+                    var title = `${gameInfo.settings.name} - ${gameInfo.branch} [${gameInfo.settings.game_branches[gameInfo.branch].latest_version}]`;
     
                     const gameHtml = `<div class="thumbnail">\
                     <div class="open">Open</div>\
@@ -187,7 +187,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     console.log(game_obj);
     
                     game_obj.querySelector('.open').addEventListener("click", (event) => {
-                        ipcRenderer.send('open-game', gameInfo.id, gameInfo.state, gameInfo.settings.game_states[gameInfo.state].latest_version);
+                        ipcRenderer.send('open-game', gameInfo.id, gameInfo.branch, gameInfo.settings.game_branches[gameInfo.branch].latest_version);
                     });
     
                     game_obj.querySelector('.thumbnail').addEventListener('mouseover', (event) => {

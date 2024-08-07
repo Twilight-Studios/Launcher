@@ -1,7 +1,7 @@
 const { ipcRenderer } = require('electron');
 
 let id;
-let state;
+let branch;
 let title;
 let platform = "windows";
 let hovering = false;
@@ -78,11 +78,11 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById("refresh").addEventListener("click", (event) => {
-        ipcRenderer.send('refresh-game', id, state, globalGameVersion, false);
+        ipcRenderer.send('refresh-game', id, branch, globalGameVersion, false);
     });
 
     document.getElementById("uninstall").addEventListener("click", (event) => {
-        ipcRenderer.send('uninstall-game', id, state, title);
+        ipcRenderer.send('uninstall-game', id, branch, title);
     });
 
     document.getElementById("logout").addEventListener("click", (event) => {
@@ -103,12 +103,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // GAME DATA INIT
     // --------------------------------------------------------------------------------------
-    ipcRenderer.on('game-id', async (event, gameId, gameState, gameVersion) => {
+    ipcRenderer.on('game-id', async (event, gameId, gameBranch, gameVersion) => {
         id = gameId;
-        state = gameState;
+        branch = gameBranch;
         globalGameVersion = gameVersion;
 
-        let { game, localVersion, installing } = await ipcRenderer.invoke('get-game', gameId, gameState);
+        let { game, localVersion, installing } = await ipcRenderer.invoke('get-game', gameId, gameBranch);
 
         globalGame = game;
         localGameVersion = localVersion;
@@ -121,8 +121,8 @@ window.addEventListener('DOMContentLoaded', () => {
         logo.src = "data:image/png;base64, " + game.art.logo;
         document.getElementsByClassName("window")[0].style.backgroundImage = `url('data:image/png;base64, ${game.art.background}')`;
 
-        const gameStateSettings = game.settings.game_states[game.state]
-        globalGameVersion = gameStateSettings.latest_version;
+        const gameBranchSettings = game.settings.game_branches[game.branch]
+        globalGameVersion = gameBranchSettings.latest_version;
         title = game.settings.name;
 
         document.getElementsByClassName("news")[0].style.backgroundImage = `url('data:image/png;base64, ${game.art.patch}')`;
@@ -149,7 +149,7 @@ window.addEventListener('DOMContentLoaded', () => {
             let icon = document.getElementById(platform);
             let tooltip = document.getElementById(`${platform}-tooltip`);
 
-            if (!gameStateSettings.platforms.includes(platform)) {
+            if (!gameBranchSettings.platforms.includes(platform)) {
                 icon.classList.add("disabled");
                 tooltip.classList.add("disabled");
                 tooltip.textContent = `No ${p_alias} support`
@@ -161,7 +161,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         let onlineIcon = document.getElementById("online");
         let onlineTooltip = document.getElementById("online-tooltip");
-        if (!gameStateSettings.requires_online) {
+        if (!gameBranchSettings.requires_online) {
             onlineIcon.classList.add("disabled");
             onlineTooltip.classList.add("disabled");
             onlineTooltip.textContent = "Can be played offline";
@@ -180,7 +180,7 @@ window.addEventListener('DOMContentLoaded', () => {
             let icon = document.getElementById(requirement);
             let tooltip = document.getElementById(`${requirement}-tooltip`);
 
-            if (!gameStateSettings.requirements.includes(requirement)) {
+            if (!gameBranchSettings.requirements.includes(requirement)) {
                 icon.classList.add("disabled");
                 tooltip.classList.add("disabled");
                 tooltip.textContent = `${r_alias} is not required`
@@ -212,7 +212,7 @@ window.addEventListener('DOMContentLoaded', () => {
         });
 
         document.querySelector('.stop-play').addEventListener('click', (event) => {
-            ipcRenderer.send('stop-game', id, state);
+            ipcRenderer.send('stop-game', id, branch);
          });
 
         actionButton.addEventListener('mouseover', (event) => {
@@ -311,7 +311,7 @@ window.addEventListener('DOMContentLoaded', () => {
             actionState = "preparing";
             hovering = false;
             updateActionButton();
-            ipcRenderer.send('start-download', id, state, platform, title, globalGameVersion);
+            ipcRenderer.send('start-download', id, branch, platform, title, globalGameVersion);
         }
         else if (actionState == "installing") {
             actionState = "stopping";
@@ -322,133 +322,133 @@ window.addEventListener('DOMContentLoaded', () => {
             actionState = "installing";
             hovering = false;
             updateActionButton();
-            ipcRenderer.send('start-download', id, state, platform, title, globalGameVersion);
+            ipcRenderer.send('start-download', id, branch, platform, title, globalGameVersion);
         }
         else if (actionState == "installed") {
             actionState = "launching";
             hovering = false;
             updateActionButton();
             createLaunchingScreen();
-            ipcRenderer.send('launch-game', id, state, globalGameVersion);
+            ipcRenderer.send('launch-game', id, branch, globalGameVersion);
         }
     }
 
-    ipcRenderer.on('launch-error', (event, gameId, gameState, error) => {
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('launch-error', (event, gameId, gameBranch, error) => {
+        if (gameId !== id || gameBranch !== branch) return;
         actionState = "installed";
         updateActionButton();
         destroyLaunchingScreen();
         notify("Game Launch Failed", `Game couldn't be launched: ${error}`, 3000, null, true);
     });
 
-    ipcRenderer.on('play-finished', (event, gameId, gameState) => {
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('play-finished', (event, gameId, gameBranch) => {
+        if (gameId !== id || gameBranch !== branch) return;
         actionState = "installed";
         updateActionButton();
         destroyLaunchingScreen();
     });
 
-    ipcRenderer.on('play-start', (event, gameId, gameState) => {
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('play-start', (event, gameId, gameBranch) => {
+        if (gameId !== id || gameBranch !== branch) return;
         document.querySelector('.launch-text').textContent = "Playing Game";
         document.querySelector('.stop-play').classList.add("active");
     });
 
-    ipcRenderer.on('stop-error', (event, gameId, gameState, error) => {
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('stop-error', (event, gameId, gameBranch, error) => {
+        if (gameId !== id || gameBranch !== branch) return;
         actionState = "installed";
         updateActionButton();
         destroyLaunchingScreen();
         notify("Game Stop Failed", `Game couldn't be stopped: ${error}`, 3000, null, true);
     });
 
-    ipcRenderer.on('stop-start', (event, gameId, gameState) => {
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('stop-start', (event, gameId, gameBranch) => {
+        if (gameId !== id || gameBranch !== branch) return;
         document.querySelector('.launch-text').textContent = "Stopping Game";
         document.querySelector('.stop-play').classList.remove("active");
     });
 
-    ipcRenderer.on('launch-progress', (event, gameId, gameState, newMessage) => {
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('launch-progress', (event, gameId, gameBranch, newMessage) => {
+        if (gameId !== id || gameBranch !== branch) return;
         document.querySelector('.launch-text').textContent = newMessage;
     });
 
-    ipcRenderer.on('download-progress', (event, gameId, gameState, progress, speed) => {
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('download-progress', (event, gameId, gameBranch, progress, speed) => {
+        if (gameId !== id || gameBranch !== branch) return;
         actionState = "installing";
         updateActionButton(progress, speed);
     });
 
-    ipcRenderer.on('download-success', (event, gameId, gameState, gameTitle) => {
-        notify("Game Installed", `${gameTitle} - ${gameState} has finished installing!`, 3000, null, true);
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('download-success', (event, gameId, gameBranch, gameTitle) => {
+        notify("Game Installed", `${gameTitle} - ${gameBranch} has finished installing!`, 3000, null, true);
+        if (gameId !== id || gameBranch !== branch) return;
 
         actionState = "installed";
         updateActionButton();
     });
 
-    ipcRenderer.on('download-cancelled', (event, gameId, gameState, gameTitle) => {
-        notify("Installation Cancelled", `${gameTitle} - ${gameState} installation has been cancelled.`, 3000, null);
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('download-cancelled', (event, gameId, gameBranch, gameTitle) => {
+        notify("Installation Cancelled", `${gameTitle} - ${gameBranch} installation has been cancelled.`, 3000, null);
+        if (gameId !== id || gameBranch !== branch) return;
 
         actionState = "not_installed";
         updateActionButton();
     });
 
-    ipcRenderer.on('download-error', (event, errorMessage, gameId, gameState, gameTitle) => {
-        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during download: ${errorMessage}`, 3000, null, true);
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('download-error', (event, errorMessage, gameId, gameBranch, gameTitle) => {
+        notify("Installation Failed", `${gameTitle} - ${gameBranch} faced an error during download: ${errorMessage}`, 3000, null, true);
+        if (gameId !== id || gameBranch !== branch) return;
 
         actionState = "not_installed";
         updateActionButton();
     });
 
-    ipcRenderer.on('extract-start', (event, gameId, gameState) => {
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('extract-start', (event, gameId, gameBranch) => {
+        if (gameId !== id || gameBranch !== branch) return;
 
         actionState = "preparing";
         updateActionButton();
     });
 
-    ipcRenderer.on('extract-progress', (event, gameId, gameState, progress) => {
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('extract-progress', (event, gameId, gameBranch, progress) => {
+        if (gameId !== id || gameBranch !== branch) return;
 
         actionState = "extract-progress";
         updateActionButton(progress);
     });
 
-    ipcRenderer.on('extract-error', (event, errorMessage, gameId, gameState, gameTitle) => {
-        notify("Installation Failed", `${gameTitle} - ${gameState} faced an error during extraction: ${errorMessage}`, 3000, null, true);
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('extract-error', (event, errorMessage, gameId, gameBranch, gameTitle) => {
+        notify("Installation Failed", `${gameTitle} - ${gameBranch} faced an error during extraction: ${errorMessage}`, 3000, null, true);
+        if (gameId !== id || gameBranch !== branch) return;
 
         actionState = "not_installed";
         updateActionButton();
     });
 
-    ipcRenderer.on('game-uninstalled', (event, gameId, gameState, gameTitle) => {
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('game-uninstalled', (event, gameId, gameBranch, gameTitle) => {
+        if (gameId !== id || gameBranch !== branch) return;
 
-        notify("Game Uninstalled", `${gameTitle} - ${gameState} was uninstalled!`, 3000, null);
+        notify("Game Uninstalled", `${gameTitle} - ${gameBranch} was uninstalled!`, 3000, null);
         actionState = "not_installed";
         updateActionButton();
     });
 
-    ipcRenderer.on('cant-uninstall-download', (event, gameId, gameState, gameTitle) => {
-        if (gameId !== id || gameState !== state) return;
-        notify("Waiting for Download", `${gameTitle} - ${gameState} cannot be uninstalled while installing a game.`, 3000, null);
+    ipcRenderer.on('cant-uninstall-download', (event, gameId, gameBranch, gameTitle) => {
+        if (gameId !== id || gameBranch !== branch) return;
+        notify("Waiting for Download", `${gameTitle} - ${gameBranch} cannot be uninstalled while installing a game.`, 3000, null);
     });
 
-    ipcRenderer.on('cant-install-download', (event, gameId, gameState, gameTitle) => {
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('cant-install-download', (event, gameId, gameBranch, gameTitle) => {
+        if (gameId !== id || gameBranch !== branch) return;
         actionState = "not_installed";
         updateActionButton();
-        notify("Waiting for Download", `${gameTitle} - ${gameState} cannot be installed while installing another game.`, 3000, null);
+        notify("Waiting for Download", `${gameTitle} - ${gameBranch} cannot be installed while installing another game.`, 3000, null);
     });
 
-    ipcRenderer.on('game-uninstalled', (event, gameId, gameState, gameTitle) => {
-        if (gameId !== id || gameState !== state) return;
+    ipcRenderer.on('game-uninstalled', (event, gameId, gameBranch, gameTitle) => {
+        if (gameId !== id || gameBranch !== branch) return;
 
-        notify("Game Uninstalled", `${gameTitle} - ${gameState} was uninstalled!`, 3000, null);
+        notify("Game Uninstalled", `${gameTitle} - ${gameBranch} was uninstalled!`, 3000, null);
         actionState = "not_installed";
         updateActionButton();
     });

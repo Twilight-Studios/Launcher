@@ -166,12 +166,12 @@ function createDashboardWindow() {
 
     ipcMain.removeAllListeners('open-game');
 
-    ipcMain.on('open-game', (event, gameId, gameState, gameGlobalVersion) => {
-        createGameWindow(gameId, gameState, gameGlobalVersion);
+    ipcMain.on('open-game', (event, gameId, gameBranch, gameGlobalVersion) => {
+        createGameWindow(gameId, gameBranch, gameGlobalVersion);
     });
 }
 
-function createGameWindow(gameId, gameState, gameGlobalVersion) {
+function createGameWindow(gameId, gameBranch, gameGlobalVersion) {
     if (mainWindow) {
         mainWindow.close();
     }
@@ -196,7 +196,7 @@ function createGameWindow(gameId, gameState, gameGlobalVersion) {
 
     mainWindow.loadFile('game.html');
     mainWindow.webContents.once('did-finish-load', async () => {
-        mainWindow.webContents.send('game-id', gameId, gameState, gameGlobalVersion);
+        mainWindow.webContents.send('game-id', gameId, gameBranch, gameGlobalVersion);
     });
 
     mainWindow.setResizable(false);
@@ -293,22 +293,22 @@ ipcMain.on('logout', () => {
     mainWindow.webContents.send('success-logout');
 });
 
-ipcMain.handle('get-game', async (event, gameId, gameState) => {
+ipcMain.handle('get-game', async (event, gameId, gameBranch) => {
     let localVersion = null;
     let installing = false;
 
-    let gamePath = path.join(app.getPath('userData'), `/games/${gameId}_${gameState}`);
+    let gamePath = path.join(app.getPath('userData'), `/games/${gameId}_${gameBranch}`);
 
     if (fs.existsSync(gamePath)) {
         localVersion = fs.readdirSync(gamePath, { withFileTypes: true }).filter(dirent => dirent.isDirectory()).map(dirent => dirent.name)[0]
         localVersion = localVersion.replaceAll("_", ".")
     }
     
-    if (inDownload === `${gameId}_${gameState}`) {
+    if (inDownload === `${gameId}_${gameBranch}`) {
         installing = true;
     }
 
-    const game = await getGame(gameId, gameState);
+    const game = await getGame(gameId, gameBranch);
 
     return {
         game: game,
@@ -327,12 +327,12 @@ ipcMain.handle('get-games', async (event) => {
             .filter(dirent => dirent.isDirectory())
             .map(dirent => dirent.name)
             .forEach(game => {
-                const [gameId, gameState] = game.split("_");
-                const gameObj = games.find(g => g.id === gameId && g.state === gameState);
+                const [gameId, gameBranch] = game.split("_");
+                const gameObj = games.find(g => g.id === gameId && g.branch === gameBranch);
 
                 if (!gameObj) {
                     fs.rmSync(path.join(gamesPath, game), { recursive: true });
-                } else if (gameState !== gameObj.state) {
+                } else if (gameBranch !== gameObj.branch) {
                     fs.rmSync(path.join(gamesPath, game), { recursive: true });
                 }
             });
@@ -365,12 +365,12 @@ ipcMain.on('refresh',  async (event, notify) => {
     }
 });
 
-ipcMain.on('refresh-game',  async (event, gameId, gameState, gameVersion, notify) => {
+ipcMain.on('refresh-game',  async (event, gameId, gameBranch, gameVersion, notify) => {
     closePatchNotesWindow();
 
     const resp = await validateCredentials(readCredentials());
     if (resp) {
-        createGameWindow(gameId, gameState, gameVersion);
+        createGameWindow(gameId, gameBranch, gameVersion);
         if (notify) mainWindow.webContents.send('success-refresh');
     }
     else {
@@ -379,19 +379,19 @@ ipcMain.on('refresh-game',  async (event, gameId, gameState, gameVersion, notify
     }
 });
 
-ipcMain.on('uninstall-game', (event, gameId, gameState, gameTitle) => {
+ipcMain.on('uninstall-game', (event, gameId, gameBranch, gameTitle) => {
     if (inDownload) {
-        mainWindow.webContents.send('cant-uninstall-download', gameId, gameState, gameTitle);
+        mainWindow.webContents.send('cant-uninstall-download', gameId, gameBranch, gameTitle);
         return;
     }
 
-    if (!fs.existsSync(path.join(app.getPath('userData'), `/games/${gameId}_${gameState}`))) {
-        mainWindow.webContents.send('game-already-uninstalled', gameId, gameState, gameTitle);
+    if (!fs.existsSync(path.join(app.getPath('userData'), `/games/${gameId}_${gameBranch}`))) {
+        mainWindow.webContents.send('game-already-uninstalled', gameId, gameBranch, gameTitle);
         return;
     }
 
-    fs.rmSync(path.join(app.getPath('userData'), `/games/${gameId}_${gameState}`), { recursive: true });
-    mainWindow.webContents.send('game-uninstalled', gameId, gameState, gameTitle);
+    fs.rmSync(path.join(app.getPath('userData'), `/games/${gameId}_${gameBranch}`), { recursive: true });
+    mainWindow.webContents.send('game-uninstalled', gameId, gameBranch, gameTitle);
 });
 
 ipcMain.on('open-patchnotes', (event, patchNotes) => {
@@ -420,9 +420,9 @@ function closePatchNotesWindow() {
     patchNotesWindow = null;
 }
 
-async function getGame(gameId, gameState) {
+async function getGame(gameId, gameBranch) {
     try {
-        const resp = await axios.post(serverUrl+'/api/get-game', { key: readCredentials(), id: gameId, state: gameState });
+        const resp = await axios.post(serverUrl+'/api/get-game', { key: readCredentials(), id: gameId, branch: gameBranch });
         return resp.data
     } catch (error) {
         return {};
@@ -472,8 +472,8 @@ function readCredentials() {
     return null;
 }
 
-function getGameLaunchJSON(gameId, gameState, gameVersion) {
-    const jsonPath = path.join(app.getPath('userData'), `/games/${gameId}_${gameState}/${gameVersion}/launcher.json`);
+function getGameLaunchJSON(gameId, gameBranch, gameVersion) {
+    const jsonPath = path.join(app.getPath('userData'), `/games/${gameId}_${gameBranch}/${gameVersion}/launcher.json`);
     try {
         if (fs.existsSync(jsonPath)) {
             return JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
@@ -578,10 +578,10 @@ function runCommands(commandsArray, commandDir, callback) {
 // DOWNLOAD MANAGEMENT
 // --------------------------------------------------------------------------------------
 
-ipcMain.on('start-download', (event, id, state, platform, title, version) => {
+ipcMain.on('start-download', (event, id, branch, platform, title, version) => {
     if (inDownload) {
-        if (inDownload !== `${id}_${state}`) {
-            mainWindow.webContents.send('cant-install-download', id, state, title);
+        if (inDownload !== `${id}_${branch}`) {
+            mainWindow.webContents.send('cant-install-download', id, branch, title);
             return;
         }
     }
@@ -591,43 +591,43 @@ ipcMain.on('start-download', (event, id, state, platform, title, version) => {
     let payload =  {
         key: readCredentials(),
         id: id,
-        state: state,
+        branch: branch,
         platform: platform
     }
 
     let outputPath = path.join(app.getPath('userData'), "game.zip");
 
-    if (fs.existsSync(path.join(app.getPath('userData'), `/games/${id}_${state}`))) {
-        fs.rmSync(path.join(app.getPath('userData'), `/games/${id}_${state}`), { recursive: true });
+    if (fs.existsSync(path.join(app.getPath('userData'), `/games/${id}_${branch}`))) {
+        fs.rmSync(path.join(app.getPath('userData'), `/games/${id}_${branch}`), { recursive: true });
     }
 
     downloadProcess = fork(path.join(__dirname, 'download-worker.js'));
-    inDownload = `${id}_${state}`;
+    inDownload = `${id}_${branch}`;
   
     downloadProcess.send({ downloadUrl, outputPath, payload });
   
     downloadProcess.on('message', (message) => {
       if (message.status === 'success') {
-        mainWindow.webContents.send('extract-start', id, state);
-        handleGameInstall(outputPath, id, state, version, title, () => {
+        mainWindow.webContents.send('extract-start', id, branch);
+        handleGameInstall(outputPath, id, branch, version, title, () => {
             inDownload = null;
             extractionActive = false;
-            mainWindow.webContents.send('download-success', id, state, title);
+            mainWindow.webContents.send('download-success', id, branch, title);
         });
     } else if (message.status === 'in_progress') {
-        mainWindow.webContents.send('download-progress', id, state, message.progress, message.downloadSpeed);
+        mainWindow.webContents.send('download-progress', id, branch, message.progress, message.downloadSpeed);
     } else if (message.status === 'error') {
         inDownload = null;
         if (fs.existsSync(outputPath)) {
             fs.unlinkSync(outputPath);
         }
-        mainWindow.webContents.send('download-error', message.error, id, state, title);
+        mainWindow.webContents.send('download-error', message.error, id, branch, title);
       } else if (message.status === 'cancelled') {
         inDownload = null;
         if (fs.existsSync(outputPath)) {
             fs.unlinkSync(outputPath);
         }
-        mainWindow.webContents.send('download-cancelled', id, state, title);
+        mainWindow.webContents.send('download-cancelled', id, branch, title);
       }
     });
   
@@ -637,7 +637,7 @@ ipcMain.on('start-download', (event, id, state, platform, title, version) => {
       if (fs.existsSync(outputPath)) {
         fs.unlinkSync(outputPath);
     }
-      mainWindow.webContents.send('download-error', 'Error in download process', id, state, title);
+      mainWindow.webContents.send('download-error', 'Error in download process', id, branch, title);
     });
   });
   
@@ -647,13 +647,13 @@ ipcMain.on('cancel-download', () => {
     }
 });
 
-function handleGameInstall(outputPath, gameId, gameState, gameVersion, gameTitle, callback) {
-    const gameDir = path.join(app.getPath('userData'), `games/${gameId}_${gameState}/${gameVersion.replaceAll(".", "_")}`);
+function handleGameInstall(outputPath, gameId, gameBranch, gameVersion, gameTitle, callback) {
+    const gameDir = path.join(app.getPath('userData'), `games/${gameId}_${gameBranch}/${gameVersion.replaceAll(".", "_")}`);
     if (!fs.existsSync(gameDir)) {
         fs.mkdirSync(gameDir, { recursive: true });
     }
 
-    extractZip(outputPath, gameDir, gameId, gameState, (err) => {
+    extractZip(outputPath, gameDir, gameId, gameBranch, (err) => {
         if (err) {
             inDownload = null;
             extractionActive = false;
@@ -661,7 +661,7 @@ function handleGameInstall(outputPath, gameId, gameState, gameVersion, gameTitle
                 fs.unlinkSync(outputPath);
             }
             console.error(err);
-            mainWindow.webContents.send('extract-error', err, gameId, gameState, gameTitle);
+            mainWindow.webContents.send('extract-error', err, gameId, gameBranch, gameTitle);
         } else {
             callback();
         }
@@ -673,7 +673,7 @@ function handleGameInstall(outputPath, gameId, gameState, gameVersion, gameTitle
 // EXTRACTION MANAGEMENT
 // --------------------------------------------------------------------------------------
 
-function extractZip(zipPath, extractTo, gameId, gameState, callback) {
+function extractZip(zipPath, extractTo, gameId, gameBranch, callback) {
     extractionActive = true;
 
     const readStream = fs.createReadStream(zipPath);
@@ -686,7 +686,7 @@ function extractZip(zipPath, extractTo, gameId, gameState, callback) {
 
     readStream.on('data', chunk => {
         processedBytes += chunk.length;
-        mainWindow.webContents.send('extract-progress', gameId, gameState, Math.round((processedBytes / totalBytes) * 100));
+        mainWindow.webContents.send('extract-progress', gameId, gameBranch, Math.round((processedBytes / totalBytes) * 100));
     });
 
     writeStream.on('close', () => {
@@ -716,12 +716,12 @@ function extractZip(zipPath, extractTo, gameId, gameState, callback) {
 // LAUNCH MANAGEMENT
 // --------------------------------------------------------------------------------------
 
-ipcMain.on('launch-game', (event, gameId, gameState, gameVersion) => {
+ipcMain.on('launch-game', (event, gameId, gameBranch, gameVersion) => {
     gameVersion = gameVersion.replaceAll(".", "_")
-    let launchJSON = getGameLaunchJSON(gameId, gameState, gameVersion);
+    let launchJSON = getGameLaunchJSON(gameId, gameBranch, gameVersion);
 
     if (launchJSON === null) {
-        mainWindow.webContents.send('launch-error', gameId, gameState, "launcher.json is missing from the game build!");
+        mainWindow.webContents.send('launch-error', gameId, gameBranch, "launcher.json is missing from the game build!");
         return;
     }
 
@@ -731,31 +731,31 @@ ipcMain.on('launch-game', (event, gameId, gameState, gameVersion) => {
         let systemDependencyCommands = launchJSON.system_dependency_commands;
 
         const userRoot = process.env.HOME || process.env.USERPROFILE;
-        const gameFolder = path.join(app.getPath('userData'), `/games/${gameId}_${gameState}/${gameVersion}/`);
+        const gameFolder = path.join(app.getPath('userData'), `/games/${gameId}_${gameBranch}/${gameVersion}/`);
 
         if (systemDependencyCommands.length !== 0) {
-            mainWindow.webContents.send('launch-progress', gameId, gameState, "Executing System Dependency Commands");
+            mainWindow.webContents.send('launch-progress', gameId, gameBranch, "Executing System Dependency Commands");
 
             runCommands(systemDependencyCommands, userRoot, (err) => {
                 if (err) {
-                    mainWindow.webContents.send('launch-error', gameId, gameState, `Failed to execute system dependencies: ${err.message}`);
+                    mainWindow.webContents.send('launch-error', gameId, gameBranch, `Failed to execute system dependencies: ${err.message}`);
                     return;
                 }
             });
         }
 
         if (relativeDependencyCommands.length !== 0) {
-            mainWindow.webContents.send('launch-progress', gameId, gameState, "Executing Relative Dependency Commands");
+            mainWindow.webContents.send('launch-progress', gameId, gameBranch, "Executing Relative Dependency Commands");
 
             runCommands(relativeDependencyCommands, gameFolder, (err) => {
                 if (err) {
-                    mainWindow.webContents.send('launch-error', gameId, gameState, `Failed to execute relative dependencies: ${err.message}`);
+                    mainWindow.webContents.send('launch-error', gameId, gameBranch, `Failed to execute relative dependencies: ${err.message}`);
                     return;
                 }
             });
         }
 
-        mainWindow.webContents.send('play-start', gameId, gameState);
+        mainWindow.webContents.send('play-start', gameId, gameBranch);
 
         coreGameProcess = spawn(coreExecCommand, { cwd: gameFolder, shell: true });
         coreGameProcessPID = coreGameProcess.pid;
@@ -764,35 +764,35 @@ ipcMain.on('launch-game', (event, gameId, gameState, gameVersion) => {
             coreGameProcess = null;
             coreGameProcessPID = null; 
             if (code === 0) {
-                mainWindow.webContents.send('play-finished', gameId, gameState);
+                mainWindow.webContents.send('play-finished', gameId, gameBranch);
             } else if (code === 1) {
                 // FORCE STOPPED
             } else {
-                mainWindow.webContents.send('launch-error', gameId, gameState, `Game exited with code: ${code}`);
+                mainWindow.webContents.send('launch-error', gameId, gameBranch, `Game exited with code: ${code}`);
             }
         });
 
         coreGameProcess.on('error', (err) => {
-            mainWindow.webContents.send('launch-error', gameId, gameState, `Failed to launch core game: ${err.message}`);
+            mainWindow.webContents.send('launch-error', gameId, gameBranch, `Failed to launch core game: ${err.message}`);
             coreGameProcess = null;
             coreGameProcessPID = null;
         });
 
     } catch (err) {
-        mainWindow.webContents.send('launch-error', gameId, gameState, err.message);
+        mainWindow.webContents.send('launch-error', gameId, gameBranch, err.message);
     }
 });
 
-ipcMain.on('stop-game', (event, gameId, gameState) => {
+ipcMain.on('stop-game', (event, gameId, gameBranch) => {
     if (coreGameProcessPID !== null) {
-        mainWindow.webContents.send('stop-start', gameId, gameState);
+        mainWindow.webContents.send('stop-start', gameId, gameBranch);
         try {
             if (os.platform() === 'win32') {
                 exec(`taskkill /PID ${coreGameProcessPID} /T /F`, (err) => {
                     if (err) {
-                        mainWindow.webContents.send('stop-error', gameId, gameState, err.message);
+                        mainWindow.webContents.send('stop-error', gameId, gameBranch, err.message);
                     } else {
-                        mainWindow.webContents.send('play-finished', gameId, gameState);
+                        mainWindow.webContents.send('play-finished', gameId, gameBranch);
                     }
                     coreGameProcess = null;
                     coreGameProcessPID = null;
@@ -807,18 +807,18 @@ ipcMain.on('stop-game', (event, gameId, gameState) => {
                         } catch (e) {
                             // Process is already terminated
                         }
-                        mainWindow.webContents.send('play-finished', gameId, gameState);
+                        mainWindow.webContents.send('play-finished', gameId, gameBranch);
                         coreGameProcess = null;
                         coreGameProcessPID = null;
                     }, 5000); 
                 } catch (err) {
-                    mainWindow.webContents.send('stop-error', gameId, gameState, err.message);
+                    mainWindow.webContents.send('stop-error', gameId, gameBranch, err.message);
                     coreGameProcess = null;
                     coreGameProcessPID = null;
                 }
             }
         } catch (err) {
-            mainWindow.webContents.send('stop-error', gameId, gameState, err.message);
+            mainWindow.webContents.send('stop-error', gameId, gameBranch, err.message);
         }
     }
 });
