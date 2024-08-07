@@ -34,6 +34,11 @@ window.addEventListener('DOMContentLoaded', () => {
         else
             notify("Failed", response.message || "Something went wrong!", 3000, null);
     });
+
+    document.querySelector('a').addEventListener('click', (event) => {
+        ipcRenderer.send("open-server");
+        event.preventDefault();
+    });
     // --------------------------------------------------------------------------------------
 
 

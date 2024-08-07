@@ -1,7 +1,7 @@
 //  PACKAGE IMPORTS
 // --------------------------------------------------------------------------------------
 
-const { app, BrowserWindow, ipcMain, Menu, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, Notification, shell } = require('electron');
 const path = require('path');
 const axios = require('axios');
 const fs = require('fs');
@@ -51,6 +51,7 @@ function createUpdateWindow() {
         height: 600,
         icon: path.join(__dirname, 'twilight.ico'),
         webPreferences: {
+            preload: path.join(__dirname, 'update.js'),
             nodeIntegration: false,
             contextIsolation: true,
             enableRemoteModule: false
@@ -68,6 +69,7 @@ function createUpdateWindow() {
         autoUpdater.checkForUpdates().then((result) => {
             if (result) {
                 if (result.cancellationToken) {
+                    mainWindow.webContents.send('update-found');
                     autoUpdater.downloadUpdate();
                 }
                 else {
@@ -394,6 +396,10 @@ ipcMain.on('uninstall-game', (event, gameId, gameState, gameTitle) => {
 
 ipcMain.on('open-patchnotes', (event, patchNotes) => {
     createPatchNotesWindow(patchNotes);
+});
+
+ipcMain.on('open-server', (event) => {
+    shell.openExternal(serverUrl); // Change to actual access key endpoint when ready
 });
 
 // --------------------------------------------------------------------------------------
