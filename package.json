@@ -1,8 +1,8 @@
 {
   "name": "twilightstudioslauncher",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Game Launcher for Twilight Studios",
-  "main": "main.js",
+  "main": "app.js",
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",

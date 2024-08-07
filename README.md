@@ -1,2 +1,2 @@
 # Launcher
-Development Game/Product Launcher for Twilight Studious
+Development Game/Product Launcher for Twilight Studios

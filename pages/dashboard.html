@@ -1,0 +1,327 @@
+<html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css' rel='stylesheet'>
+<title>Twilight Studios Launcher</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    font-family: "Poppins", sans-serif;
+    font-weight: 300;
+    letter-spacing: -0.25px;
+    word-spacing: -0.25px;
+  }
+
+  .window {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: black;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .notification {
+    position: absolute;
+    padding-top: 4px;
+    padding-bottom: 8px;
+    height: 80px;
+    width: 100vw;
+    background: #b81de3;
+    background: linear-gradient(90deg, rgb(223, 57, 188) 0%, rgba(184, 29, 227) 100%);
+    box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transition: all ease-in-out 0.25s;
+    z-index: 1000;
+    pointer-events: none;
+  }
+
+  .notification > h1 {
+    margin-top: 10px;
+    margin-left: 15px;
+    color: white;
+    font-weight: 700;
+    font-size: 22px;
+  }
+
+  .notification > span {
+    margin-left: 15px;
+    color: white;
+  }
+
+  .notification.active {
+    pointer-events: all;
+    opacity: 1;
+  }
+
+  @property --headerColor1 {
+    syntax: '<color>';
+    initial-value: black;
+    inherits: false;
+  }
+  
+  @property --headerColor2 {
+    syntax: '<color>';
+    initial-value: black;
+    inherits: false;
+  }
+
+  .header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background: black;
+    background: linear-gradient(90deg, var(--headerColor1) 0%, var(--headerColor2) 100%);
+    box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
+    padding-bottom: 15px;
+    transition: --headerColor1 ease-in-out 0.5s, --headerColor2 ease-in-out 0.5s;
+  }
+
+  .header.color {
+    --headerColor1: rgb(223, 57, 188);
+    --headerColor2: rgba(184, 29, 227);
+  }
+
+  .header > h1 {
+    color: white;
+    margin: 20px;
+    margin-left: 30px;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+
+  .header-buttons {
+    display: flex;
+    flex-direction: row;
+    margin: 20px;
+    margin-right: 30px;
+    margin-bottom: 10px;
+  }
+
+  .header-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    color: white;
+    background-color: #DF39BC;
+    box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
+    width: 20px;
+    height: 20px;
+    font-size: 16px;
+    border-radius: 6px;
+    transition: all ease-in-out 0.2s;
+    cursor: pointer;
+  }
+
+  .header-button:hover {
+    color: black;
+    background-color: white;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 10px;
+    padding-top: 30px;
+    padding-left: 20px;
+    overflow-y: auto;
+  }
+
+  .grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .loader {
+    grid-column: span 3;
+    grid-row: span 3;
+    margin-top: 175px;
+    display: none;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loader.active {
+    display: flex;
+  }
+
+  .loader::before {
+    content: "";
+    width: 50px;
+    height: 50px;
+    border: 5px solid #fff;
+    border-top: 5px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+  }
+
+  .game {
+    width: 380px;
+    height: 230px;
+    margin-bottom: 35px;
+  }
+
+  .thumbnail {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 200px;
+    border-radius: 5px;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    transition: box-shadow ease-in-out 0.2s;
+    box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  .thumbnail:hover {
+    box-shadow: 0px 0px 30px 5px rgba(255,255,255,0.8);
+  }
+
+  .thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: all ease-in-out 0.2s;
+  }
+
+  .thumbnail:hover img {
+    filter: blur(3px) brightness(0.8);
+    transform: scale(1.2);
+  }
+
+  .game > h3 {
+    margin-top: 10px;
+    color: white;
+    font-weight: 600;
+    pointer-events: none;
+  }
+
+  .open {
+    position: absolute;
+    padding: 15px;
+    border-radius: 10px;
+    background-color: white;
+    color: black;
+    z-index: 2;
+    opacity: 0;
+    transition: all ease-in-out 0.2s;
+    cursor: pointer;
+    font-weight: 800;
+  }
+
+  .open:hover {
+    background-color: black;
+    color: white;
+  }
+
+  .thumbnail:hover .open {
+    opacity: 1;
+  }
+
+  .popout {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: all ease-in-out 0.2s;
+  }
+
+  .popout.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .popout-case {
+    background: #b81de3;
+    background: linear-gradient(90deg, rgb(223, 57, 188) 0%, rgba(184, 29, 227) 100%);
+    box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
+    width: 26%;
+    height: 21%;
+    color: white;
+    padding: 2%;
+    border-radius: 10px;
+  }
+
+  .popout-case > h2 {
+    font-weight: 700;
+  }
+
+  .popout-case > p {
+    margin-top: 10px;
+    font-size: 14px;
+  }
+
+  .buttons {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .button {
+    padding: 10px;
+    width: fit-content;
+    background-color: black;
+    color: white;
+    border-radius: 10px;
+    margin-right: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .button.remove {
+    background-color: red;
+    color: white;
+  }
+  
+</style>
+<div class="popout">
+  <div class="popout-case">
+    <h2>Popout Title</h2>
+    <p>Popout text and description</p>
+    <div class="buttons">
+      <div class="primary button">Confirm</div>
+      <div class="cancel button">Cancel</div>
+    </div>
+  </div>
+</div>
+<div class="window">
+  <div class="notification">
+    <h1>Notification</h1>
+    <span>Description</span>
+  </div>
+  <div class="header">
+    <h1>All Games</h1>
+    <div class="header-buttons">
+        <div class="header-button" id="refresh" style="margin-right: 10px;"><i class="fa-solid fa-arrows-rotate"></i></div>
+        <div class="header-button" id="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="loader active"></div>
+  </div>
+</div>
+</html>
