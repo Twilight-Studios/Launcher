@@ -2,7 +2,7 @@ const { ipcRenderer } = require('electron');
 
 let gameName;
 let latestVersion;
-let patchInfo;
+let patchTitles;
 let patchHTMLFiles;
 let currentPatchIndex;
 let upperIndexBound;
@@ -10,21 +10,21 @@ let upperIndexBound;
 window.addEventListener('DOMContentLoaded', () => {
 
     function updatePatchNoteContent(index) {
-        let version = Object.keys(patchInfo)[index];
+        let version = Object.keys(patchTitles)[index];
         document.querySelector('.version').textContent = version;
         document.querySelector('.notes').innerHTML = atob(patchHTMLFiles[index]);
 
-        document.querySelector(".title").textContent = patchInfo[version].title
-        document.querySelector(".tag").textContent = patchInfo[version].type
+        document.querySelector(".title").textContent = patchTitles[version].title
+        document.querySelector(".tag").textContent = patchTitles[version].type
     }
     
-    ipcRenderer.on('load-patchnotes', (event, patchNotes) => {
-        gameName = patchNotes.gameName;
-        latestVersion = patchNotes.latestVersion;
-        patchInfo = patchNotes.notes.titles;
-        patchHTMLFiles = patchNotes.notes.patch_notes;
+    ipcRenderer.on('load-patchnotes', (event, patchNoteInfo) => {
+        gameName = patchNoteInfo.gameName;
+        latestVersion = patchNoteInfo.latestVersion;
+        patchTitles = patchNoteInfo.notes.titles;
+        patchHTMLFiles = patchNoteInfo.notes.patch_notes;
     
-        upperIndexBound = Object.keys(patchInfo).indexOf(latestVersion);
+        upperIndexBound = Object.keys(patchTitles).indexOf(latestVersion);
         document.querySelector('.name').textContent = gameName;
         document.querySelector('title').textContent = `${gameName} - Patch Notes`
     

@@ -1,3 +1,4 @@
+// TODO: Refactor
 const { ipcRenderer } = require('electron');
 
 let id;
@@ -16,31 +17,31 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // POPOUT INIT
     // --------------------------------------------------------------------------------------
-    var current_callback = null;
+    var currentCallback = null;
     var popout = document.getElementsByClassName('popout')[0];
-    var primary_button = document.getElementsByClassName('primary button')[0];
-    var cancel_button = document.getElementsByClassName('cancel button')[0];
+    var primaryButton = document.getElementsByClassName('primary button')[0];
+    var cancelButton = document.getElementsByClassName('cancel button')[0];
 
     function successCallbackBuffer(event) {
         popout.classList.remove('active');
-        current_callback();
+        currentCallback();
     }
 
-    primary_button.addEventListener("click", successCallbackBuffer);
+    primaryButton.addEventListener("click", successCallbackBuffer);
 
-    cancel_button.addEventListener("click", (event) => {
+    cancelButton.addEventListener("click", (event) => {
         popout.classList.remove('active');
     });
 
-    function activatePopout(title, description, button_text, button_class, success_callback) {
+    function activatePopout(title, description, buttonText, buttonClass, successCallback) {
         if (popout.classList.contains("active")) return;
     
-        current_callback = success_callback;
+        currentCallback = successCallback;
     
-        primary_button.classList.remove(button_class);
-        primary_button.textContent = button_text;
-        current_class = button_class;
-        primary_button.classList.add(button_class);
+        primaryButton.classList.remove(buttonClass);
+        primaryButton.textContent = buttonText;
+        currentClass = buttonClass;
+        primaryButton.classList.add(buttonClass);
     
         popout.children[0].getElementsByTagName("h2")[0].textContent = title;
         popout.children[0].getElementsByTagName("p")[0].textContent = description;
@@ -52,12 +53,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // NOTIFICATION INIT
     // --------------------------------------------------------------------------------------
-    function notify(title, description, length, callback, notify_os = false) {
+    function notify(title, description, length, callback, notifyOs = false) {
         document.querySelector('h1').textContent = title;
         document.querySelector('.noti-desc').textContent = description;
         document.querySelector('.notification').classList.add('active');
 
-        if (notify_os) {
+        if (notifyOs) {
             ipcRenderer.send("notify", title, description);
         }
 
@@ -78,7 +79,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById("refresh").addEventListener("click", (event) => {
-        ipcRenderer.send('refresh-game', id, branch, globalGameVersion, false);
+        ipcRenderer.send('refresh', false, { gameId : id, gameBranch: branch, gameVersion: globalGameVersion });
     });
 
     document.getElementById("uninstall").addEventListener("click", (event) => {
@@ -95,9 +96,6 @@ window.addEventListener('DOMContentLoaded', () => {
         );
     });
 
-    ipcRenderer.on('success-refresh', (event) => {
-        notify("Success", "Refreshed your access and catalog!", 3000, null);
-    });
     // --------------------------------------------------------------------------------------
 
 
@@ -144,7 +142,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 0; i < platforms.length; i++) {
             let platform = platforms[i];
-            let p_alias = platformAliases[i];
+            let pAlias = platformAliases[i];
 
             let icon = document.getElementById(platform);
             let tooltip = document.getElementById(`${platform}-tooltip`);
@@ -152,10 +150,10 @@ window.addEventListener('DOMContentLoaded', () => {
             if (!gameBranchSettings.platforms.includes(platform)) {
                 icon.classList.add("disabled");
                 tooltip.classList.add("disabled");
-                tooltip.textContent = `No ${p_alias} support`
+                tooltip.textContent = `No ${pAlias} support`
             }
             else {
-                tooltip.textContent = `Compatible with ${p_alias}`
+                tooltip.textContent = `Compatible with ${pAlias}`
             }
         }
 
@@ -175,7 +173,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 0; i < requirements.length; i++) {
             let requirement = requirements[i];
-            let r_alias = requirementAliases[i];
+            let rAlias = requirementAliases[i];
 
             let icon = document.getElementById(requirement);
             let tooltip = document.getElementById(`${requirement}-tooltip`);
@@ -183,10 +181,10 @@ window.addEventListener('DOMContentLoaded', () => {
             if (!gameBranchSettings.requirements.includes(requirement)) {
                 icon.classList.add("disabled");
                 tooltip.classList.add("disabled");
-                tooltip.textContent = `${r_alias} is not required`
+                tooltip.textContent = `${rAlias} is not required`
             }
             else {
-                tooltip.textContent = `${r_alias} must be launched`
+                tooltip.textContent = `${rAlias} must be launched`
             }
         }
 
@@ -196,7 +194,7 @@ window.addEventListener('DOMContentLoaded', () => {
             actionState = "installing";
         }
         else if (localGameVersion === null) {
-            actionState = "not_installed";
+            actionState = "not-installed";
         }
         else if (localGameVersion !== globalGameVersion) {
             actionState = "req-update";
@@ -240,7 +238,7 @@ window.addEventListener('DOMContentLoaded', () => {
     function updateActionButton(localProgress = 0, localSpeed = 0) {
         let actionButton = document.querySelector('.action-button');
 
-        if (actionState == "not_installed") {
+        if (actionState == "not-installed") {
             lastProgress = 0;
             lastSpeed = 0;
             localGameVersion = null;
@@ -307,7 +305,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     function actionButtonClick() {
-        if (actionState == "not_installed") {
+        if (actionState == "not-installed") {
             actionState = "preparing";
             hovering = false;
             updateActionButton();
@@ -391,7 +389,7 @@ window.addEventListener('DOMContentLoaded', () => {
         notify("Installation Cancelled", `${gameTitle} - ${gameBranch} installation has been cancelled.`, 3000, null);
         if (gameId !== id || gameBranch !== branch) return;
 
-        actionState = "not_installed";
+        actionState = "not-installed";
         updateActionButton();
     });
 
@@ -399,7 +397,7 @@ window.addEventListener('DOMContentLoaded', () => {
         notify("Installation Failed", `${gameTitle} - ${gameBranch} faced an error during download: ${errorMessage}`, 3000, null, true);
         if (gameId !== id || gameBranch !== branch) return;
 
-        actionState = "not_installed";
+        actionState = "not-installed";
         updateActionButton();
     });
 
@@ -421,7 +419,7 @@ window.addEventListener('DOMContentLoaded', () => {
         notify("Installation Failed", `${gameTitle} - ${gameBranch} faced an error during extraction: ${errorMessage}`, 3000, null, true);
         if (gameId !== id || gameBranch !== branch) return;
 
-        actionState = "not_installed";
+        actionState = "not-installed";
         updateActionButton();
     });
 
@@ -429,7 +427,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (gameId !== id || gameBranch !== branch) return;
 
         notify("Game Uninstalled", `${gameTitle} - ${gameBranch} was uninstalled!`, 3000, null);
-        actionState = "not_installed";
+        actionState = "not-installed";
         updateActionButton();
     });
 
@@ -440,7 +438,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     ipcRenderer.on('cant-install-download', (event, gameId, gameBranch, gameTitle) => {
         if (gameId !== id || gameBranch !== branch) return;
-        actionState = "not_installed";
+        actionState = "not-installed";
         updateActionButton();
         notify("Waiting for Download", `${gameTitle} - ${gameBranch} cannot be installed while installing another game.`, 3000, null);
     });
@@ -449,7 +447,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (gameId !== id || gameBranch !== branch) return;
 
         notify("Game Uninstalled", `${gameTitle} - ${gameBranch} was uninstalled!`, 3000, null);
-        actionState = "not_installed";
+        actionState = "not-installed";
         updateActionButton();
     });
     // --------------------------------------------------------------------------------------

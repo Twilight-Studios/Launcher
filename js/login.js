@@ -1,3 +1,4 @@
+// TODO: Clean up
 const { ipcRenderer } = require('electron');
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -36,7 +37,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelector('a').addEventListener('click', (event) => {
-        ipcRenderer.send("open-server");
+        ipcRenderer.send("open-server-url");
         event.preventDefault();
     });
     // --------------------------------------------------------------------------------------

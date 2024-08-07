@@ -1,34 +1,35 @@
+// TODO: Refactor
 const { ipcRenderer, ipcMain } = require('electron');
 
 window.addEventListener('DOMContentLoaded', () => {
 
     // POPOUT INIT
     // --------------------------------------------------------------------------------------
-    var current_callback = null;
+    var currentCallback = null;
     var popout = document.getElementsByClassName('popout')[0];
-    var primary_button = document.getElementsByClassName('primary button')[0];
-    var cancel_button = document.getElementsByClassName('cancel button')[0];
+    var primaryButton = document.getElementsByClassName('primary button')[0];
+    var cancelButton = document.getElementsByClassName('cancel button')[0];
 
     function successCallbackBuffer(event) {
         popout.classList.remove('active');
-        current_callback();
+        currentCallback();
     }
 
-    primary_button.addEventListener("click", successCallbackBuffer);
+    primaryButton.addEventListener("click", successCallbackBuffer);
 
-    cancel_button.addEventListener("click", (event) => {
+    cancelButton.addEventListener("click", (event) => {
         popout.classList.remove('active');
     });
 
-    function activatePopout(title, description, button_text, button_class, success_callback) {
+    function activatePopout(title, description, buttonText, buttonClass, successCallback) {
         if (popout.classList.contains("active")) return;
     
-        current_callback = success_callback;
+        currentCallback = successCallback;
     
-        primary_button.classList.remove(button_class);
-        primary_button.textContent = button_text;
-        current_class = button_class;
-        primary_button.classList.add(button_class);
+        primaryButton.classList.remove(buttonClass);
+        primaryButton.textContent = buttonText;
+        currentClass = buttonClass;
+        primaryButton.classList.add(buttonClass);
     
         popout.children[0].getElementsByTagName("h2")[0].textContent = title;
         popout.children[0].getElementsByTagName("p")[0].textContent = description;
@@ -40,12 +41,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // NOTIFICATION INIT
     // --------------------------------------------------------------------------------------
-    function notify(title, description, length, callback, notify_os = false) {
+    function notify(title, description, length, callback, notifyOs = false) {
         document.querySelector('h1').textContent = title;
         document.querySelector('span').textContent = description;
         document.querySelector('.notification').classList.add('active');
 
-        if (notify_os) {
+        if (notifyOs) {
             ipcRenderer.send("notify", title, description);
         }
 
@@ -156,11 +157,11 @@ window.addEventListener('DOMContentLoaded', () => {
         const grid = document.getElementsByClassName("grid")[0];
         document.getElementsByClassName("loader")[0].classList.remove("active");
     
-        games.forEach((game_info) => {
+        games.forEach((gameInfo) => {
             let game = document.createElement("div");
             game.classList.add("game");
     
-            var thumbnail = "data:image/png;base64," + game_info.art.cover;
+            var thumbnail = "data:image/png;base64," + gameInfo.art.cover;
             
             (function(gameElement, thumbnailSrc, gameInfo) {
                 var thumbanailColorLoadElement = document.createElement("img");
@@ -183,25 +184,25 @@ window.addEventListener('DOMContentLoaded', () => {
     
                     gameElement.innerHTML = gameHtml;
     
-                    var game_obj = grid.appendChild(gameElement);
-                    console.log(game_obj);
+                    var gameObj = grid.appendChild(gameElement);
+                    console.log(gameObj);
     
-                    game_obj.querySelector('.open').addEventListener("click", (event) => {
+                    gameObj.querySelector('.open').addEventListener("click", (event) => {
                         ipcRenderer.send('open-game', gameInfo.id, gameInfo.branch, gameInfo.settings.game_branches[gameInfo.branch].latest_version);
                     });
     
-                    game_obj.querySelector('.thumbnail').addEventListener('mouseover', (event) => {
+                    gameObj.querySelector('.thumbnail').addEventListener('mouseover', (event) => {
                         event.currentTarget.style.boxShadow = `0px 0px 30px 5px ${rgba}`;
                     });
     
-                    game_obj.querySelector('.thumbnail').addEventListener('mouseout', (event) => {
+                    gameObj.querySelector('.thumbnail').addEventListener('mouseout', (event) => {
                         event.currentTarget.style.boxShadow = 'none';
                     });
                 };
     
                 thumbanailColorLoadElement.src = thumbnailSrc;
                 document.body.append(thumbanailColorLoadElement);
-            })(game, thumbnail, game_info);
+            })(game, thumbnail, gameInfo);
         });
     }
 

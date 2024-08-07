@@ -1,3 +1,5 @@
+// TODO: Test app throughly
+
 //  PACKAGE IMPORTS
 // --------------------------------------------------------------------------------------
 
@@ -12,25 +14,45 @@ const { autoUpdater } = require("electron-updater");
 
 // --------------------------------------------------------------------------------------
 
+// CUSTOMISATION
+// --------------------------------------------------------------------------------------
+
+// Used for all back-end
+const SERVER_URL = "https://twilightdev.replit.app";
+
+// Used for customisation of UI 
+// TODO: Implement it
+const PRIMARY_COLOR_HEX = "#000000"
+const SECONDARY_COLOR_HEX = "#000000"
+const ACCEPT_COLOR_HEX = "#000000"
+const WARNING_COLOR_HEX = "#000000"
+const REJECT_COLOR_HEX = "#000000"
+const DARK_COLOR_HEX = "#000000"
+const LIGHT_COLOR_HEX = "#000000"
+
+// Used for Windows process identification
+const APP_AUTHOR_DOMAIN = "twilightstudios.com"
+const APP_NAME = "twilightstudioslauncher"
+
+// --------------------------------------------------------------------------------------
+
 // GLOBAL VARIABLES
 // --------------------------------------------------------------------------------------
 
-const serverUrl = "https://twilightdev.replit.app";
-
-let mainWindow;
-let patchNotesWindow;
-let downloadProcess;
-let inDownload;
-let extractionActive = false;
-let coreGameProcess = null;
-let coreGameProcessPID = null;
+let mainWindow; // Holds the object that is the current main window. When null, program stops.
+let patchNotesWindow; // Holds the object that is the current patch notes windows. Can be null.
+let downloadProcess; // Holds the current child process in charge of downloading the game. Can be null.
+let gameInDownload; // Object containing information about the current game being downloaded. Can be null.
+let extractionActive = false; // Whether a zip file of the game is currently being extracted.
+let coreGameProcess = null; // Holds the current child process which should be the game executable. Can be null.
+let coreGameProcessPID = null; // Holds the process ID of the child process which should the game executable. Can be null.
 
 // --------------------------------------------------------------------------------------
 
 //  ELECTRON-UPDATER
 // --------------------------------------------------------------------------------------
 
-autoUpdater.autoDownload = false;
+autoUpdater.autoDownload = false; // Updates are not automatically downloaded, and only checked on start-up.
 
 autoUpdater.on("update-downloaded", () => {
     autoUpdater.quitAndInstall();
@@ -38,13 +60,11 @@ autoUpdater.on("update-downloaded", () => {
 
 // --------------------------------------------------------------------------------------
 
-// WINDOW MANAGEMENT
+// WINDOW CREATION
 // --------------------------------------------------------------------------------------
 
 function createUpdateWindow() {
-    if (mainWindow) {
-        mainWindow.close();
-    }
+    if (mainWindow) { mainWindow.close(); }
 
     mainWindow = new BrowserWindow({
         width: 400,
@@ -60,34 +80,23 @@ function createUpdateWindow() {
     
     mainWindow.loadFile('pages/update.html');
     mainWindow.setResizable(false);
-
     Menu.setApplicationMenu(null);
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
 
         autoUpdater.checkForUpdates().then((result) => {
-            if (result) {
-                if (result.cancellationToken) {
-                    mainWindow.webContents.send('update-found');
-                    autoUpdater.downloadUpdate();
-                }
-                else {
-                    createLoginWindow();
-                }
+            if (result && result.cancellationToken) { // Valid update is found
+                mainWindow.webContents.send('update-found');
+                autoUpdater.downloadUpdate();
             }
-            else {
-                createLoginWindow();
-            }
+            else { createLoginWindow(); } // Client is up-to-date
         })
     });
 }
 
-function createLoginWindow(autofill=true) {
-    if (mainWindow) {
-        mainWindow.close();
-    }
-
+function createLoginWindow(autoValidateStoredCredentials=true) {
+    if (mainWindow) { mainWindow.close(); }
     closePatchNotesWindow();
 
     mainWindow = new BrowserWindow({
@@ -102,41 +111,34 @@ function createLoginWindow(autofill=true) {
         }
     });
 
-    mainWindow.on('closed', () => {
-        closePatchNotesWindow();
-    });
-    
+    mainWindow.on('closed', closePatchNotesWindow);
     mainWindow.loadFile('pages/login.html');
     mainWindow.setResizable(false);
-
     Menu.setApplicationMenu(null);
 
-    const credentials = readCredentials();
-    if (credentials && autofill) {
+    const credentials = readCredentials(); // Load stored credentials
+    if (credentials && autoValidateStoredCredentials) { // If stored credentials exist and these should be validated automatically.
+
         validateCredentials(credentials).then(valid => {
-            if (valid) {
-                createDashboardWindow();
-            } else {
-                mainWindow.webContents.send('failed-to-validate');
+            if (valid) { createDashboardWindow(); } 
+            else {
+                mainWindow.webContents.send('failed-to-validate'); // TODO: More descriptive error handling and in all other places
                 mainWindow.webContents.send('fill-credentials', credentials);
                 mainWindow.show();
             }
         });
-    } else {
-        if (!credentials) {
-            uninstallAllGames();
-        }
-        mainWindow.once('ready-to-show', () => {
-            mainWindow.show();
-        });
+
+    } 
+    else {
+
+        if (!credentials) { uninstallAllGames(); } // Make sure that all games are uninstalled if credentials cannot be loaded (privacy reasons).
+        mainWindow.once('ready-to-show', () => { mainWindow.show(); });
+
     }
 }
 
 function createDashboardWindow() {
-    if (mainWindow) {
-        mainWindow.close();
-    }
-
+    if (mainWindow) { mainWindow.close(); }
     closePatchNotesWindow();
 
     mainWindow = new BrowserWindow({
@@ -151,31 +153,15 @@ function createDashboardWindow() {
         }
     });
     
-    mainWindow.on('closed', () => {
-        closePatchNotesWindow();
-    });
-
+    mainWindow.on('closed', () => { closePatchNotesWindow(); });
     mainWindow.loadFile('pages/dashboard.html');
     mainWindow.setResizable(false);
-
     Menu.setApplicationMenu(null);
-
-    mainWindow.once('ready-to-show', () => {
-        mainWindow.show();
-    });
-
-    ipcMain.removeAllListeners('open-game');
-
-    ipcMain.on('open-game', (event, gameId, gameBranch, gameGlobalVersion) => {
-        createGameWindow(gameId, gameBranch, gameGlobalVersion);
-    });
+    mainWindow.once('ready-to-show', () => { mainWindow.show(); });
 }
 
 function createGameWindow(gameId, gameBranch, gameGlobalVersion) {
-    if (mainWindow) {
-        mainWindow.close();
-    }
-
+    if (mainWindow) { mainWindow.close(); }
     closePatchNotesWindow();
 
     mainWindow = new BrowserWindow({
@@ -190,30 +176,24 @@ function createGameWindow(gameId, gameBranch, gameGlobalVersion) {
         }
     });
 
-    mainWindow.on('closed', () => {
-        closePatchNotesWindow();
-    });
-
+    mainWindow.on('closed', () => { closePatchNotesWindow(); });
     mainWindow.loadFile('pages/game.html');
+    mainWindow.setResizable(false);
+    Menu.setApplicationMenu(null);
+
     mainWindow.webContents.once('did-finish-load', async () => {
         mainWindow.webContents.send('game-id', gameId, gameBranch, gameGlobalVersion);
     });
 
-    mainWindow.setResizable(false);
-    
-    Menu.setApplicationMenu(null);
-
-    mainWindow.once('ready-to-show', () => {
-        mainWindow.show();
-    });
+    mainWindow.once('ready-to-show', () => { mainWindow.show(); });
 }
 
 function createPatchNotesWindow(patchNotes) {
     closePatchNotesWindow();
     
     patchNotesWindow = new BrowserWindow({
-        width: 600,
-        height: 400,
+        width: 1000,
+        height: 600,
         icon: path.join(__dirname, 'resources/logo.ico'),
         webPreferences: {
             preload: path.join(__dirname, 'js/patchnotes.js'),
@@ -224,27 +204,26 @@ function createPatchNotesWindow(patchNotes) {
     });
 
     patchNotesWindow.loadFile('pages/patchnotes.html');
+    patchNotesWindow.setResizable(false);
+    Menu.setApplicationMenu(null);
+
     patchNotesWindow.webContents.once('did-finish-load', () => {
         patchNotesWindow.webContents.send('load-patchnotes', patchNotes);
     });
 
-    Menu.setApplicationMenu(null);
-
-    patchNotesWindow.once('ready-to-show', () => {
-        patchNotesWindow.show();
-    });
+    patchNotesWindow.once('ready-to-show', () => { patchNotesWindow.show(); });
 }
 
 // --------------------------------------------------------------------------------------
 
-// APP INIT AND CLOSE
+// APP EVENTS
 // --------------------------------------------------------------------------------------
 
 app.whenReady().then(createUpdateWindow);
 
 app.on("ready", () => {
     if (process.platform == 'win32') {
-        app.setAppUserModelId('com.twilightstudios.twilightstudioslauncher');
+        app.setAppUserModelId(`${APP_AUTHOR_DOMAIN.split('.')[1]}.${APP_AUTHOR_DOMAIN.split('.')[0]}.${APP_NAME}`); // Change later
     }
 });
 
@@ -270,6 +249,12 @@ app.on('activate', () => {
 // GLOBAL IPC CALLBACKS
 // --------------------------------------------------------------------------------------
 
+ipcMain.on('notify', (event, title, description) => {
+    let notification = new Notification({ title: title, body: description, icon: path.join(__dirname, 'resources/logo.ico') });
+    notification.show();
+    notification.on('click', (event, arg) => { mainWindow.show() });
+});
+
 ipcMain.handle('login', async (event, { accessKey }) => {
     let valid = await validateCredentials(accessKey);
     if (valid) {
@@ -286,25 +271,27 @@ ipcMain.on('login-success', () => {
 ipcMain.on('logout', () => {
     closePatchNotesWindow();
     mainWindow.close();
-    clearCredentials();
+
     forceStopDownload();
     uninstallAllGames();
+
+    clearCredentials();
     createLoginWindow();
+    
     mainWindow.webContents.send('success-logout');
 });
 
 ipcMain.handle('get-game', async (event, gameId, gameBranch) => {
     let localVersion = null;
     let installing = false;
-
-    let gamePath = path.join(app.getPath('userData'), `/games/${gameId}_${gameBranch}`);
+    const gamePath = path.join(app.getPath('userData'), `/games/${gameId}_${gameBranch}`);
 
     if (fs.existsSync(gamePath)) {
-        localVersion = fs.readdirSync(gamePath, { withFileTypes: true }).filter(dirent => dirent.isDirectory()).map(dirent => dirent.name)[0]
-        localVersion = localVersion.replaceAll("_", ".")
+        const directories = fs.readdirSync(gamePath, { withFileTypes: true }).filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
+        if (directories.length > 0) { localVersion = directories[0].replace("_", "."); }
     }
-    
-    if (inDownload === `${gameId}_${gameBranch}`) {
+
+    if (gameInDownload && gameInDownload.gameId === gameId && gameInDownload.gameBranch === gameBranch) {
         installing = true;
     }
 
@@ -319,68 +306,55 @@ ipcMain.handle('get-game', async (event, gameId, gameBranch) => {
 
 ipcMain.handle('get-games', async (event) => {
     const games = await getGames();
-
-    let gamesPath = path.join(app.getPath('userData'), "games");
+    const gamesPath = path.join(app.getPath('userData'), 'games');
 
     if (fs.existsSync(gamesPath)) {
-        fs.readdirSync(gamesPath, { withFileTypes: true })
+        // Read the content of the games directory, filtering for directories only
+        const gameDirectories = fs.readdirSync(gamesPath, { withFileTypes: true })
             .filter(dirent => dirent.isDirectory())
-            .map(dirent => dirent.name)
-            .forEach(game => {
-                const [gameId, gameBranch] = game.split("_");
-                const gameObj = games.find(g => g.id === gameId && g.branch === gameBranch);
+            .map(dirent => dirent.name);
 
-                if (!gameObj) {
-                    fs.rmSync(path.join(gamesPath, game), { recursive: true });
-                } else if (gameBranch !== gameObj.branch) {
-                    fs.rmSync(path.join(gamesPath, game), { recursive: true });
-                }
-            });
+        gameDirectories.forEach(gameDir => {
+            const [gameId, gameBranch] = gameDir.split('_');
+            const gameObj = games.find(game => game.id === gameId && game.branch === gameBranch);
+
+            const shouldDelete = !gameObj || (gameObj && gameBranch !== gameObj.branch);
+
+            if (shouldDelete) {
+                const gameDirPath = path.join(gamesPath, gameDir);
+                removePath(gameDirPath);
+            }
+        });
     }
 
     return games;
 });
 
-ipcMain.on('notify', (event, title, description) => {
-    let notification = new Notification({ title: title, body: description, icon: path.join(__dirname, 'resources/logo.ico') });
-
-    notification.show();
-
-    notification.on('click', (event, arg) => {
-        mainWindow.show();
-    });
+ipcMain.on('open-game', (event, gameId, gameBranch, gameGlobalVersion) => {
+    createGameWindow(gameId, gameBranch, gameGlobalVersion);
 });
 
-ipcMain.on('refresh',  async (event, notify) => {
+ipcMain.on('refresh',  async (event, notify, gameInfo = null) => {
     closePatchNotesWindow();
 
     const resp = await validateCredentials(readCredentials());
     if (resp) {
-        createDashboardWindow();
+        if (!gameInfo) { createDashboardWindow(); }
+        else { 
+            let { gameId, gameBranch, gameVersion } = gameInfo;
+            createGameWindow(gameId, gameBranch, gameVersion); 
+        }
+
         if (notify) mainWindow.webContents.send('success-refresh');
     }
     else {
-        createLoginWindow(autofill=false);
-        mainWindow.webContents.send('lost-access');
-    }
-});
-
-ipcMain.on('refresh-game',  async (event, gameId, gameBranch, gameVersion, notify) => {
-    closePatchNotesWindow();
-
-    const resp = await validateCredentials(readCredentials());
-    if (resp) {
-        createGameWindow(gameId, gameBranch, gameVersion);
-        if (notify) mainWindow.webContents.send('success-refresh');
-    }
-    else {
-        createLoginWindow(autofill=false);
+        createLoginWindow(autoValidateStoredCredentials=false);
         mainWindow.webContents.send('lost-access');
     }
 });
 
 ipcMain.on('uninstall-game', (event, gameId, gameBranch, gameTitle) => {
-    if (inDownload) {
+    if (gameInDownload) {
         mainWindow.webContents.send('cant-uninstall-download', gameId, gameBranch, gameTitle);
         return;
     }
@@ -390,7 +364,7 @@ ipcMain.on('uninstall-game', (event, gameId, gameBranch, gameTitle) => {
         return;
     }
 
-    fs.rmSync(path.join(app.getPath('userData'), `/games/${gameId}_${gameBranch}`), { recursive: true });
+    removePath(path.join(app.getPath('userData'), `/games/${gameId}_${gameBranch}`));
     mainWindow.webContents.send('game-uninstalled', gameId, gameBranch, gameTitle);
 });
 
@@ -398,8 +372,8 @@ ipcMain.on('open-patchnotes', (event, patchNotes) => {
     createPatchNotesWindow(patchNotes);
 });
 
-ipcMain.on('open-server', (event) => {
-    shell.openExternal(serverUrl); // Change to actual access key endpoint when ready
+ipcMain.on('open-server-url', (event) => {
+    shell.openExternal(SERVER_URL); // TODO: Change to actual access key endpoint when ready
 });
 
 // --------------------------------------------------------------------------------------
@@ -407,40 +381,37 @@ ipcMain.on('open-server', (event) => {
 // UTILITY FUNCTIONS
 // --------------------------------------------------------------------------------------
 
+function removePath(pathToRemove) {
+    if (fs.existsSync(pathToRemove)) { fs.rmSync(pathToRemove); }
+}
+
 function closePatchNotesWindow() {
     if (patchNotesWindow) {
-        try {
-            patchNotesWindow.close();
-        }
-        catch (err) {
-            // It's fine, its probably destroyed anyway
-        }
+        try { patchNotesWindow.close(); }
+        catch (err) { } // It's fine, its probably destroyed anyway
     }
-
     patchNotesWindow = null;
 }
 
-async function getGame(gameId, gameBranch) {
+async function getGame(gameId, gameBranch) { // TODO: Error check
     try {
-        const resp = await axios.post(serverUrl+'/api/get-game', { key: readCredentials(), id: gameId, branch: gameBranch });
+        const resp = await axios.post(SERVER_URL+'/api/get-game', { key: readCredentials(), id: gameId, branch: gameBranch });
         return resp.data
-    } catch (error) {
-        return {};
-    }
+    } 
+    catch (error) { return {}; }
 }
 
-async function getGames() {
+async function getGames() { // TODO: Error check
     try {
-        const resp = await axios.post(serverUrl+'/api/get-all-games', { key: readCredentials() });
+        const resp = await axios.post(SERVER_URL+'/api/get-all-games', { key: readCredentials() });
         return resp.data
-    } catch (error) {
-        return {};
     }
+    catch (error) { return {}; }
 }
 
-async function validateCredentials(credentials) {
+async function validateCredentials(credentials) { //TODO: Error check
     try {
-        const resp = await axios.post(serverUrl+'/api/validate-access', { key: credentials });
+        const resp = await axios.post(SERVER_URL+'/api/validate-access', { key: credentials });
 
         if (resp.status !== 200) {
             forceStopDownload();
@@ -448,46 +419,39 @@ async function validateCredentials(credentials) {
         }
 
         return resp.status === 200;
-    } catch (error) {
-        return false;
-    }
+    } 
+    catch (error) { return false; }
 }
 
-function saveCredentials(credentials) {
+function saveCredentials(credentials) { // TODO: Error check
     fs.writeFile('credentials.json', JSON.stringify(credentials), 'utf8', (err) => {
-        if (err) {
-            console.error('An error occurred while saving credentials', err);
-        }
+        if (err) { console.error('An error occurred while saving credentials', err); }
     });
 }
 
-function readCredentials() {
+function readCredentials() { // TODO: Error check
     try {
-        if (fs.existsSync('credentials.json')) {
-            return JSON.parse(fs.readFileSync('credentials.json', 'utf8')).accessKey;
+        if (fs.existsSync('credentials.json')) { 
+            return JSON.parse(fs.readFileSync('credentials.json', 'utf8')).accessKey; 
         }
-    } catch (err) {
-        console.error('An error occurred while reading credentials', err);
-    }
+    } 
+    catch (err) { console.error('An error occurred while reading credentials', err); }
     return null;
 }
 
 function getGameLaunchJSON(gameId, gameBranch, gameVersion) {
     const jsonPath = path.join(app.getPath('userData'), `/games/${gameId}_${gameBranch}/${gameVersion}/launcher.json`);
     try {
-        if (fs.existsSync(jsonPath)) {
-            return JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+        if (fs.existsSync(jsonPath)) { 
+            return JSON.parse(fs.readFileSync(jsonPath, 'utf8')); 
         }
-    } catch (err) {
-        console.error('An error occurred while reading a launcher.json file', err);
-    }
+    } 
+    catch (err) { console.error('An error occurred while reading a launcher.json file', err); }
     return null;
 }
 
 function clearCredentials() {
-    if (fs.existsSync('credentials.json')) {
-        fs.unlinkSync('credentials.json');
-    }
+    removePath('credentials.json');
 }
 
 function forceStopDownload() {
@@ -495,19 +459,17 @@ function forceStopDownload() {
         downloadProcess.kill();
         downloadProcess = null;
     }
-    if (inDownload) {
+
+    if (gameInDownload) {
         if (extractionActive) {
             if (readStream) readStream.destroy();
             if (writeStream) writeStream.destroy();
         }
 
-        if (fs.existsSync(path.join(app.getPath('userData'), `/games/${inDownload}`))) {
-            fs.rmSync(path.join(app.getPath('userData'), `/games/${inDownload}`), { recursive: true });
-        }
+        removePath(path.join(app.getPath('userData'), `/games/${gameInDownload.gamePath}`));
+        removePath(path.join(app.getPath('userData'), "game.zip"));
 
-        if (fs.existsSync(path.join(app.getPath('userData'), "game.zip"))) {
-            fs.unlinkSync(path.join(app.getPath('userData'), "game.zip"), { recursive: true });
-        }
+        gameInDownload = null;
     }
 }
 
@@ -536,13 +498,11 @@ function forceStopCurrentGame() {
 }
 
 function uninstallAllGames() {
-    if (inDownload) {
+    if (gameInDownload) {
         downloadProcess.send({ action: 'cancel' });
     }
 
-    if (fs.existsSync(path.join(app.getPath('userData'), "games"))) {
-        fs.rmSync(path.join(app.getPath('userData'), "games"), { recursive: true });
-    }
+    removePath(path.join(app.getPath('userData'), "games"));
 }
 
 function executeCommand(commandObj, commandDir, callback) {
@@ -550,27 +510,19 @@ function executeCommand(commandObj, commandDir, callback) {
     execSync(command, { cwd: commandDir }, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error: ${stderr}`);
-            if (commandObj.critical) {
-                return callback(new Error(`Critical command failed: ${command}`));
-            }
+            if (commandObj.critical) { return callback(new Error(`Critical command failed: ${command}`)); }
         }
         callback(null);
     });
 }
 
 function runCommands(commandsArray, commandDir, callback) {
-    let index = 0;
-    function nextCommand(err) {
-        if (err) {
-            return callback(err);
-        }
-        if (index < commandsArray.length) {
-            executeCommand(commandsArray[index++], commandDir, nextCommand);
-        } else {
-            callback(null);
-        }
+    for (let i = 0; i < commandsArray.length; i++) {
+        executeCommand(commandsArray[i], commandDir, (err) => {
+            if (err) { return callback(err); }
+        });
     }
-    nextCommand(null);
+    callback(null);
 }
 
 // --------------------------------------------------------------------------------------
@@ -580,12 +532,12 @@ function runCommands(commandsArray, commandDir, callback) {
 
 ipcMain.on('start-download', (event, gameId, gameBranch, gamePlatform, gameTitle, gameVersion) => {
 
-    if (inDownload !== `${gameId}_${gameBranch}`) {
+    if (gameInDownload && (gameInDownload.gameId !== gameId || gameInDownload.gameBranch !== gameBranch)) {
         mainWindow.webContents.send('cant-install-download', gameId, gameBranch, gameTitle);
         return;
     }
 
-    let downloadUrl = serverUrl + "/api/download-game";
+    let downloadUrl = SERVER_URL + "/api/download-game";
 
     let payload =  {
         key: readCredentials(), // TODO: POTENTIAL ERROR HERE
@@ -594,17 +546,11 @@ ipcMain.on('start-download', (event, gameId, gameBranch, gamePlatform, gameTitle
         platform: gamePlatform
     }
 
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // TODO: MAYBE WRAP THIS IN SOME FUNCTION??? SEEMS TO REPEAT A LOT
     let outputPath = path.join(app.getPath('userData'), "game.zip");
-
-    if (fs.existsSync(path.join(app.getPath('userData'), `/games/${gameId}_${gameBranch}`))) {
-        fs.rmSync(path.join(app.getPath('userData'), `/games/${gameId}_${gameBranch}`), { recursive: true });
-    }
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    removePath(path.join(app.getPath('userData'), `/games/${gameId}_${gameBranch}`));
 
     downloadProcess = fork(path.join(__dirname, 'js/downloadWorker.js'));
-    inDownload = `${gameId}_${gameBranch}`;
+    gameInDownload = { gameId : gameId, gameBranch : gameBranch, gamePath : `${gameId}_${gameBranch}` };
   
     downloadProcess.send({ downloadUrl, outputPath, payload });
   
@@ -613,85 +559,63 @@ ipcMain.on('start-download', (event, gameId, gameBranch, gamePlatform, gameTitle
         if (message.status === 'success') {
             mainWindow.webContents.send('extract-start', gameId, gameBranch);
             handleGameInstall(outputPath, gameId, gameBranch, gameVersion, gameTitle, () => {
-                inDownload = null;
+                gameInDownload = null;
                 extractionActive = false;
                 mainWindow.webContents.send('download-success', gameId, gameBranch, gameTitle);
             });
         } 
 
-        else if (message.status === 'in_progress') { // TODO: CLEAN UP THESE IPC NAMES FOR CONSISTENCY
+        else if (message.status === 'in-progress') { // TODO: Create consistent IPC naming system (more of a game.js problem)
             mainWindow.webContents.send('download-progress', gameId, gameBranch, message.progress, message.downloadSpeed); 
         }
 
         else if (message.status === 'error') {
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO: WRAP THIS IN A FUNCTION
-            inDownload = null;
-
-            if (fs.existsSync(outputPath))
-                fs.unlinkSync(outputPath);
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+            gameInDownload = null;
+            removePath(outputPath);
             mainWindow.webContents.send('download-error', message.error, gameId, gameBranch, gameTitle);
         } 
 
         else if (message.status === 'cancelled') {
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO: WRAP THIS IN A FUNCTION
-            inDownload = null;
-
-            if (fs.existsSync(outputPath)) {
-                fs.unlinkSync(outputPath);
-            }
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+            gameInDownload = null;
+            removePath(outputPath);
             mainWindow.webContents.send('download-cancelled', gameId, gameBranch, gameTitle);
         }
     });
   
     downloadProcess.on('error', (error) => {
-        inDownload = null;
+        gameInDownload = null;
         console.error('Error in download process:', error);
-
-        if (fs.existsSync(outputPath))
-            fs.unlinkSync(outputPath);
-
+        removePath(outputPath);
         mainWindow.webContents.send('download-error', 'Error in download process', gameId, gameBranch, gameTitle);
     });
 
 });
   
 ipcMain.on('cancel-download', () => {
-    if (downloadProcess) {
-      downloadProcess.send({ action: 'cancel' });
-    }
+    if (downloadProcess) { downloadProcess.send({ action: 'cancel' }); }
 });
+
+// --------------------------------------------------------------------------------------
+
+// INSTALLATION MANAGEMENT
+// --------------------------------------------------------------------------------------
 
 function handleGameInstall(outputPath, gameId, gameBranch, gameVersion, gameTitle, callback) {
     const gameDir = path.join(app.getPath('userData'), `games/${gameId}_${gameBranch}/${gameVersion.replaceAll(".", "_")}`);
-    if (!fs.existsSync(gameDir)) {
-        fs.mkdirSync(gameDir, { recursive: true });
-    }
+    if (!fs.existsSync(gameDir)) { fs.mkdirSync(gameDir, { recursive: true }); }
 
     extractZip(outputPath, gameDir, gameId, gameBranch, (err) => {
         if (err) {
-            inDownload = null;
+            gameInDownload = null;
             extractionActive = false;
-            if (fs.existsSync(outputPath)) {
-                fs.unlinkSync(outputPath);
-            }
+            removePath(outputPath);
+
             console.error(err);
             mainWindow.webContents.send('extract-error', err, gameId, gameBranch, gameTitle);
-        } else {
-            callback();
         }
+        else { callback(); }
     });
 }
-
-// --------------------------------------------------------------------------------------
-
-// EXTRACTION MANAGEMENT
-// --------------------------------------------------------------------------------------
 
 function extractZip(zipPath, extractTo, gameId, gameBranch, callback) {
     extractionActive = true;
@@ -713,10 +637,8 @@ function extractZip(zipPath, extractTo, gameId, gameBranch, callback) {
         readStream.destroy();
         writeStream.destroy();
         if (extractionActive) {
-            if (fs.existsSync(zipPath)) {;
-                fs.unlinkSync(zipPath);
-            }
-            callback();
+            removePath(outputPath);
+            callback(null);
         }
     });
 
@@ -783,13 +705,9 @@ ipcMain.on('launch-game', (event, gameId, gameBranch, gameVersion) => {
         coreGameProcess.on('close', (code) => {
             coreGameProcess = null;
             coreGameProcessPID = null; 
-            if (code === 0) {
-                mainWindow.webContents.send('play-finished', gameId, gameBranch);
-            } else if (code === 1) {
-                // FORCE STOPPED
-            } else {
-                mainWindow.webContents.send('launch-error', gameId, gameBranch, `Game exited with code: ${code}`);
-            }
+            if (code === 0) { mainWindow.webContents.send('play-finished', gameId, gameBranch); } 
+            else if (code === 1) { } // FORCE STOPPED
+            else { mainWindow.webContents.send('launch-error', gameId, gameBranch, `Game exited with code: ${code}`) }
         });
 
         coreGameProcess.on('error', (err) => {
@@ -798,9 +716,8 @@ ipcMain.on('launch-game', (event, gameId, gameBranch, gameVersion) => {
             coreGameProcessPID = null;
         });
 
-    } catch (err) {
-        mainWindow.webContents.send('launch-error', gameId, gameBranch, err.message);
-    }
+    } 
+    catch (err) { mainWindow.webContents.send('launch-error', gameId, gameBranch, err.message); }
 });
 
 ipcMain.on('stop-game', (event, gameId, gameBranch) => {
