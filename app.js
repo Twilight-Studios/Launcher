@@ -18,7 +18,7 @@ const { autoUpdater } = require("electron-updater");
 // --------------------------------------------------------------------------------------
 
 // Used for all back-end
-const SERVER_URL = "https://twilightdev.replit.app";
+const DEFAULT_SERVER_URL = "https://twilightdev.replit.app"; // Only used as an automatic value for the server value for login
 
 // Used for customisation of UI 
 // TODO: Implement it
@@ -39,6 +39,7 @@ const APP_NAME = "twilightstudioslauncher"
 // GLOBAL VARIABLES
 // --------------------------------------------------------------------------------------
 
+let currentServerUrl; // Holds the current server URL being used.
 let mainWindow; // Holds the object that is the current main window. When null, program stops.
 let patchNotesWindow; // Holds the object that is the current patch notes windows. Can be null.
 let downloadProcess; // Holds the current child process in charge of downloading the game. Can be null.
@@ -116,10 +117,12 @@ function createLoginWindow(autoValidateStoredCredentials=true) {
     mainWindow.setResizable(false);
     Menu.setApplicationMenu(null);
 
-    const credentials = readCredentials(); // Load stored credentials
+    let credentials = readCredentials(); // Load stored credentials
+    if (credentials) { currentServerUrl = credentials.serverUrl; }
+
     if (credentials && autoValidateStoredCredentials) { // If stored credentials exist and these should be validated automatically.
 
-        validateCredentials(credentials).then(valid => {
+        validateCredentials(credentials.accessKey).then(valid => {
             if (valid) { createDashboardWindow(); } 
             else {
                 mainWindow.webContents.send('failed-to-validate'); // TODO: More descriptive error handling and in all other places
@@ -131,7 +134,10 @@ function createLoginWindow(autoValidateStoredCredentials=true) {
     } 
     else {
 
-        if (!credentials) { uninstallAllGames(); } // Make sure that all games are uninstalled if credentials cannot be loaded (privacy reasons).
+        if (!credentials) {
+            mainWindow.webContents.send('fill-server-url', DEFAULT_SERVER_URL);
+            uninstallAllGames(); // Make sure that all games are uninstalled if credentials cannot be loaded (privacy reasons)
+        }
         mainWindow.once('ready-to-show', () => { mainWindow.show(); });
 
     }
@@ -255,13 +261,14 @@ ipcMain.on('notify', (event, title, description) => {
     notification.on('click', (event, arg) => { mainWindow.show() });
 });
 
-ipcMain.handle('login', async (event, { accessKey }) => {
+ipcMain.handle('login', async (event, { accessKey, serverUrl }) => {
+    currentServerUrl = serverUrl;
     let valid = await validateCredentials(accessKey);
     if (valid) {
-        saveCredentials({ accessKey });
+        saveCredentials({ accessKey, serverUrl });
         return { success: true };
     }
-    return { success: false, message: "Invalid access key!" };
+    return { success: false, message: "Invalid access key or server!" };
 });
 
 ipcMain.on('login-success', () => {
@@ -337,7 +344,7 @@ ipcMain.on('open-game', (event, gameId, gameBranch, gameGlobalVersion) => {
 ipcMain.on('refresh',  async (event, notify, gameInfo = null) => {
     closePatchNotesWindow();
 
-    const resp = await validateCredentials(readCredentials());
+    const resp = await validateCredentials(readCredentials().accessKey);
     if (resp) {
         if (!gameInfo) { createDashboardWindow(); }
         else { 
@@ -372,10 +379,6 @@ ipcMain.on('open-patchnotes', (event, patchNotes) => {
     createPatchNotesWindow(patchNotes);
 });
 
-ipcMain.on('open-server-url', (event) => {
-    shell.openExternal(SERVER_URL); // TODO: Change to actual access key endpoint when ready
-});
-
 // --------------------------------------------------------------------------------------
 
 // UTILITY FUNCTIONS
@@ -395,7 +398,7 @@ function closePatchNotesWindow() {
 
 async function getGame(gameId, gameBranch) { // TODO: Error check
     try {
-        const resp = await axios.post(SERVER_URL+'/api/get-game', { key: readCredentials(), id: gameId, branch: gameBranch });
+        const resp = await axios.post(currentServerUrl+'/api/get-game', { key: readCredentials().accessKey, id: gameId, branch: gameBranch });
         return resp.data
     } 
     catch (error) { return {}; }
@@ -403,7 +406,7 @@ async function getGame(gameId, gameBranch) { // TODO: Error check
 
 async function getGames() { // TODO: Error check
     try {
-        const resp = await axios.post(SERVER_URL+'/api/get-all-games', { key: readCredentials() });
+        const resp = await axios.post(currentServerUrl+'/api/get-all-games', { key: readCredentials().accessKey });
         return resp.data
     }
     catch (error) { return {}; }
@@ -411,7 +414,7 @@ async function getGames() { // TODO: Error check
 
 async function validateCredentials(credentials) { //TODO: Error check
     try {
-        const resp = await axios.post(SERVER_URL+'/api/validate-access', { key: credentials });
+        const resp = await axios.post(currentServerUrl +'/api/validate-access', { key: credentials });
 
         if (resp.status !== 200) {
             forceStopDownload();
@@ -420,7 +423,8 @@ async function validateCredentials(credentials) { //TODO: Error check
 
         return resp.status === 200;
     } 
-    catch (error) { return false; }
+    catch (error) { 
+        return false; }
 }
 
 function saveCredentials(credentials) { // TODO: Error check
@@ -432,7 +436,7 @@ function saveCredentials(credentials) { // TODO: Error check
 function readCredentials() { // TODO: Error check
     try {
         if (fs.existsSync('credentials.json')) { 
-            return JSON.parse(fs.readFileSync('credentials.json', 'utf8')).accessKey; 
+            return JSON.parse(fs.readFileSync('credentials.json', 'utf8')); 
         }
     } 
     catch (err) { console.error('An error occurred while reading credentials', err); }
@@ -537,10 +541,10 @@ ipcMain.on('start-download', (event, gameId, gameBranch, gamePlatform, gameTitle
         return;
     }
 
-    let downloadUrl = SERVER_URL + "/api/download-game";
+    let downloadUrl = currentServerUrl + "/api/download-game";
 
     let payload =  {
-        key: readCredentials(), // TODO: POTENTIAL ERROR HERE
+        key: readCredentials().accessKey, // TODO: POTENTIAL ERROR HERE
         id: gameId,
         branch: gameBranch,
         platform: gamePlatform

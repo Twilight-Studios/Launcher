@@ -27,26 +27,27 @@ window.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
 
         const accessKey = document.getElementById('accesskey').value;
+        const serverUrl = document.getElementById('server').value;
         
-        const response = await ipcRenderer.invoke('login', { accessKey });
+        const response = await ipcRenderer.invoke('login', { accessKey, serverUrl });
 
         if (response.success) 
             notify("Success", "Logging you in...", 1000, () => { ipcRenderer.send('login-success'); });
         else
             notify("Failed", response.message || "Something went wrong!", 3000, null);
     });
-
-    document.querySelector('a').addEventListener('click', (event) => {
-        ipcRenderer.send("open-server-url");
-        event.preventDefault();
-    });
     // --------------------------------------------------------------------------------------
 
 
     // IPC CALLBACKS
     // --------------------------------------------------------------------------------------
-    ipcRenderer.on('fill-credentials', (event, accessKey) => {
-        document.getElementById('accesskey').value = accessKey;
+    ipcRenderer.on('fill-server-url', (event, serverUrl) => {
+        document.getElementById('server').value = serverUrl;
+    })
+
+    ipcRenderer.on('fill-credentials', (event, credentials) => {
+        document.getElementById('accesskey').value = credentials.accessKey;
+        document.getElementById('server').value = credentials.serverUrl;
     });
 
     ipcRenderer.on('success-logout', (event) => {

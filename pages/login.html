@@ -23,7 +23,7 @@
 
   .logo {
     width: 100vw;
-    height: 50vh;
+    height: 43vh;
     background-image: url('../resources/background.png');
     background-size: cover;
     background-position: center;
@@ -34,7 +34,7 @@
   }
 
   .logo img {
-    height: 80%;
+    height: 100%;
   }
 
   .login-container {
@@ -51,6 +51,7 @@
   }
 
   h2 {
+    margin-top: 25px;
     font-weight: 700;
     color: #DF39BC;
     font-size: 20px;
@@ -58,7 +59,7 @@
 
   h4 {
     font-size: 16px;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
   }
 
   form {
@@ -87,21 +88,13 @@
     padding: 3%;
     color: white;
     border-radius: 7px;
+    margin-top: 10px;
     font-weight: 700;
     transition: all ease-in-out 0.25s;
   }
 
   button:hover {
     box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
-  }
-
-  p {
-    margin-top: 10px;
-    font-size: 12px;
-  }
-
-  a {
-    color: #000;
   }
 
   .notification {
@@ -148,11 +141,11 @@
 
       <form id="form">
         <label for="accesskey">Access Key</label>
-        <input type="text" id="accesskey" name="accesskey" required="">
+        <input type="text" id="accesskey" name="accesskey" required="" placeholder="Your access key...">
+        <label for="server">Server</label>
+        <input type="text" id="server" name="server" required="" placeholder="https://domain.tld">
         <button type="submit">Login</button>
       </form>
-
-      <p>No access key? Request one <a href="#">here</a></p>
     </div>
   </div>
 </div>
