@@ -118,15 +118,17 @@ function createLoginWindow(autoValidateStoredCredentials=true) {
     Menu.setApplicationMenu(null);
 
     let credentials = readCredentials(); // Load stored credentials
-    if (credentials) { currentServerUrl = credentials.serverUrl; }
+    if (credentials) { 
+        currentServerUrl = credentials.serverUrl; 
+        mainWindow.webContents.send('fill-credentials', credentials);
+    }
 
     if (credentials && autoValidateStoredCredentials) { // If stored credentials exist and these should be validated automatically.
-
+        mainWindow.webContents.send('started-auto-validation');
         validateCredentials(credentials.accessKey, autoLogout=false).then(({ok, status}) => {
             if (ok) { createDashboardWindow(); } 
             else {
                 mainWindow.webContents.send('failed-to-validate', getErrorMessage(status)); // TODO: More descriptive error handling and in all other places
-                mainWindow.webContents.send('fill-credentials', credentials);
                 mainWindow.show();
             }
         });
