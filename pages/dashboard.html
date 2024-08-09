@@ -32,7 +32,7 @@
     position: absolute;
     padding-top: 4px;
     padding-bottom: 8px;
-    height: 80px;
+    height: 129px;
     width: 100vw;
     background: #b81de3;
     background: linear-gradient(90deg, rgb(223, 57, 188) 0%, rgba(184, 29, 227) 100%);
@@ -44,15 +44,16 @@
   }
 
   .notification > h1 {
-    margin-top: 10px;
-    margin-left: 15px;
+    margin-top: 20px;
+    margin-left: 20px;
     color: white;
     font-weight: 700;
-    font-size: 22px;
+    font-size: 30px;
   }
 
   .notification > span {
-    margin-left: 15px;
+    margin-left: 20px;
+    font-size: 20px;
     color: white;
   }
 
@@ -90,11 +91,34 @@
     --headerColor2: rgba(184, 29, 227);
   }
 
-  .header > h1 {
-    color: white;
+  .top-row {
+    display: flex;
     margin: 20px;
     margin-left: 30px;
-    margin-bottom: 10px;
+    margin-bottom: 0px;
+    align-items: center;
+  }
+
+  .logo {
+    background-image: url('../resources/logo.png');
+    width: 40px;
+    height: 40px;
+    background-size: cover;
+    background-position: center;
+    margin-right: 10px;
+  }
+
+  .login-info {
+    color: white;
+    font-weight: 600;
+  }
+
+  .hero > h1 {
+    color: white;
+    margin-top: 10px;
+    margin-left: 30px;
+    margin-right: 20px;
+    margin-bottom: 20px;
     font-weight: 700;
   }
 
@@ -314,7 +338,13 @@
     <span>Description</span>
   </div>
   <div class="header">
-    <h1>All Games</h1>
+    <div class="hero">
+      <div class="top-row">
+        <div class="logo"></div>
+        <div class="login-info">Loading...</div>
+      </div>
+      <h1>My Games</h1>
+    </div>
     <div class="header-buttons">
         <div class="header-button" id="refresh" style="margin-right: 10px;"><i class="fa-solid fa-arrows-rotate"></i></div>
         <div class="header-button" id="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>

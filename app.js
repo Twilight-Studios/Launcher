@@ -3,7 +3,7 @@
 //  PACKAGE IMPORTS
 // --------------------------------------------------------------------------------------
 
-const { app, BrowserWindow, ipcMain, Menu, Notification, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, Notification } = require('electron');
 const path = require('path');
 const axios = require('axios');
 const fs = require('fs');
@@ -122,10 +122,10 @@ function createLoginWindow(autoValidateStoredCredentials=true) {
 
     if (credentials && autoValidateStoredCredentials) { // If stored credentials exist and these should be validated automatically.
 
-        validateCredentials(credentials.accessKey).then(valid => {
-            if (valid) { createDashboardWindow(); } 
+        validateCredentials(credentials.accessKey, autoLogout=false).then(({ok, status}) => {
+            if (ok) { createDashboardWindow(); } 
             else {
-                mainWindow.webContents.send('failed-to-validate'); // TODO: More descriptive error handling and in all other places
+                mainWindow.webContents.send('failed-to-validate', getErrorMessage(status)); // TODO: More descriptive error handling and in all other places
                 mainWindow.webContents.send('fill-credentials', credentials);
                 mainWindow.show();
             }
@@ -164,6 +164,10 @@ function createDashboardWindow() {
     mainWindow.setResizable(false);
     Menu.setApplicationMenu(null);
     mainWindow.once('ready-to-show', () => { mainWindow.show(); });
+
+    mainWindow.webContents.once('did-finish-load', async () => {
+        mainWindow.webContents.send('load-credentials', readCredentials());
+    });
 }
 
 function createGameWindow(gameId, gameBranch, gameGlobalVersion) {
@@ -263,12 +267,13 @@ ipcMain.on('notify', (event, title, description) => {
 
 ipcMain.handle('login', async (event, { accessKey, serverUrl }) => {
     currentServerUrl = serverUrl;
-    let valid = await validateCredentials(accessKey);
-    if (valid) {
+    let { ok, status } = await validateCredentials(accessKey, autoLogout=false);
+    if (ok) {
         saveCredentials({ accessKey, serverUrl });
         return { success: true };
     }
-    return { success: false, message: "Invalid access key or server!" };
+
+    return { success: false, message: getErrorMessage(status) };
 });
 
 ipcMain.on('login-success', () => {
@@ -341,11 +346,19 @@ ipcMain.on('open-game', (event, gameId, gameBranch, gameGlobalVersion) => {
     createGameWindow(gameId, gameBranch, gameGlobalVersion);
 });
 
+ipcMain.on('cant-access-game', (event, gameId, gameBranch, installing) => {
+    if (installing) { forceStopDownload(); }
+    removePath(path.join(app.getPath('userData'), `/games/${gameId}_${gameBranch}`));
+
+    createDashboardWindow();
+    mainWindow.webContents.send('game-load-failed');
+})
+
 ipcMain.on('refresh',  async (event, notify, gameInfo = null) => {
     closePatchNotesWindow();
 
-    const resp = await validateCredentials(readCredentials().accessKey);
-    if (resp) {
+    const { ok, status } = await validateCredentials(readCredentials().accessKey, autoLogout=true);
+    if (ok) {
         if (!gameInfo) { createDashboardWindow(); }
         else { 
             let { gameId, gameBranch, gameVersion } = gameInfo;
@@ -353,10 +366,6 @@ ipcMain.on('refresh',  async (event, notify, gameInfo = null) => {
         }
 
         if (notify) mainWindow.webContents.send('success-refresh');
-    }
-    else {
-        createLoginWindow(autoValidateStoredCredentials=false);
-        mainWindow.webContents.send('lost-access');
     }
 });
 
@@ -383,6 +392,21 @@ ipcMain.on('open-patchnotes', (event, patchNotes) => {
 
 // UTILITY FUNCTIONS
 // --------------------------------------------------------------------------------------
+
+function getErrorMessage(status) {
+    switch (status) {
+        case 403:
+            return "Your access key is not valid!";
+        case 404:
+            return "The server is invalid!";
+        case 500:
+            return "The server faced an error!";
+        case -1:
+            return "The server couldn't be reached!";
+        default:
+            return "An unknown error occurred!";
+    }
+}
 
 function removePath(pathToRemove) {
     if (fs.existsSync(pathToRemove)) { fs.rmSync(pathToRemove); }
@@ -412,19 +436,30 @@ async function getGames() { // TODO: Error check
     catch (error) { return {}; }
 }
 
-async function validateCredentials(credentials) { //TODO: Error check
+async function validateCredentials(credentials, autoLogout) { //TODO: Error check
     try {
         const resp = await axios.post(currentServerUrl +'/api/validate-access', { key: credentials });
 
         if (resp.status !== 200) {
             forceStopDownload();
             uninstallAllGames();
+
+            if (autoLogout) {
+                createLoginWindow(autoValidateStoredCredentials=false);
+                mainWindow.webContents.send('invalid-credentials', getErrorMessage(resp.status));
+            }
         }
 
-        return resp.status === 200;
+        return { ok: resp.status === 200, status: resp.status };
     } 
     catch (error) { 
-        return false; }
+        if (autoLogout) {
+            createLoginWindow(autoValidateStoredCredentials=false);
+            mainWindow.webContents.send('invalid-credentials', getErrorMessage(resp.status));
+        }
+        
+        return { ok: false, status: -1 }; // -1 is a manual override to state that no internet connection was established!
+    }
 }
 
 function saveCredentials(credentials) { // TODO: Error check

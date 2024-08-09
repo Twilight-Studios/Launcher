@@ -41,20 +41,25 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // NOTIFICATION INIT
     // --------------------------------------------------------------------------------------
+    let activateNotifications = 0;
+
     function notify(title, description, length, callback, notifyOs = false) {
         document.querySelector('h1').textContent = title;
         document.querySelector('span').textContent = description;
         document.querySelector('.notification').classList.add('active');
+        activateNotifications++;
 
         if (notifyOs) {
             ipcRenderer.send("notify", title, description);
         }
 
         setTimeout(() => {
-            if (callback)
-                callback();
+            if (callback) callback();
+            activateNotifications--;
 
-            document.querySelector('.notification').classList.remove('active');
+            if (activateNotifications == 0) {
+                document.querySelector('.notification').classList.remove('active');
+            }
         }, length);
     }
     // --------------------------------------------------------------------------------------
@@ -80,8 +85,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // IPC CALLBACKS
     // --------------------------------------------------------------------------------------
+    ipcRenderer.on('load-credentials', (event, credentials) => {
+        document.querySelector('.login-info').textContent = `Logged in as ${credentials.accessKey} on ${credentials.serverUrl}`;
+    })
+
     ipcRenderer.on('success-refresh', (event) => {
         notify("Success", "Refreshed your access and catalog!", 3000, null);
+    });
+
+    ipcRenderer.on('game-load-failed', (event) => {
+        notify("Game Load Failed!", "That game can no longer be accessed", 3000, null);
     });
 
     ipcRenderer.on('download-success', (event, gameId, gameBranch, title) => {

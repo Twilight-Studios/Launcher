@@ -53,20 +53,25 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // NOTIFICATION INIT
     // --------------------------------------------------------------------------------------
+    let activateNotifications = 0;
+
     function notify(title, description, length, callback, notifyOs = false) {
         document.querySelector('h1').textContent = title;
-        document.querySelector('.noti-desc').textContent = description;
+        document.querySelector('span').textContent = description;
         document.querySelector('.notification').classList.add('active');
+        activateNotifications++;
 
         if (notifyOs) {
             ipcRenderer.send("notify", title, description);
         }
 
         setTimeout(() => {
-            if (callback)
-                callback();
+            if (callback) callback();
+            activateNotifications--;
 
-            document.querySelector('.notification').classList.remove('active');
+            if (activateNotifications == 0) {
+                document.querySelector('.notification').classList.remove('active');
+            }
         }, length);
     }
     // --------------------------------------------------------------------------------------
@@ -107,6 +112,11 @@ window.addEventListener('DOMContentLoaded', () => {
         globalGameVersion = gameVersion;
 
         let { game, localVersion, installing } = await ipcRenderer.invoke('get-game', gameId, gameBranch);
+
+        if (!game) {
+            ipcRenderer.send('cant-access-game', gameId, gameBranch, installing);
+            return;
+        }
 
         globalGame = game;
         localGameVersion = localVersion;
