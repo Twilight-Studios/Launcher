@@ -401,6 +401,8 @@ function getErrorMessage(status) {
             return "Your access key is not valid!";
         case 404:
             return "The server is invalid!";
+        case 406:
+            return "The resource couldn't be found!";
         case 500:
             return "The server faced an error!";
         case -1:
