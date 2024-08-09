@@ -413,7 +413,7 @@ function getErrorMessage(status) {
 }
 
 function removePath(pathToRemove) {
-    if (fs.existsSync(pathToRemove)) { fs.rmSync(pathToRemove); }
+    if (fs.existsSync(pathToRemove)) { fs.rmSync(pathToRemove, { recursive: true }); }
 }
 
 function closePatchNotesWindow() {
@@ -457,12 +457,17 @@ async function validateCredentials(credentials, autoLogout) { //TODO: Error chec
         return { ok: resp.status === 200, status: resp.status };
     } 
     catch (error) { 
+        let status;
+        
+        if ('response' in error) { status = error.response.status }
+        if (status === undefined) { status = -1; } // -1 is a manual override to state that no internet connection was established!
+
         if (autoLogout) {
             createLoginWindow(autoValidateStoredCredentials=false);
-            mainWindow.webContents.send('invalid-credentials', getErrorMessage(resp.status));
+            mainWindow.webContents.send('invalid-credentials', getErrorMessage(status));
         }
         
-        return { ok: false, status: -1 }; // -1 is a manual override to state that no internet connection was established!
+        return { ok: false, status: status }; 
     }
 }
 
