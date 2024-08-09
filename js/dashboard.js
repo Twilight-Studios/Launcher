@@ -86,7 +86,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // IPC CALLBACKS
     // --------------------------------------------------------------------------------------
     ipcRenderer.on('load-credentials', (event, credentials) => {
-        document.querySelector('.login-info').textContent = `Logged in as ${credentials.accessKey} on ${credentials.serverUrl}`;
+        document.querySelector('.login-info').textContent = `> Logged in as ${credentials.accessKey} on ${credentials.serverUrl}`;
     })
 
     ipcRenderer.on('success-refresh', (event) => {
@@ -220,17 +220,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     getGames();
-    // --------------------------------------------------------------------------------------
-
-
-    // OTHER UI EVENTS
-    // --------------------------------------------------------------------------------------
-    document.querySelector('.grid').addEventListener("scroll", (event) => {
-        if (document.querySelector('.grid').scrollTop !== 0)
-            document.querySelector('.header').classList.add('color');
-        else
-            document.querySelector('.header').classList.remove('color');
-    });
     // --------------------------------------------------------------------------------------
 
 });

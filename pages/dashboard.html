@@ -32,7 +32,7 @@
     position: absolute;
     padding-top: 4px;
     padding-bottom: 8px;
-    height: 129px;
+    height: 115px;
     width: 100vw;
     background: #b81de3;
     background: linear-gradient(90deg, rgb(223, 57, 188) 0%, rgba(184, 29, 227) 100%);
@@ -48,30 +48,18 @@
     margin-left: 20px;
     color: white;
     font-weight: 700;
-    font-size: 30px;
+    font-size: 27px;
   }
 
   .notification > span {
     margin-left: 20px;
-    font-size: 20px;
     color: white;
+    font-size: 17px;
   }
 
   .notification.active {
     pointer-events: all;
     opacity: 1;
-  }
-
-  @property --headerColor1 {
-    syntax: '<color>';
-    initial-value: black;
-    inherits: false;
-  }
-  
-  @property --headerColor2 {
-    syntax: '<color>';
-    initial-value: black;
-    inherits: false;
   }
 
   .header {
@@ -80,35 +68,15 @@
     align-items: center;
     justify-content: space-between;
     background: black;
-    background: linear-gradient(90deg, var(--headerColor1) 0%, var(--headerColor2) 100%);
-    box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(90deg, #df39bc 0%, #b81de3 100%); 
     padding-bottom: 15px;
     transition: --headerColor1 ease-in-out 0.5s, --headerColor2 ease-in-out 0.5s;
   }
 
-  .header.color {
-    --headerColor1: rgb(223, 57, 188);
-    --headerColor2: rgba(184, 29, 227);
-  }
-
-  .top-row {
-    display: flex;
+  .login-info {
     margin: 20px;
     margin-left: 30px;
     margin-bottom: 0px;
-    align-items: center;
-  }
-
-  .logo {
-    background-image: url('../resources/logo.png');
-    width: 40px;
-    height: 40px;
-    background-size: cover;
-    background-position: center;
-    margin-right: 10px;
-  }
-
-  .login-info {
     color: white;
     font-weight: 600;
   }
@@ -118,7 +86,7 @@
     margin-top: 10px;
     margin-left: 30px;
     margin-right: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     font-weight: 700;
   }
 
@@ -135,20 +103,20 @@
     align-items: center;
     justify-content: center;
     padding: 10px;
-    color: white;
-    background-color: #DF39BC;
-    box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
+    color: #b81de3;
+    background-color: white;
     width: 20px;
     height: 20px;
     font-size: 16px;
+    font-weight: 700;
     border-radius: 6px;
     transition: all ease-in-out 0.2s;
     cursor: pointer;
   }
 
   .header-button:hover {
-    color: black;
-    background-color: white;
+    color: white;
+    background-color: black;
   }
 
   .grid {
@@ -279,7 +247,7 @@
 
   .popout-case {
     background: #b81de3;
-    background: linear-gradient(90deg, rgb(223, 57, 188) 0%, rgba(184, 29, 227) 100%);
+    background: linear-gradient(90deg, #df39bc 0%, #b81de3 100%);
     box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
     width: 26%;
     height: 21%;
@@ -339,11 +307,8 @@
   </div>
   <div class="header">
     <div class="hero">
-      <div class="top-row">
-        <div class="logo"></div>
-        <div class="login-info">Loading...</div>
-      </div>
-      <h1>My Games</h1>
+      <div class="login-info">Loading...</div>
+      <h1>My Library</h1>
     </div>
     <div class="header-buttons">
         <div class="header-button" id="refresh" style="margin-right: 10px;"><i class="fa-solid fa-arrows-rotate"></i></div>
