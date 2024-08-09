@@ -493,6 +493,7 @@ function getGameLaunchJSON(gameId, gameBranch, gameVersion) {
 
 function clearCredentials() {
     removePath('credentials.json');
+    currentServerUrl = null;
 }
 
 function forceStopDownload() {
