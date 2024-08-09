@@ -679,7 +679,7 @@ function extractZip(zipPath, extractTo, gameId, gameBranch, callback) {
         readStream.destroy();
         writeStream.destroy();
         if (extractionActive) {
-            removePath(outputPath);
+            removePath(zipPath);
             callback(null);
         }
     });
