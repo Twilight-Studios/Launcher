@@ -77,7 +77,7 @@ window.addEventListener('DOMContentLoaded', () => {
         inLogin = true;
         button.classList.add("disabled");
         button.textContent = "Loading";
-        notify("Logging in", "Trying to log you in...", 3000, null);
+        notify("Logging in", "Attempting to log you in...", 3000, null);
     });
 
     ipcRenderer.on('success-logout', (event) => {

@@ -57,7 +57,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     function notify(title, description, length, callback, notifyOs = false) {
         document.querySelector('h1').textContent = title;
-        document.querySelector('span').textContent = description;
+        document.querySelector('.noti-desc').textContent = description;
         document.querySelector('.notification').classList.add('active');
         activateNotifications++;
 
@@ -453,10 +453,10 @@ window.addEventListener('DOMContentLoaded', () => {
         notify("Waiting for Download", `${gameTitle} - ${gameBranch} cannot be installed while installing another game.`, 3000, null);
     });
 
-    ipcRenderer.on('game-uninstalled', (event, gameId, gameBranch, gameTitle) => {
+    ipcRenderer.on('game-already-uninstalled', (event, gameId, gameBranch, gameTitle) => {
         if (gameId !== id || gameBranch !== branch) return;
 
-        notify("Game Uninstalled", `${gameTitle} - ${gameBranch} was uninstalled!`, 3000, null);
+        notify("Game Already Uninstalled", `${gameTitle} - ${gameBranch} is already uninstalled!`, 3000, null);
         actionState = "not-installed";
         updateActionButton();
     });
