@@ -402,17 +402,17 @@ ipcMain.on('open-patchnotes', (event, patchNotes) => {
 function getErrorMessage(status) {
     switch (status) {
         case 403:
-            return "Your access key is not valid!";
+            return "Your access key is not valid";
         case 404:
-            return "The server is invalid!";
+            return "The server address is invalid";
         case 406:
-            return "The resource couldn't be found!";
+            return "The resource couldn't be found";
         case 500:
-            return "The server faced an error!";
+            return "The server faced an error";
         case -1:
-            return "The server couldn't be reached!";
+            return "The server couldn't be reached";
         default:
-            return "An unknown error occurred!";
+            return "An unknown error occurred";
     }
 }
 

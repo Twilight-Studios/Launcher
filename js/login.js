@@ -85,7 +85,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     
     ipcRenderer.on('invalid-credentials', (event, errorMessage) => {
-        notify("Uh-oh! Your access has been lost!", errorMessage, 3000, null);
+        notify("Your access has been lost!", errorMessage, 3000, null);
     });
 
     ipcRenderer.on('success-auto-validate', (event) => {
