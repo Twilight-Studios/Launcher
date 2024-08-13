@@ -46,11 +46,11 @@ window.addEventListener('DOMContentLoaded', () => {
         
         notify("Logging in", "Trying to log you in...", 3000, null);
         button.classList.add("disabled");
-        button.textContent = "Loading";
+        button.textContent = "Logging in...";
         
         const response = await ipcRenderer.invoke('login', { accessKey, serverUrl });
 
-        if (response.success) { notify("Success", "Logging you in...", 1000, () => { ipcRenderer.send('login-success'); }); }
+        if (response.success) { notify("Success", "Loading home page...", 1000, () => { ipcRenderer.send('login-success'); }) }
         else {
             inLogin = false;
             button.classList.remove("disabled");
@@ -76,7 +76,7 @@ window.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.on('started-auto-validation', (event) => {
         inLogin = true;
         button.classList.add("disabled");
-        button.textContent = "Loading";
+        button.textContent = "Logging in...";
         notify("Logging in", "Attempting to log you in...", 3000, null);
     });
 
@@ -86,6 +86,10 @@ window.addEventListener('DOMContentLoaded', () => {
     
     ipcRenderer.on('invalid-credentials', (event, errorMessage) => {
         notify("Uh-oh! Your access has been lost!", errorMessage, 3000, null);
+    });
+
+    ipcRenderer.on('success-auto-validate', (event) => {
+        notify("Success", "Loading home page...", 1000, () => { ipcRenderer.send('login-success'); });
     });
 
     ipcRenderer.on('failed-to-validate', (event, errorMessage) => {

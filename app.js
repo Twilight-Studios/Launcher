@@ -17,6 +17,10 @@ const { autoUpdater } = require("electron-updater");
 // CUSTOMISATION
 // --------------------------------------------------------------------------------------
 
+// Used during development (MUST BE ENSURED AS DISABLED BEFORE PRODUCTION)
+const DEV_MODE_ENABLED = false; // Used to provide access to chromium dev tools and logging environments
+// TODO: Make sure DEV_MODE_ENABLED logs all info to terminal during runtime (Within and outside main.js using IPC)
+
 // Used for all back-end
 const DEFAULT_SERVER_URL = "https://twilightdev.replit.app"; // Only used as an automatic value for the server value for login
 
@@ -81,7 +85,7 @@ function createUpdateWindow() {
     
     mainWindow.loadFile('pages/update.html');
     mainWindow.setResizable(false);
-    Menu.setApplicationMenu(null);
+    if (!DEV_MODE_ENABLED) { Menu.setApplicationMenu(null); }
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
@@ -115,7 +119,7 @@ function createLoginWindow(autoValidateStoredCredentials=true) {
     mainWindow.on('closed', closePatchNotesWindow);
     mainWindow.loadFile('pages/login.html');
     mainWindow.setResizable(false);
-    Menu.setApplicationMenu(null);
+    if (!DEV_MODE_ENABLED) { Menu.setApplicationMenu(null); }
 
     let credentials = readCredentials(); // Load stored credentials
     if (credentials) { 
@@ -126,7 +130,7 @@ function createLoginWindow(autoValidateStoredCredentials=true) {
     if (credentials && autoValidateStoredCredentials) { // If stored credentials exist and these should be validated automatically.
         mainWindow.webContents.send('started-auto-validation');
         validateCredentials(credentials.accessKey, autoLogout=false).then(({ok, status}) => {
-            if (ok) { createDashboardWindow(); } 
+            if (ok) { mainWindow.webContents.send('success-auto-validate'); } 
             else {
                 mainWindow.webContents.send('failed-to-validate', getErrorMessage(status)); // TODO: More descriptive error handling and in all other places
                 mainWindow.show();
@@ -164,7 +168,7 @@ function createDashboardWindow() {
     mainWindow.on('closed', () => { closePatchNotesWindow(); });
     mainWindow.loadFile('pages/dashboard.html');
     mainWindow.setResizable(false);
-    Menu.setApplicationMenu(null);
+    if (!DEV_MODE_ENABLED) { Menu.setApplicationMenu(null); }
     mainWindow.once('ready-to-show', () => { mainWindow.show(); });
 
     mainWindow.webContents.once('did-finish-load', async () => {
@@ -191,7 +195,7 @@ function createGameWindow(gameId, gameBranch, gameGlobalVersion) {
     mainWindow.on('closed', () => { closePatchNotesWindow(); });
     mainWindow.loadFile('pages/game.html');
     mainWindow.setResizable(false);
-    Menu.setApplicationMenu(null);
+    if (!DEV_MODE_ENABLED) { Menu.setApplicationMenu(null); }
 
     mainWindow.webContents.once('did-finish-load', async () => {
         mainWindow.webContents.send('game-id', gameId, gameBranch, gameGlobalVersion);
@@ -217,7 +221,7 @@ function createPatchNotesWindow(patchNotes) {
 
     patchNotesWindow.loadFile('pages/patchnotes.html');
     patchNotesWindow.setResizable(false);
-    Menu.setApplicationMenu(null);
+    if (!DEV_MODE_ENABLED) { Menu.setApplicationMenu(null); }
 
     patchNotesWindow.webContents.once('did-finish-load', () => {
         patchNotesWindow.webContents.send('load-patchnotes', patchNotes);
@@ -429,15 +433,15 @@ async function getGame(gameId, gameBranch) { // TODO: Error check
         const resp = await axios.post(currentServerUrl+'/api/get-game', { key: readCredentials().accessKey, id: gameId, branch: gameBranch });
         return resp.data
     } 
-    catch (error) { return {}; }
+    catch (error) { return null; }
 }
 
 async function getGames() { // TODO: Error check
     try {
-        const resp = await axios.post(currentServerUrl+'/api/get-all-games', { key: readCredentials().accessKey });
+        const resp = await axios.post(currentServerUrl+'/api/get-all-games', { key: readCredentials().accessKey, minimal: true });
         return resp.data
     }
-    catch (error) { return {}; }
+    catch (error) { return null; }
 }
 
 async function validateCredentials(credentials, autoLogout) { //TODO: Error check

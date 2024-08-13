@@ -113,6 +113,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // UI UTILS
     // --------------------------------------------------------------------------------------
+    function displayEmptyMessage(message) {
+        document.querySelector('.grid').innerHTML = '';
+        let messageObject = document.createElement('div');
+
+        messageObject.classList.add('empty');
+        messageObject.textContent = message;
+
+        document.querySelector('.grid').appendChild(messageObject);
+    }
+
     function getAverageRGB(imgEl) {
         // SOURCE: https://stackoverflow.com/questions/2541481/get-average-color-of-image-via-javascript
         var blockSize = 5,
@@ -163,6 +173,17 @@ window.addEventListener('DOMContentLoaded', () => {
     // --------------------------------------------------------------------------------------
     async function getGames() {
         let games = await ipcRenderer.invoke('get-games');
+        
+        if (!games || !(games instanceof Array)) {
+            displayEmptyMessage("Failed to load games library! Please reload the page");
+            return;
+        }
+
+        if (games.length === 0) {
+            displayEmptyMessage("You don't have any games in your library");
+            return;
+        }
+
         fillGames(games)
     }
 
@@ -198,7 +219,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     gameElement.innerHTML = gameHtml;
     
                     var gameObj = grid.appendChild(gameElement);
-                    console.log(gameObj);
     
                     gameObj.querySelector('.open').addEventListener("click", (event) => {
                         ipcRenderer.send('open-game', gameInfo.id, gameInfo.branch, gameInfo.settings.game_branches[gameInfo.branch].latest_version);
