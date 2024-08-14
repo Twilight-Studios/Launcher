@@ -63,6 +63,10 @@ autoUpdater.on("update-downloaded", () => {
     autoUpdater.quitAndInstall();
 });
 
+autoUpdater.on('error', (error) => {
+    mainWindow.webContents.send('update-error', error.message);
+});
+
 // --------------------------------------------------------------------------------------
 
 // WINDOW CREATION
@@ -235,11 +239,21 @@ function createPatchNotesWindow(patchNotes) {
 // APP EVENTS
 // --------------------------------------------------------------------------------------
 
-app.whenReady().then(createUpdateWindow);
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) { app.quit(); } 
 
 app.on("ready", () => {
     if (process.platform == 'win32') {
-        app.setAppUserModelId(`${APP_AUTHOR_DOMAIN.split('.')[1]}.${APP_AUTHOR_DOMAIN.split('.')[0]}.${APP_NAME}`); // Change later
+        app.setAppUserModelId(`${APP_AUTHOR_DOMAIN.split('.')[1]}.${APP_AUTHOR_DOMAIN.split('.')[0]}.${APP_NAME}`);
+    }
+
+    createUpdateWindow();
+});
+
+app.on('second-instance', (event, commandLine, workingDirectory) => {
+    if (mainWindow) {
+        if (mainWindow.isMinimized()) { mainWindow.restore(); }
+        mainWindow.focus();
     }
 });
 
