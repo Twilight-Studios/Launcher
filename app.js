@@ -22,7 +22,7 @@ const DEV_MODE_ENABLED = false; // Used to provide access to chromium dev tools 
 // APP INIT AND EVENTS
 // --------------------------------------------------------------------------------------
 
-if (!app.requestSingleInstanceLock) { app.quit(); }
+if (!app.requestSingleInstanceLock()) { app.quit(); }
 
 windowManager.setDevMode(DEV_MODE_ENABLED);
 windowManager.setDefaultServerUrl(DEFAULT_SERVER_URL);
@@ -76,7 +76,7 @@ ipcMain.on('refresh',  async (event, notify, gameInfo = null) => {
         windowManager.createLoginWindow(() => {
             windowManager.sendMessage('fill-credentials', auth.getUser());
             windowManager.sendMessage('invalid-credentials', getErrorMessage(status));
-        })
+        }, false);
     }
 });
 

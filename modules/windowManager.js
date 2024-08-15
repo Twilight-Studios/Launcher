@@ -56,12 +56,12 @@ function createWindow(fileName, width, height, callback) {
 exports.createUpdateWindow = (callback) => { 
     createWindow('update', 400, 600, () => {
         if (updateManager.checkForUpdates()) { exports.sendMessage('update-found'); }
-        else { exports.createLoginWindow(true, null); }
+        else { exports.createLoginWindow(); }
         if (callback) { callback(); }
     });
 }
 
-exports.createLoginWindow = (autoAuthenticate, callback) => { 
+exports.createLoginWindow = (callback, autoAuthenticate=false) => { 
     createWindow('login', 400, 600, async () => {
         auth.loadUser();
 
