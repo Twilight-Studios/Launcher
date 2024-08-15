@@ -50,7 +50,7 @@ process.on("message", (message) => {
 			const progress = (downloadedBytes / totalSize) * 100;
 
 			process.send({
-				status: "in-progress",
+				status: "progress",
 				downloadedBytes,
 				totalSize,
 				downloadSpeed: downloadSpeed.toFixed(2),
