@@ -55,9 +55,11 @@ function createWindow(fileName, width, height, callback) {
 
 exports.createUpdateWindow = (callback) => { 
     createWindow('update', 400, 600, () => {
-        if (updateManager.checkForUpdates()) { exports.sendMessage('update-found'); }
-        else { exports.createLoginWindow(); }
-        if (callback) { callback(); }
+        updateManager.checkForUpdates().then(updateAvailable => { 
+            if (updateAvailable) { exports.sendMessage('update-found'); }
+            else { exports.createLoginWindow(); }
+            if (callback) { callback(); }
+        });
     });
 }
 

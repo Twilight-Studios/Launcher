@@ -24,15 +24,14 @@ autoUpdater.on('error', (error) => {
 // UPDATE CHECKER
 // --------------------------------------------------------------------------------------
 
-exports.checkForUpdates = function () {
-    autoUpdater.checkForUpdates().then((result) => {
-        if (result && result.cancellationToken) { // Valid update is found
-            autoUpdater.downloadUpdate();
-            return true;
-        }
-        else { return false; } // Launcher is up-to-date
-    })
-    return false;
+exports.checkForUpdates = async function () {
+    const result = await autoUpdater.checkForUpdates();
+    if (result && result.cancellationToken) {  // Valid update is found
+        await autoUpdater.downloadUpdate();
+        return true;
+    } else { 
+        return false; // Launcher is up-to-date
+    }
 }
 
 // --------------------------------------------------------------------------------------
