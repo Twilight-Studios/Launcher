@@ -57,7 +57,7 @@ exports.createUpdateWindow = (callback) => {
     createWindow('update', 400, 600, () => {
         updateManager.checkForUpdates().then(updateAvailable => { 
             if (updateAvailable) { exports.sendMessage('update-found'); }
-            else { exports.createLoginWindow(); }
+            else { exports.createLoginWindow(null, true); }
             if (callback) { callback(); }
         });
     });
