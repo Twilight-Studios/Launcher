@@ -1,9 +1,17 @@
 const { ipcRenderer } = require('electron');
 const { notify } = require("../modules/frontend/notification");
-const { getAverageRGB } = require("../modules/utils");
+const popout = require("../modules/frontend/popout");
 
 window.addEventListener('DOMContentLoaded', () => {
     const grid = document.querySelector('.grid');
+    const logoutButton = document.querySelector("#logout")
+    const notificationObject = document.querySelector('.notification');
+
+    popout.setup(
+        document.querySelector('.popout'), 
+        document.querySelector('.primary.button'), 
+        document.querySelector('.cancel.button')
+    );
 
     function displayEmptyMessage(message) {
         grid.innerHTML = '';
@@ -60,5 +68,22 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     
         games.forEach(game => { createGameUi(game) });
+    });
+
+    logoutButton.addEventListener("click", (event) => {
+        popout.activate(
+            "Are you sure?",
+            "By logging out, all your games will be uninstalled for privacy reasons. This is irrreversible!",
+            "Logout",
+            "remove",
+            () => { notify(
+                notificationObject, 
+                "Logging Out", 
+                "Clearing your session...", 
+                1500, 
+                false, 
+                () => { ipcRenderer.send("logout"); }) 
+            }
+        );
     });
 });

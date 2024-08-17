@@ -9,6 +9,7 @@ let currentUser = {
 }
 
 exports.onLoginSuccess = null;
+exports.onLogout = null;
 exports.onAuthLost = null;
 
 exports.getUser = () => { return currentUser; }
@@ -59,14 +60,24 @@ exports.authenticateUser = async function () {
     }
 }
 
+exports.logout = function () {
+    exports.setUser(null, null);
+    fileManager.removePath("credentials.json");
+    if (exports.onLogout) exports.onLogout();
+}
+
 ipcMain.handle('login', async (event, { accessKey, serverUrl }) => {
     exports.setUser(accessKey, serverUrl);
     let {ok, status} = await exports.authenticateUser();
 
     if (ok) { return { success: true }; }
     return { success: false, message: utils.getErrorMessage(status) };
+});
+
+ipcMain.on('logout', (event) => {
+    exports.logout();
 })
 
-ipcMain.handle('auth-lost', (event, code) => {
+ipcMain.on('auth-lost', (event, code) => {
     if (exports.onAuthLost) exports.onAuthLost(code);
-})
+});

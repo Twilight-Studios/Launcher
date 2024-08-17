@@ -14,14 +14,21 @@ const utils = require("./modules/utils");
 // --------------------------------------------------------------------------------------
 
 const DEFAULT_SERVER_URL = "https://twilightdev.replit.app"; // Only used as an automatic value for the server value for login
-wm.devMode = false; // Used to provide access to chromium dev tools (MUST BE SET TO FALSE BEFORE LEAVING DEV ENVIRONMENT)
+wm.devMode = true; // Used to provide access to chromium dev tools (MUST BE SET TO FALSE BEFORE LEAVING DEV ENVIRONMENT)
 
 // --------------------------------------------------------------------------------------
 
-// WINDOW START UP PROCESSES
+// CALLBACKS
 // --------------------------------------------------------------------------------------
+
+updateManager.onError = (error) => { wm.sendMessage('update-error', error.message) }
 
 auth.onLoginSuccess = () => { setTimeout(() => { wm.createLibraryWindow(); }, 1000); }
+
+auth.onLogout = () => {
+    wm.createLoginWindow();
+    wm.sendMessage("success-logout")
+};
 
 auth.onAuthLost = function (code) {
     wm.createLoginWindow();
@@ -31,18 +38,16 @@ auth.onAuthLost = function (code) {
 wm.onUpdateWindowCreated = function () {
     updateManager.checkForUpdates().then(updateAvailable => { 
         if (updateAvailable) wm.sendMessage('update-found');
-        else wm.createLoginWindow(() => { autoAuthProcess() });
+        else wm.createLoginWindow(async () => { // Auto-auth occurs here
+            if (!auth.isUserValid()) return;
+            wm.sendMessage('started-auto-auth');
+        
+            let {ok, status} = await auth.authenticateUser();
+        
+            if (ok) { wm.sendMessage('success-auto-auth'); }
+            else wm.sendMessage('failed-auto-auth', utils.getErrorMessage(status));
+        });
     });
-}
-
-async function autoAuthProcess() {
-    if (!auth.isUserValid()) return;
-    wm.sendMessage('started-auto-auth');
-
-    let {ok, status} = await auth.authenticateUser();
-
-    if (ok) { wm.sendMessage('success-auto-auth'); }
-    else wm.sendMessage('failed-auto-auth', utils.getErrorMessage(status));
 }
 
 wm.onLoginWindowCreated = function () {

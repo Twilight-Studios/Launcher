@@ -1,17 +1,15 @@
 const { autoUpdater } = require("electron-updater");
 
-let errorCallback = null;
 autoUpdater.autoDownload = false;
+exports.onError = null;
 
 autoUpdater.on("update-downloaded", () => {
     autoUpdater.quitAndInstall();
 });
 
 autoUpdater.on('error', (error) => {
-    if (errorCallback) errorCallback();
+    if (onError) onError(error);
 });
-
-exports.setErrorCallback = (callback) => { errorCallback = callback; }
 
 exports.checkForUpdates = async function () {
     const result = await autoUpdater.checkForUpdates();
