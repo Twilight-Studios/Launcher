@@ -3,11 +3,7 @@
 
 const { app, ipcMain, Notification } = require('electron');
 const path = require('path');
-const auth = require("./modules/auth");
 const windowManager = require("./modules/windowManager");
-const downloadManager = require("./modules/downloadManager");
-const gameManager = require("./modules/gameManager");
-const processManager = require("./modules/processManager");
 
 // --------------------------------------------------------------------------------------
 
@@ -39,11 +35,6 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
     }
 });
 
-app.on('before-quit', () => {
-    downloadManager.forceStopDownload();
-    processManager.stopGame();
-});
-
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') { app.quit(); }
 });
@@ -57,46 +48,6 @@ ipcMain.on('notify', (event, title, description) => {
     let notification = new Notification({ title: title, body: description, icon: path.join(__dirname, 'resources/logo.ico') });
     notification.show();
     notification.on('click', (event, arg) => { windowManager.showMainWindow(); });
-});
-
-ipcMain.on('refresh',  async (event, notify, gameInfo = null) => {
-    const { ok, status } = await auth.authenticateUser();
-    
-    if (ok) {
-        if (!gameInfo) { windowManager.createLibraryWindow(); }
-        else { 
-            let { gameId, gameBranch, gameVersion } = gameInfo;
-            windowManager.createGameWindow(gameId, gameBranch, gameVersion); 
-        }
-
-        if (notify) windowManager.sendMessage('success-refresh');
-    }
-    else {
-        gameManager.uninstallAllGames();
-        windowManager.createLoginWindow(() => {
-            windowManager.sendMessage('fill-credentials', auth.getUser());
-            windowManager.sendMessage('invalid-credentials', getErrorMessage(status));
-        }, false);
-    }
-});
-
-ipcMain.on('launch-game', (event, gameId, gameBranch, gameVersion) => {
-    let game = {
-        id: gameId,
-        branch: gameBranch,
-        version: gameVersion
-    }
-
-    processManager.launchGame(game);
-});
-
-ipcMain.on('stop-game', (event, gameId, gameBranch) => {
-    let game = {
-        id: gameId,
-        branch: gameBranch
-    }
-
-    processManager.stopGame(game);
 });
 
 // --------------------------------------------------------------------------------------

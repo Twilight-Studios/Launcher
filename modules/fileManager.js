@@ -1,9 +1,7 @@
 // MODULE IMPORTS
 // --------------------------------------------------------------------------------------
 
-const { app } = require('electron');
 const fs = require('fs');
-const path = require('path');
 
 // --------------------------------------------------------------------------------------
 
@@ -34,20 +32,5 @@ exports.makePath = function (pathToMake) {
 exports.removePath = function (pathToRemove) {
     if (fs.existsSync(pathToRemove)) { fs.rmSync(pathToRemove, { recursive: true }); }
 }
-
-// --------------------------------------------------------------------------------------
-
-// GAME PATHS
-// --------------------------------------------------------------------------------------
-
-exports.getGamePath = function (game) {
-    let gamePath = path.join(app.getPath('userData'), `/games/${game.id}_${game.branch}`); 
-    if (game.version) { gamePath = path.join(gamePath, `/${game.version.replaceAll(".", "_")}`) }
-    return gamePath;
-}
-
-exports.getGameLaunchJsonPath = (game) => { return path.join(exports.getGamePath(game), '/launcher.json'); }
-exports.getGamesPath = () => { return path.join(app.getPath('userData'), "games"); };
-exports.getZipDownloadPath = () => { return path.join(app.getPath('userData'), "game.zip"); }
 
 // --------------------------------------------------------------------------------------

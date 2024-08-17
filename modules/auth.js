@@ -1,13 +1,8 @@
 // MODULE IMPORTS
 // --------------------------------------------------------------------------------------
 
-const { ipcMain } = require('electron');
 const axios = require('axios');
 const fileManager = require('./fileManager');
-const windowManager = require('./windowManager');
-const gameManager = require('./gameManager');
-const downloadManager = require('./downloadManager');
-const utils = require('./utils');
 
 // --------------------------------------------------------------------------------------
 
@@ -68,37 +63,5 @@ exports.authenticateUser = async function () {
         return { ok: false, status: status };
     }
 }
-
-// --------------------------------------------------------------------------------------
-
-// IPC CALLBACKS
-// --------------------------------------------------------------------------------------
-
-ipcMain.handle('login', async (event, { accessKey, serverUrl }) => {
-    exports.setUser(accessKey, serverUrl);
-    let {ok, status} = await exports.authenticateUser();
-
-    if (ok) {
-        fileManager.saveJson({ accessKey, serverUrl }, "credentials.json");
-        return { success: true };
-    }
-
-    return { success: false, message: utils.getErrorMessage(status) };
-});
-
-ipcMain.on('login-success', () => {
-    windowManager.createLibraryWindow();
-});
-
-ipcMain.on('logout', () => {
-    windowManager.closePatchNotesWindow();
-    windowManager.closeMainWindow();
-
-    downloadManager.forceStopDownload();
-    gameManager.uninstallAllGames();
-
-    fileManager.removePath('credentials.json');
-    windowManager.createLoginWindow(() => { windowManager.sendMessage('success-logout'); });
-});
 
 // --------------------------------------------------------------------------------------

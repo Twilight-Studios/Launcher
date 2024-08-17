@@ -2,7 +2,6 @@
 // --------------------------------------------------------------------------------------
 
 const { autoUpdater } = require("electron-updater");
-const windowManager = require("./windowManager");
 
 // --------------------------------------------------------------------------------------
 
@@ -16,7 +15,7 @@ autoUpdater.on("update-downloaded", () => {
 });
 
 autoUpdater.on('error', (error) => {
-    windowManager.sendMessage('update-error', error.message);
+    console.error(error);
 });
 
 // --------------------------------------------------------------------------------------

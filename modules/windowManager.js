@@ -1,10 +1,9 @@
 // MODULE IMPORTS
 // --------------------------------------------------------------------------------------
 
-const { BrowserWindow, ipcMain, Menu } = require('electron');
+const { BrowserWindow, Menu } = require('electron');
 const path = require('path');
 const auth = require('./auth');
-const gameManager = require('./gameManager');
 const utils = require('./utils');
 const updateManager = require('./updateManager');
 
@@ -81,7 +80,7 @@ exports.createLoginWindow = (callback, autoAuthenticate=false) => {
         let {ok, status} = await auth.authenticateUser();
         if (ok) { exports.sendMessage('success-auto-validate'); }
         else {
-            gameManager.uninstallAllGames(); 
+            //gameManager.uninstallAllGames(); 
             exports.sendMessage('failed-to-validate', utils.getErrorMessage(status)); 
         }
 
@@ -157,14 +156,5 @@ exports.closeMainWindow = function () {
     }
     mainWindow = null;
 }
-
-// --------------------------------------------------------------------------------------
-
-// IPC CALLBACKS
-// --------------------------------------------------------------------------------------
-
-ipcMain.on('open-patchnotes', (event, patchNotes) => {
-    exports.createPatchNotesWindow(patchNotes);
-});
 
 // --------------------------------------------------------------------------------------
