@@ -8,7 +8,7 @@ let currentUser = {
     serverUrl: null
 }
 
-exports.onLoginSuccess = null;
+exports.onAuthSuccess = null;
 exports.onLogout = null;
 exports.onAuthLost = null;
 
@@ -39,7 +39,7 @@ exports.setUser = function (accessKey, serverUrl) {
     currentUser.authenticated = false;
 }
 
-exports.authenticateUser = async function (triggerLoginCallback=true) {
+exports.authenticateUser = async function (triggerAuthSuccessCallback=true) {
     if (!exports.isUserValid) { return { ok: false, status: -1 }; }
 
     try {
@@ -47,7 +47,7 @@ exports.authenticateUser = async function (triggerLoginCallback=true) {
 
         if (resp.status === 200) {
             exports.saveUser();
-            if (exports.onLoginSuccess && triggerLoginCallback) { exports.onLoginSuccess(); }
+            if (exports.onAuthSuccess && triggerAuthSuccessCallback) { exports.onAuthSuccess(); }
         }
 
         return { ok: resp.status === 200, status: resp.status };

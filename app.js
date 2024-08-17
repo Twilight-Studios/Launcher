@@ -24,7 +24,7 @@ wm.devMode = false; // Used to provide access to chromium dev tools (MUST BE SET
 
 updateManager.onError = (error) => { wm.sendMessage('update-error', error.message) }
 
-auth.onLoginSuccess = () => { setTimeout(() => { wm.createLibraryWindow(); }, 1000); }
+auth.onAuthSuccess = () => { setTimeout(() => { wm.createLibraryWindow(); }, 1000); }
 
 auth.onLogout = () => {
     wm.createLoginWindow();
@@ -37,7 +37,7 @@ auth.onAuthLost = function (code) {
 }
 
 wm.onWindowReload = async function () {
-    let {ok, status} = await auth.authenticateUser(triggerLoginCallback=false);
+    let {ok, status} = await auth.authenticateUser(triggerAuthSuccessCallback=false);
 
     if (!ok) {
         auth.onAuthLost(status);
