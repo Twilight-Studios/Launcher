@@ -4,6 +4,7 @@
 const { app } = require('electron');
 
 const wm = require("./modules/backend/windowManager");
+const gm = require("./modules/backend/gameManager");
 const updateManager = require("./modules/backend/updateManager");
 const auth = require("./modules/backend/auth");
 const utils = require("./modules/utils");
@@ -27,12 +28,19 @@ auth.onLoginSuccess = () => { setTimeout(() => { wm.createLibraryWindow(); }, 10
 
 auth.onLogout = () => {
     wm.createLoginWindow();
-    wm.sendMessage("success-logout")
+    wm.sendMessage("success-logout");
 };
 
 auth.onAuthLost = function (code) {
     wm.createLoginWindow();
     wm.sendMessage('auth-lost', utils.getErrorMessage(code));
+}
+
+wm.onWindowReloaded = function () {
+    auth.authenticateUser(triggerLoginCallback=false).then(({ok, status}) => {
+        if (!ok) wm.sendMessage("auth-lost", status);
+        else wm.sendMessage("success-reload");
+    });
 }
 
 wm.onUpdateWindowCreated = function () {
@@ -42,8 +50,7 @@ wm.onUpdateWindowCreated = function () {
             if (!auth.isUserValid()) return;
             wm.sendMessage('started-auto-auth');
         
-            let {ok, status} = await auth.authenticateUser();
-        
+            let {ok, status} = await auth.authenticateUser();        
             if (ok) { wm.sendMessage('success-auto-auth'); }
             else wm.sendMessage('failed-auto-auth', utils.getErrorMessage(status));
         });
@@ -55,8 +62,9 @@ wm.onLoginWindowCreated = function () {
     wm.sendMessage('fill-input-fields', auth.getUser(), DEFAULT_SERVER_URL);  
 }
 
-wm.onLibraryWindowCreated = function () {
-    wm.sendMessage('library-loaded', null, auth.getUser());
+wm.onLibraryWindowCreated = async function () {
+    let games = await gm.getAllGameData(auth.getUser(), true);
+    wm.sendMessage('library-loaded', games, auth.getUser());
 }
 
 // --------------------------------------------------------------------------------------

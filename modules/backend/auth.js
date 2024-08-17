@@ -39,7 +39,7 @@ exports.setUser = function (accessKey, serverUrl) {
     currentUser.authenticated = false;
 }
 
-exports.authenticateUser = async function () {
+exports.authenticateUser = async function (triggerLoginCallback=true) {
     if (!exports.isUserValid) { return { ok: false, status: -1 }; }
 
     try {
@@ -47,7 +47,7 @@ exports.authenticateUser = async function () {
 
         if (resp.status === 200) {
             exports.saveUser();
-            if (exports.onLoginSuccess) { exports.onLoginSuccess(); }
+            if (exports.onLoginSuccess && triggerLoginCallback) { exports.onLoginSuccess(); }
         }
 
         return { ok: resp.status === 200, status: resp.status };

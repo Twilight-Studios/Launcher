@@ -1,8 +1,9 @@
-const { BrowserWindow, Menu } = require('electron');
+const { BrowserWindow, Menu, ipcMain } = require('electron');
 const path = require('path');
 
 let mainWindow;
 let patchNotesWindow;
+let mainWindowCreateMethod;
 
 exports.getMainWindow = () => { return mainWindow; }
 exports.getPatchNotesWindow = () => { return patchNotesWindow; }
@@ -13,6 +14,7 @@ exports.onLoginWindowCreated = null;
 exports.onLibraryWindowCreated = null;
 exports.onGameWindowCreated = null;
 exports.onPatchNotesWindowCreated = null;
+exports.onWindowReloaded = null;
 
 function createWindow(fileName, width, height, callback) {
     if (mainWindow) { mainWindow.close(); }
@@ -41,21 +43,25 @@ function createWindow(fileName, width, height, callback) {
 }
 
 exports.createUpdateWindow = (callback) => { createWindow('update', 400, 600, () => {
+    mainWindowCreateMethod = exports.createUpdateWindow;
     if (exports.onUpdateWindowCreated) exports.onUpdateWindowCreated();
     if (callback) callback();
 });}
 
 exports.createLoginWindow = (callback) => { createWindow('login', 400, 600, () => {
+    mainWindowCreateMethod = exports.createLoginWindow;
     if (exports.onLoginWindowCreated) exports.onLoginWindowCreated();
     if (callback) callback();
 });}
 
 exports.createLibraryWindow = (callback) => { createWindow('library', 1280, 720, () => {
+    mainWindowCreateMethod = exports.createLibraryWindow;
     if (exports.onLibraryWindowCreated) exports.onLibraryWindowCreated();
     if (callback) callback();
 });}
 
 exports.createGameWindow = (callback) => { createWindow('game', 1280, 720, () => {
+    mainWindowCreateMethod = exports.createGameWindow;
     if (exports.onGameWindowCreated) exports.onGameWindowCreated();
     if (callback) callback();
 });}
@@ -89,6 +95,12 @@ exports.createPatchNotesWindow = function (patchNotes, callback) {
 
 exports.showMainWindow = () => { mainWindow.show(); }
 
+exports.reloadCurrentWindow = (callback) => { // TODO: The issue with reload, is that existing onWindowCreated callbacks can execute procedures after window, causing unwanted and duplicated behaviour. Needs to be looked into and fixed.
+    mainWindowCreateMethod();
+    if (exports.onWindowReloaded) exports.onWindowReloaded();
+    if (callback) callback();
+}
+
 exports.sendMessage = (channel, ...args) => {
     if (mainWindow && mainWindow.webContents) {
         mainWindow.webContents.send(channel, ...args);
@@ -110,3 +122,7 @@ exports.closeMainWindow = function () {
     }
     mainWindow = null;
 }
+
+ipcMain.on('reload', (event) => {
+    exports.reloadCurrentWindow();
+});

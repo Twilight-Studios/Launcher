@@ -4,7 +4,8 @@ const popout = require("../modules/frontend/popout");
 
 window.addEventListener('DOMContentLoaded', () => {
     const grid = document.querySelector('.grid');
-    const logoutButton = document.querySelector("#logout")
+    const logoutButton = document.querySelector("#logout");
+    const reloadButton = document.querySelector("#reload");
     const notificationObject = document.querySelector('.notification');
 
     popout.setup(
@@ -14,7 +15,6 @@ window.addEventListener('DOMContentLoaded', () => {
     );
 
     function displayEmptyMessage(message) {
-        grid.innerHTML = '';
         let messageObject = document.createElement('div');
         messageObject.classList.add('empty');
         messageObject.textContent = message;
@@ -29,8 +29,8 @@ window.addEventListener('DOMContentLoaded', () => {
         let gameElement = document.createElement("div");
         gameElement.classList.add("game");
     
-        let title = `${game.name} - ${gameInfo.branch} [${game.latest_version}]`;
-        let thumbnailUrl = "data:image/png;base64," + gameInfo.art.cover;
+        let title = `${game.settings.name} - ${game.branch}`;
+        let thumbnailUrl = "data:image/png;base64," + game.art.cover;
         
         gameElement.innerHTML = `<div class="thumbnail">\
         <div class="open">Open</div>\
@@ -55,6 +55,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     
     ipcRenderer.on('library-loaded', (event, games, { accessKey, serverUrl }) => {
+        grid.innerHTML = '';
         document.querySelector('.login-info').textContent = `> Logged in as ${accessKey} on ${serverUrl}`;
 
         if (!games || !(games instanceof Array)) {
@@ -69,6 +70,12 @@ window.addEventListener('DOMContentLoaded', () => {
     
         games.forEach(game => { createGameUi(game) });
     });
+
+    ipcRenderer.on('success-reload', (event) => {
+        notify(notificationObject, "Success", "Reloaded your access and catalog!", 3000, false, null);
+    });
+
+    reloadButton.addEventListener("click", (event) => { ipcRenderer.send("reload"); })
 
     logoutButton.addEventListener("click", (event) => {
         popout.activate(
