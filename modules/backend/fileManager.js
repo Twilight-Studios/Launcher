@@ -1,12 +1,4 @@
-// MODULE IMPORTS
-// --------------------------------------------------------------------------------------
-
 const fs = require('fs');
-
-// --------------------------------------------------------------------------------------
-
-// JSON MANAGEMENT
-// --------------------------------------------------------------------------------------
 
 exports.saveJson = function (contents, path) {
     fs.writeFile(path, JSON.stringify(contents), 'utf8', (err) => {
@@ -20,11 +12,6 @@ exports.readJson = function (path) {
     return null;
 }
 
-// --------------------------------------------------------------------------------------
-
-// FILE/PATH MANAGEMENT
-// --------------------------------------------------------------------------------------
-
 exports.makePath = function (pathToMake) {
     if (!fs.existsSync(pathToMake)) { fs.mkdirSync(pathToMake, { recursive: true }); }
 }
@@ -32,5 +19,3 @@ exports.makePath = function (pathToMake) {
 exports.removePath = function (pathToRemove) {
     if (fs.existsSync(pathToRemove)) { fs.rmSync(pathToRemove, { recursive: true }); }
 }
-
-// --------------------------------------------------------------------------------------

@@ -3,10 +3,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="script-src 'self';">
 <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css' rel='stylesheet'>
-<title>Twilight Studios Launcher - Patch Notes</title>
+<title>ForgeKit Launcher - Patch Notes</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
+  :root {
+    --primary-color: #DD2C00;
+    --secondary-color: #FE5722;
+  }
+  
   html {
     scroll-behavior: smooth;
   }
@@ -35,8 +40,8 @@
     height: 50px;
     padding-top: 5px;
     padding-bottom: 5px;
-    background: #b81de3;
-    background: linear-gradient(90deg, rgb(223, 57, 188) 0%, rgba(184, 29, 227) 100%);
+    background: var(--primary-color);
+    background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
     box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
     position: fixed;
     display: flex;
@@ -78,7 +83,7 @@
   }
 
   .tag {
-    background-color: #df39bc;
+    background-color: var(--secondary-color);
     padding: 8px;
     border-radius: 6px;
     width: fit-content;
@@ -104,7 +109,7 @@
   h1 {
     font-size: 20px;
     font-weight: 500;
-    color: #B81DE3;
+    color: var(--primary-color);
     margin-top: 10px;
     margin-bottom: 10px;
   }
@@ -112,7 +117,7 @@
   h2 {
     font-size: 16px;
     font-weight: 500;
-    color: #B81DE3;
+    color: var(--primary-color);
     margin-top: 8px;
     margin-bottom: 8px;
   }

@@ -1,38 +1,11 @@
-// TODO: Clean up
 const { ipcRenderer } = require('electron');
+const { notify } = require("../modules/frontend/notification");
 
 window.addEventListener('DOMContentLoaded', () => {
-    
-    // NOTIFICATION INIT
-    // --------------------------------------------------------------------------------------
-    let activateNotifications = 0;
-
-    function notify(title, description, length, callback, notifyOs = false) {
-        document.querySelector('h1').textContent = title;
-        document.querySelector('span').textContent = description;
-        document.querySelector('.notification').classList.add('active');
-        activateNotifications++;
-
-        if (notifyOs) {
-            ipcRenderer.send("notify", title, description);
-        }
-
-        setTimeout(() => {
-            if (callback) callback();
-            activateNotifications--;
-
-            if (activateNotifications == 0) {
-                document.querySelector('.notification').classList.remove('active');
-            }
-        }, length);
-    }
-    // --------------------------------------------------------------------------------------
-
-
-    // FORM EVENTS
-    // --------------------------------------------------------------------------------------
-    const form = document.getElementById('form');
+    const form = document.querySelector('#form');
     const button = document.querySelector('button');
+    const notificationObject = document.querySelector('.notification');
+
     let inLogin = false;
 
     form.addEventListener('submit', async (event) => {
@@ -44,60 +17,52 @@ window.addEventListener('DOMContentLoaded', () => {
         const accessKey = document.getElementById('accesskey').value;
         const serverUrl = document.getElementById('serverurl').value;
         
-        notify("Logging in", "Trying to log you in...", 3000, null);
+        notify(notificationObject, "Logging in", "Trying to log you in...", 3000, false, null);
         button.classList.add("disabled");
         button.textContent = "Logging in...";
         
         const response = await ipcRenderer.invoke('login', { accessKey, serverUrl });
 
-        if (response.success) { notify("Success", "Loading library...", 1000, () => { ipcRenderer.send('login-success'); }) }
+        if (response.success) notify(notificationObject, "Success", "Loading library...", 1000, false, null)
         else {
             inLogin = false;
             button.classList.remove("disabled");
             button.textContent = "Login";
-            notify("Failed to Login", response.message || "Something went wrong!", 3000, null);
+            notify(notificationObject, "Failed to Login", response.message || "Something went wrong!", 3000, false, null);
         }
             
     });
-    // --------------------------------------------------------------------------------------
 
+    ipcRenderer.on('fill-input-fields', (event, { accessKey, serverUrl }, defaultServerUrl) => {
+        document.getElementById('serverurl').value = defaultServerUrl;
 
-    // IPC CALLBACKS
-    // --------------------------------------------------------------------------------------
-    ipcRenderer.on('fill-server-url', (event, serverUrl) => {
-        document.getElementById('serverurl').value = serverUrl;
-    })
-
-    ipcRenderer.on('fill-credentials', (event, credentials) => {
-        if (credentials.accessKey) { document.getElementById('accesskey').value = credentials.accessKey; }
-        if (credentials.serverUrl) { document.getElementById('serverurl').value = credentials.serverUrl; }
+        if (accessKey) { document.getElementById('accesskey').value = accessKey; }
+        if (serverUrl) { document.getElementById('serverurl').value = serverUrl; }
     });
 
-    ipcRenderer.on('started-auto-validation', (event) => {
+    ipcRenderer.on('started-auto-auth', (event) => {
         inLogin = true;
         button.classList.add("disabled");
         button.textContent = "Logging in...";
-        notify("Logging in", "Attempting to log you in...", 3000, null);
+        notify(notificationObject, "Logging in", "Attempting to log you in...", 3000, false, null);
     });
 
-    ipcRenderer.on('success-logout', (event) => {
-        notify("Success", "Logged out and uninstalled all games!", 3000, null);
-    });
-    
-    ipcRenderer.on('invalid-credentials', (event, errorMessage) => {
-        notify("Your access has been lost!", errorMessage, 3000, null);
+    ipcRenderer.on('success-auto-auth', (event) => {
+        notify(notificationObject, "Success", "Loading library...", 1000, false, () => { ipcRenderer.send('login-success'); });
     });
 
-    ipcRenderer.on('success-auto-validate', (event) => {
-        notify("Success", "Loading library...", 1000, () => { ipcRenderer.send('login-success'); });
-    });
-
-    ipcRenderer.on('failed-to-validate', (event, errorMessage) => {
+    ipcRenderer.on('failed-auto-auth', (event, errorMessage) => {
         inLogin = false;
         button.classList.remove("disabled");
         button.textContent = "Login";
-        notify("Failed to Validate Access", errorMessage, 3000, null);
+        notify(notificationObject, "Failed to Validate Access", errorMessage, 3000, false, null);
     });
-    // --------------------------------------------------------------------------------------
+
+    ipcRenderer.on('success-logout', (event) => {
+        notify(notificationObject, "Success", "Logged out and uninstalled all games!", 3000, false, null);
+    });
     
+    ipcRenderer.on('auth-lost', (event, errorMessage) => {
+        notify(notificationObject, "Your access has been lost!", errorMessage, 3000, false, null);
+    });
 });

@@ -4,9 +4,14 @@
 <meta name="viewport" content="width=device-width">
 <meta http-equiv="Content-Security-Policy" content="script-src 'self';">
 <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css' rel='stylesheet'>
-<title>Twilight Studios Launcher</title>
+<title>ForgeKit Launcher</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+  :root {
+    --primary-color: #DD2C00;
+    --secondary-color: #FE5722;
+  }
 
   * {
     margin: 0;
@@ -23,7 +28,7 @@
 
   .logo {
     width: 100vw;
-    height: 50vh;
+    height: 40vh;
     background-image: url('../resources/background.png');
     background-size: cover;
     background-position: center;
@@ -52,7 +57,7 @@
 
   h2 {
     font-weight: 700;
-    color: #DF39BC;
+    color: var(--secondary-color);
     font-size: 20px;
     margin-bottom: 20px;
     width: 100vw;
@@ -74,7 +79,7 @@
     content: "";
     width: 50px;
     height: 50px;
-    border: 5px solid #DF39BC;
+    border: 5px solid var(--secondary-color);
     border-top: 5px solid transparent;
     border-radius: 50%;
     animation: spin 1s linear infinite;
@@ -88,7 +93,7 @@
 
   i {
     margin-top: 20px;
-    color: #DF39BC;
+    color: var(--secondary-color);
     font-size: 60px;
     visibility: hidden;
     width: 0px;

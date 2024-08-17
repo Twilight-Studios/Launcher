@@ -1,19 +1,15 @@
-// MODULE IMPORTS
-// --------------------------------------------------------------------------------------
-
+const { ipcMain } = require('electron');
 const axios = require('axios');
 const fileManager = require('./fileManager');
-
-// --------------------------------------------------------------------------------------
-
-// GLOBAL VARIABLE MANAGEMENT
-// --------------------------------------------------------------------------------------
+const utils = require('../utils');
 
 let currentUser = {
     accessKey: null,
-    serverUrl: null,
-    authenticated: false
+    serverUrl: null
 }
+
+exports.onLoginSuccess = null;
+exports.onAuthLost = null;
 
 exports.getUser = () => { return currentUser; }
 
@@ -25,13 +21,15 @@ exports.loadUser = function () {
     if (!userJson) {
         currentUser.accessKey = null;
         currentUser.serverUrl = null;
+        return;
     }
-    else {
-        currentUser.accessKey = userJson.accessKey;
-        currentUser.serverUrl = userJson.serverUrl;
-    }
+    
+    currentUser.accessKey = userJson.accessKey;
+    currentUser.serverUrl = userJson.serverUrl;
+}
 
-    currentUser.authenticated = false;
+exports.saveUser = function () {
+    fileManager.saveJson(currentUser, "credentials.json");
 }
 
 exports.setUser = function (accessKey, serverUrl) {
@@ -40,18 +38,16 @@ exports.setUser = function (accessKey, serverUrl) {
     currentUser.authenticated = false;
 }
 
-// --------------------------------------------------------------------------------------
-
-// AUTHENTICATION
-// --------------------------------------------------------------------------------------
-
 exports.authenticateUser = async function () {
     if (!exports.isUserValid) { return { ok: false, status: -1 }; }
 
     try {
         const resp = await axios.post(`${currentUser.serverUrl}/api/validate-access`, { key: currentUser.accessKey });
 
-        currentUser.authenticated = resp.status === 200;
+        if (resp.status === 200) {
+            exports.saveUser();
+            if (exports.onLoginSuccess) { exports.onLoginSuccess(); }
+        }
 
         return { ok: resp.status === 200, status: resp.status };
     } 
@@ -59,9 +55,18 @@ exports.authenticateUser = async function () {
         let status = 0; // Default status for no internet connection
         if (error.response) { status = error.response.status; }
 
-        currentUser.authenticated = false;
         return { ok: false, status: status };
     }
 }
 
-// --------------------------------------------------------------------------------------
+ipcMain.handle('login', async (event, { accessKey, serverUrl }) => {
+    exports.setUser(accessKey, serverUrl);
+    let {ok, status} = await exports.authenticateUser();
+
+    if (ok) { return { success: true }; }
+    return { success: false, message: utils.getErrorMessage(status) };
+})
+
+ipcMain.handle('auth-lost', (event, code) => {
+    if (exports.onAuthLost) exports.onAuthLost(code);
+})
