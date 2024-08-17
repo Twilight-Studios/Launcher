@@ -14,7 +14,7 @@ exports.onLoginWindowCreated = null;
 exports.onLibraryWindowCreated = null;
 exports.onGameWindowCreated = null;
 exports.onPatchNotesWindowCreated = null;
-exports.onWindowReloaded = null;
+exports.onWindowReload = null;
 
 function createWindow(fileName, width, height, callback) {
     if (mainWindow) { mainWindow.close(); }
@@ -95,9 +95,21 @@ exports.createPatchNotesWindow = function (patchNotes, callback) {
 
 exports.showMainWindow = () => { mainWindow.show(); }
 
-exports.reloadCurrentWindow = (callback) => { // TODO: The issue with reload, is that existing onWindowCreated callbacks can execute procedures after window, causing unwanted and duplicated behaviour. Needs to be looked into and fixed.
+exports.reloadCurrentWindow = async (callback) => {
+    /*
+    The issue with reload is that old onWindowCreated callbacks can execute procedures after window reload.
+    This can cause unwanted and duplicated behaviour through callbacks being called twice.
+    The current solution is if the onWindowReload callback returns false, the new page isnt loaded.
+    This prevents new onWindowCreated callbacks to be triggered, but still doesn't stop existing ones still executing.
+    For that reason, reloads must not be called before some IPC callback doesn't state all onWindowCreated callbacks are done.
+    For example, the library-loaded callback will allow for reloads to be triggered. This isn't ideal but its the best option as of now.
+    */
+    
+    if (exports.onWindowReload) {
+        let response = await exports.onWindowReload(); // onWindowReload must be asynchronous
+        if (response === false) return;
+    }
     mainWindowCreateMethod();
-    if (exports.onWindowReloaded) exports.onWindowReloaded();
     if (callback) callback();
 }
 
@@ -124,5 +136,5 @@ exports.closeMainWindow = function () {
 }
 
 ipcMain.on('reload', (event) => {
-    exports.reloadCurrentWindow();
+    exports.reloadCurrentWindow(() => { exports.sendMessage("success-reload"); }); // Hacky fix but it works for now
 });

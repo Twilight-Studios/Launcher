@@ -15,7 +15,7 @@ const utils = require("./modules/utils");
 // --------------------------------------------------------------------------------------
 
 const DEFAULT_SERVER_URL = "https://twilightdev.replit.app"; // Only used as an automatic value for the server value for login
-wm.devMode = true; // Used to provide access to chromium dev tools (MUST BE SET TO FALSE BEFORE LEAVING DEV ENVIRONMENT)
+wm.devMode = false; // Used to provide access to chromium dev tools (MUST BE SET TO FALSE BEFORE LEAVING DEV ENVIRONMENT)
 
 // --------------------------------------------------------------------------------------
 
@@ -36,11 +36,15 @@ auth.onAuthLost = function (code) {
     wm.sendMessage('auth-lost', utils.getErrorMessage(code));
 }
 
-wm.onWindowReloaded = function () {
-    auth.authenticateUser(triggerLoginCallback=false).then(({ok, status}) => {
-        if (!ok) wm.sendMessage("auth-lost", status);
-        else wm.sendMessage("success-reload");
-    });
+wm.onWindowReload = async function () {
+    let {ok, status} = await auth.authenticateUser(triggerLoginCallback=false);
+
+    if (!ok) {
+        auth.onAuthLost(status);
+        return false; // The reload should stop
+    }
+    
+    return true;
 }
 
 wm.onUpdateWindowCreated = function () {

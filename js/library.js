@@ -7,6 +7,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const logoutButton = document.querySelector("#logout");
     const reloadButton = document.querySelector("#reload");
     const notificationObject = document.querySelector('.notification');
+    let libraryLoaded = false;
+    let reloadStarted = false;
 
     popout.setup(
         document.querySelector('.popout'), 
@@ -55,6 +57,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     
     ipcRenderer.on('library-loaded', (event, games, { accessKey, serverUrl }) => {
+        libraryLoaded = true;
         grid.innerHTML = '';
         document.querySelector('.login-info').textContent = `> Logged in as ${accessKey} on ${serverUrl}`;
 
@@ -72,12 +75,27 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     ipcRenderer.on('success-reload', (event) => {
-        notify(notificationObject, "Success", "Reloaded your access and catalog!", 3000, false, null);
+        notify(notificationObject, "Success", "Reloaded your access and library!", 3000, false, null);
     });
 
-    reloadButton.addEventListener("click", (event) => { ipcRenderer.send("reload"); })
+    reloadButton.addEventListener("click", (event) => {
+        if (reloadStarted) return;
+
+        if (!libraryLoaded) notify(notificationObject, "Wait Up", "Your library hasn't loaded yet!", 2000, false, null);
+        else {
+            reloadStarted = true;
+            notify(notificationObject, "Reloading", "Started reloading your access and library...", 3000, false, null);
+            ipcRenderer.send("reload");
+        }
+    });
 
     logoutButton.addEventListener("click", (event) => {
+        if (reloadStarted) return;
+
+        if (!libraryLoaded) {
+            notify(notificationObject, "Wait Up", "Your library hasn't loaded yet!", 2000, false, null);
+            return;
+        }
         popout.activate(
             "Are you sure?",
             "By logging out, all your games will be uninstalled for privacy reasons. This is irrreversible!",

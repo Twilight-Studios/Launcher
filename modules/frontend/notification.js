@@ -12,11 +12,11 @@ exports.notify = function (notificationObject, title, description, length, notif
     activateNotifications++;
 
     setTimeout(() => {
-
+        activateNotifications--;
+        
         let stillExists = document.contains(notificationObject) != null;
         if (!stillExists) return; // Assume that the page has changed and JS callbacks are no longer valid.
 
-        activateNotifications--;
         if (activateNotifications == 0) { notificationObject.classList.remove('active'); }
 
         if (onEndCallback) onEndCallback();
