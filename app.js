@@ -60,8 +60,9 @@ auth.onLogout = () => {
 };
 
 auth.onAuthLost = function (code) {
-    wm.openWindowPreset('login');
-    wm.sendNotification("Your access has been lost!", utils.getErrorMessage(code), 3000);
+    wm.openWindowPreset('login', () => {
+        wm.sendNotification("Your access has been lost!", utils.getErrorMessage(code), 3000);
+    });
 }
 
 updateManager.onError = (error) => { wm.sendMessage('update-error', error.message) }
