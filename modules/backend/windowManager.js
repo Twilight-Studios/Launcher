@@ -41,7 +41,7 @@ function createWindow(fileName, width, height, callback) {
         height: height,
         icon: path.join(__dirname, '../../resources/logo.ico'),
         webPreferences: {
-            preload: path.join(__dirname, `../../js/${fileName}.js`),
+            preload: path.join(__dirname, `../../pages/${fileName}.js`),
             nodeIntegration: false,
             contextIsolation: true,
             enableRemoteModule: false,

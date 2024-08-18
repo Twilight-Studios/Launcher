@@ -1,6 +1,3 @@
-// MODULE IMPORTS
-// --------------------------------------------------------------------------------------
-
 const { app } = require('electron');
 
 const wm = require("./modules/backend/windowManager");
@@ -9,18 +6,8 @@ const updateManager = require("./modules/backend/updateManager");
 const auth = require("./modules/backend/auth");
 const utils = require("./modules/utils");
 
-// --------------------------------------------------------------------------------------
-
-// APP CUSTOMISATION
-// --------------------------------------------------------------------------------------
-
 const DEFAULT_SERVER_URL = "https://twilightdev.replit.app"; // Only used as an automatic value for the server value for login
 wm.devMode = false; // Used to provide access to chromium dev tools (MUST BE SET TO FALSE BEFORE LEAVING DEV ENVIRONMENT)
-
-// --------------------------------------------------------------------------------------
-
-// CALLBACKS
-// --------------------------------------------------------------------------------------
 
 wm.addWindowPreset('update', 400, 600, () => {
     updateManager.checkForUpdates().then(updateAvailable => { 
@@ -45,8 +32,8 @@ wm.addWindowPreset('login', 400, 600, () => {
 })
 
 wm.addWindowPreset('library', 1280, 720, async () => {
-    let games = await gm.getAllGameData(auth.getUser(), true);
-    wm.sendMessage('library-loaded', games, auth.getUser());
+    let gamesData = await gm.getAllGameData(auth.getUser(), true);
+    wm.sendMessage('library-loaded', gamesData, auth.getUser());
 });
 
 wm.onWindowReload = async function () {
@@ -74,11 +61,6 @@ auth.onAuthLost = function (code) {
 
 updateManager.onError = (error) => { wm.sendMessage('update-error', error.message) }
 
-// --------------------------------------------------------------------------------------
-
-// APP INIT AND EVENTS
-// --------------------------------------------------------------------------------------
-
 if (!app.requestSingleInstanceLock()) { app.quit(); }
 
 app.on("ready", () => {
@@ -96,5 +78,3 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') { app.quit(); }
 });
-
-// --------------------------------------------------------------------------------------
