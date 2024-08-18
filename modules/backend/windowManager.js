@@ -8,7 +8,7 @@ exports.getMainWindow = () => { return mainWindow; }
 exports.getPatchNotesWindow = () => { return patchNotesWindow; }
 
 exports.devMode = false;
-exports.onWindowReload = null;
+exports.onWindowPresetOpened = null; // onWindowPresetOpened must be asynchronous
 
 let windowPresets = {};
 
@@ -27,10 +27,15 @@ exports.openWindowPreset = function (fileName, additionalCallback) {
     let wp = windowPresets[fileName];
     currentWindowPreset = fileName;
 
-    createWindow(fileName, wp.width, wp.height, () => {
-        if (wp.defaultCallback) wp.defaultCallback();
-        if (additionalCallback) additionalCallback();
-    });
+    if (exports.onWindowPresetOpened) {
+        exports.onWindowPresetOpened(fileName).then(shouldContinue => {
+            if (shouldContinue === false) return;
+            createWindow(fileName, wp.width, wp.height, () => {
+                if (wp.defaultCallback) wp.defaultCallback();
+                if (additionalCallback) additionalCallback();
+            });
+        });
+    }
 }
 
 function createWindow(fileName, width, height, callback) {
@@ -50,7 +55,7 @@ function createWindow(fileName, width, height, callback) {
     });
     
     mainWindow.loadFile(`./pages/${fileName}.html`);
-    mainWindow.setResizable(false);
+    mainWindow.setResizable(exports.devMode);
     if (!exports.devMode) { Menu.setApplicationMenu(null); }
 
     if (callback) { mainWindow.webContents.once('did-finish-load', () => { callback(); }); }
@@ -58,22 +63,9 @@ function createWindow(fileName, width, height, callback) {
 }
 
 exports.reloadCurrentWindow = async (callback) => {
-    /*
-    The issue with reload is that old defaultCallback procedures can execute procedures after window reload.
-    This can cause unwanted and duplicated behaviour through callbacks being called twice.
-    The current solution is if the onWindowReload callback returns false, the new page isnt loaded.
-    This prevents new defaultCallback procedures to be triggered, but still doesn't stop existing ones still executing.
-    For that reason, reloads must not be called before some IPC callback doesn't state all defaultCallback procedures are done.
-    For example, the library-loaded callback will allow for reloads to be triggered. This isn't ideal but its the best option as of now.
-    */
-    
-    if (exports.onWindowReload) {
-        let response = await exports.onWindowReload(); // onWindowReload must be asynchronous
-        if (response === false) return;
-    }
-
-    exports.openWindowPreset(currentWindowPreset);
-    if (callback) callback();
+    exports.openWindowPreset(currentWindowPreset, () => {
+        if (callback) callback();
+    });
 }
 
 exports.sendMessage = (channel, ...args) => {
@@ -81,6 +73,10 @@ exports.sendMessage = (channel, ...args) => {
         mainWindow.webContents.send(channel, ...args);
     }
 };
+
+exports.sendNotification = function (title, description, length) {
+    exports.sendMessage('notification', title, description, length);
+}
 
 exports.showMainWindow = () => { mainWindow.show(); }
 
@@ -93,5 +89,9 @@ exports.closeMainWindow = function () {
 }
 
 ipcMain.on('reload', (event) => {
-    exports.reloadCurrentWindow(() => { exports.sendMessage("success-reload"); }); // Hacky fix but it works for now
+    exports.reloadCurrentWindow(() => { exports.sendNotification("Success", "Reloaded your window", 3000) });
+});
+
+ipcMain.on('open-window-preset', (event, fileName) => {
+    exports.openWindowPreset(fileName);
 });

@@ -57,12 +57,4 @@ window.addEventListener('DOMContentLoaded', () => {
         button.textContent = "Login";
         notify(notificationObject, "Failed to Validate Access", errorMessage, 3000, false, null);
     });
-
-    ipcRenderer.on('success-logout', (event) => {
-        notify(notificationObject, "Success", "Logged out and uninstalled all games!", 3000, false, null);
-    });
-    
-    ipcRenderer.on('auth-lost', (event, errorMessage) => {
-        notify(notificationObject, "Your access has been lost!", errorMessage, 3000, false, null);
-    });
 });

@@ -8,8 +8,9 @@ window.addEventListener('DOMContentLoaded', () => {
     let reloadStarted = false;
 
     const grid = document.querySelector('.grid');
-    const logoutButton = document.querySelector("#logout");
     const reloadButton = document.querySelector("#reload");
+    const settingsButton = document.querySelector("#settings");
+    const logoutButton = document.querySelector("#logout");
     const notificationObject = document.querySelector('.notification');
 
     popout.setup(
@@ -67,7 +68,7 @@ window.addEventListener('DOMContentLoaded', () => {
     reloadButton.addEventListener("click", (event) => {
         if (reloadStarted) return;
 
-        if (!libraryLoaded) notify(notificationObject, "Wait Up", "Your library hasn't loaded yet!", 2000, false, null);
+        if (!libraryLoaded) notify(notificationObject, "Please Wait", "Your library hasn't loaded yet!", 2000, false, null);
         else {
             reloadStarted = true;
             notify(notificationObject, "Reloading", "Started reloading library...", 3000, false, null);
@@ -75,11 +76,18 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    settingsButton.addEventListener("click", (event) => {
+        if (reloadStarted) return;
+
+        if (!libraryLoaded) notify(notificationObject, "Please Wait", "Your library hasn't loaded yet!", 2000, false, null);
+        else ipcRenderer.send("open-window-preset", 'settings');
+    });
+
     logoutButton.addEventListener("click", (event) => {
         if (reloadStarted) return;
 
         if (!libraryLoaded) {
-            notify(notificationObject, "Wait Up", "Your library hasn't loaded yet!", 2000, false, null);
+            notify(notificationObject, "Please Wait", "Your library hasn't loaded yet!", 2000, false, null);
             return;
         }
 

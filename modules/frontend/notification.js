@@ -1,4 +1,4 @@
-const { Notification } = require("electron");
+const { Notification, ipcRenderer } = require("electron");
 const path = require("path");
 
 let activateNotifications = 0;
@@ -25,3 +25,7 @@ exports.notify = function (notificationObject, title, description, length, notif
 
     if (notifyOs) new Notification({ title: title, body: description, icon: path.join(__dirname, 'resources/logo.ico') }).show();
 }
+
+ipcRenderer.on('notification', (event, title, description, length) => {
+    exports.notify(null, title, description, length, false, null);
+});

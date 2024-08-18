@@ -36,12 +36,16 @@ wm.addWindowPreset('library', 1280, 720, async () => {
     wm.sendMessage('library-loaded', gamesData, auth.getUser());
 });
 
-wm.onWindowReload = async function () {
+wm.addWindowPreset('settings', 1280, 720, null);
+
+wm.onWindowPresetOpened = async function (fileName) {
+    if (fileName == "login" || fileName == "update") return;
+
     let {ok, status} = await auth.authenticateUser(triggerAuthSuccessCallback=false);
 
     if (!ok) {
         auth.onAuthLost(status);
-        return false; // The reload should stop
+        return false; // The preset should not be opened
     }
     
     return true;
@@ -50,13 +54,14 @@ wm.onWindowReload = async function () {
 auth.onAuthSuccess = () => { setTimeout(() => { wm.openWindowPreset('library'); }, 1000); }
 
 auth.onLogout = () => {
-    wm.openWindowPreset('login');
-    wm.sendMessage("success-logout");
+    wm.openWindowPreset('login', () => {
+        wm.sendNotification("Success", "Logged out and uninstalled all games!", 3000);
+    });
 };
 
 auth.onAuthLost = function (code) {
     wm.openWindowPreset('login');
-    wm.sendMessage('auth-lost', utils.getErrorMessage(code));
+    wm.sendNotification("Your access has been lost!", utils.getErrorMessage(code), 3000);
 }
 
 updateManager.onError = (error) => { wm.sendMessage('update-error', error.message) }
