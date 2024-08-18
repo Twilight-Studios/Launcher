@@ -22,19 +22,32 @@ wm.devMode = false; // Used to provide access to chromium dev tools (MUST BE SET
 // CALLBACKS
 // --------------------------------------------------------------------------------------
 
-updateManager.onError = (error) => { wm.sendMessage('update-error', error.message) }
+wm.addWindowPreset('update', 400, 600, () => {
+    updateManager.checkForUpdates().then(updateAvailable => { 
+        if (updateAvailable) wm.sendMessage('update-found');
 
-auth.onAuthSuccess = () => { setTimeout(() => { wm.createLibraryWindow(); }, 1000); }
+        else wm.openWindowPreset('login', async () => { // Auto-auth occurs here
 
-auth.onLogout = () => {
-    wm.createLoginWindow();
-    wm.sendMessage("success-logout");
-};
+            if (!auth.isUserValid()) return;
+            wm.sendMessage('started-auto-auth');
+        
+            let {ok, status} = await auth.authenticateUser();        
+            if (ok) { wm.sendMessage('success-auto-auth'); }
+            else wm.sendMessage('failed-auto-auth', utils.getErrorMessage(status));
 
-auth.onAuthLost = function (code) {
-    wm.createLoginWindow();
-    wm.sendMessage('auth-lost', utils.getErrorMessage(code));
-}
+        });
+    });
+});
+
+wm.addWindowPreset('login', 400, 600, () => {
+    auth.loadUser();
+    wm.sendMessage('fill-input-fields', auth.getUser(), DEFAULT_SERVER_URL);  
+})
+
+wm.addWindowPreset('library', 1280, 720, async () => {
+    let games = await gm.getAllGameData(auth.getUser(), true);
+    wm.sendMessage('library-loaded', games, auth.getUser());
+});
 
 wm.onWindowReload = async function () {
     let {ok, status} = await auth.authenticateUser(triggerAuthSuccessCallback=false);
@@ -47,29 +60,19 @@ wm.onWindowReload = async function () {
     return true;
 }
 
-wm.onUpdateWindowCreated = function () {
-    updateManager.checkForUpdates().then(updateAvailable => { 
-        if (updateAvailable) wm.sendMessage('update-found');
-        else wm.createLoginWindow(async () => { // Auto-auth occurs here
-            if (!auth.isUserValid()) return;
-            wm.sendMessage('started-auto-auth');
-        
-            let {ok, status} = await auth.authenticateUser();        
-            if (ok) { wm.sendMessage('success-auto-auth'); }
-            else wm.sendMessage('failed-auto-auth', utils.getErrorMessage(status));
-        });
-    });
+auth.onAuthSuccess = () => { setTimeout(() => { wm.openWindowPreset('library'); }, 1000); }
+
+auth.onLogout = () => {
+    wm.openWindowPreset('login');
+    wm.sendMessage("success-logout");
+};
+
+auth.onAuthLost = function (code) {
+    wm.openWindowPreset('login');
+    wm.sendMessage('auth-lost', utils.getErrorMessage(code));
 }
 
-wm.onLoginWindowCreated = function () {
-    auth.loadUser();
-    wm.sendMessage('fill-input-fields', auth.getUser(), DEFAULT_SERVER_URL);  
-}
-
-wm.onLibraryWindowCreated = async function () {
-    let games = await gm.getAllGameData(auth.getUser(), true);
-    wm.sendMessage('library-loaded', games, auth.getUser());
-}
+updateManager.onError = (error) => { wm.sendMessage('update-error', error.message) }
 
 // --------------------------------------------------------------------------------------
 
@@ -80,7 +83,7 @@ if (!app.requestSingleInstanceLock()) { app.quit(); }
 
 app.on("ready", () => {
     if (process.platform == 'win32') { app.setAppUserModelId("com.thenebulo.forgekitlauncher"); }
-    wm.createUpdateWindow();
+    wm.openWindowPreset('update');
 });
 
 app.on('second-instance', (event, commandLine, workingDirectory) => {
