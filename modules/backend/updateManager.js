@@ -8,7 +8,7 @@ autoUpdater.on("update-downloaded", () => {
 });
 
 autoUpdater.on('error', (error) => {
-    if (onError) onError(error);
+    if (exports.onError) exports.onError(error);
 });
 
 exports.checkForUpdates = async function () {
