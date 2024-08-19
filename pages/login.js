@@ -8,9 +8,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     let inLogin = false;
 
-    form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-
+    async function login() {
         if (inLogin) return;
         inLogin = true;
 
@@ -30,31 +28,21 @@ window.addEventListener('DOMContentLoaded', () => {
             button.textContent = "Login";
             notify(notificationObject, "Failed to Login", response.message || "Something went wrong!", 3000, false, null);
         }
-            
+    }
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        await login();
     });
+
+    ipcRenderer.on('try-login', async (event) => {
+        await login();
+    })
 
     ipcRenderer.on('fill-input-fields', (event, { accessKey, serverUrl }, defaultServerUrl) => {
         document.getElementById('serverurl').value = defaultServerUrl;
 
         if (accessKey) { document.getElementById('accesskey').value = accessKey; }
         if (serverUrl) { document.getElementById('serverurl').value = serverUrl; }
-    });
-
-    ipcRenderer.on('started-auto-auth', (event) => {
-        inLogin = true;
-        button.classList.add("disabled");
-        button.textContent = "Logging in...";
-        notify(notificationObject, "Logging in", "Attempting to log you in...", 3000, false, null);
-    });
-
-    ipcRenderer.on('success-auto-auth', (event) => {
-        notify(notificationObject, "Success", "Loading library...", 1000, false, () => { ipcRenderer.send('login-success'); });
-    });
-
-    ipcRenderer.on('failed-auto-auth', (event, errorMessage) => {
-        inLogin = false;
-        button.classList.remove("disabled");
-        button.textContent = "Login";
-        notify(notificationObject, "Failed to Validate Access", errorMessage, 3000, false, null);
     });
 });

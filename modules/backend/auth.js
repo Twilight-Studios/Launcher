@@ -8,7 +8,7 @@ let currentUser = {
     serverUrl: null
 }
 
-exports.onAuthSuccess = null;
+exports.onLoginSuccess = null;
 exports.onLogout = null;
 exports.onAuthLost = null;
 
@@ -39,17 +39,11 @@ exports.setUser = function (accessKey, serverUrl) {
     currentUser.authenticated = false;
 }
 
-exports.authenticateUser = async function (triggerAuthSuccessCallback=true) {
+exports.authenticateUser = async function () {
     if (!exports.isUserValid) { return { ok: false, status: -1 }; }
 
     try {
         const resp = await axios.post(`${currentUser.serverUrl}/api/validate-access`, { key: currentUser.accessKey });
-
-        if (resp.status === 200) {
-            exports.saveUser();
-            if (exports.onAuthSuccess && triggerAuthSuccessCallback) { exports.onAuthSuccess(); }
-        }
-
         return { ok: resp.status === 200, status: resp.status };
     } 
     catch (error) {
@@ -60,6 +54,18 @@ exports.authenticateUser = async function (triggerAuthSuccessCallback=true) {
     }
 }
 
+exports.login = async function () {
+    let {ok, status} = await exports.authenticateUser();
+
+    if (ok) {
+        exports.saveUser();
+        if (exports.onLoginSuccess) { exports.onLoginSuccess(); }
+        return { success: true };
+    }
+
+    return { success: false, message: utils.getErrorMessage(status) };
+}
+
 exports.logout = function () {
     exports.setUser(null, null);
     fileManager.removePath("credentials.json");
@@ -68,10 +74,8 @@ exports.logout = function () {
 
 ipcMain.handle('login', async (event, { accessKey, serverUrl }) => {
     exports.setUser(accessKey, serverUrl);
-    let {ok, status} = await exports.authenticateUser();
-
-    if (ok) { return { success: true }; }
-    return { success: false, message: utils.getErrorMessage(status) };
+    let response = await exports.login();
+    return response;
 });
 
 ipcMain.on('logout', (event) => {

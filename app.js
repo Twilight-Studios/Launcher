@@ -16,11 +16,7 @@ wm.addWindowPreset('update', 400, 600, () => {
         else wm.openWindowPreset('login', async () => { // Auto-auth occurs here
 
             if (!auth.isUserValid()) return;
-            wm.sendMessage('started-auto-auth');
-        
-            let {ok, status} = await auth.authenticateUser();        
-            if (ok) { wm.sendMessage('success-auto-auth'); }
-            else wm.sendMessage('failed-auto-auth', utils.getErrorMessage(status));
+            wm.sendMessage('try-login');
 
         });
     });
@@ -41,7 +37,7 @@ wm.addWindowPreset('settings', 1280, 720, null);
 wm.onWindowPresetOpened = async function (fileName) {
     if (fileName == "login" || fileName == "update") return;
 
-    let {ok, status} = await auth.authenticateUser(triggerAuthSuccessCallback=false);
+    let {ok, status} = await auth.authenticateUser();
 
     if (!ok) {
         auth.onAuthLost(status);
@@ -51,7 +47,7 @@ wm.onWindowPresetOpened = async function (fileName) {
     return true;
 }
 
-auth.onAuthSuccess = () => { setTimeout(() => { wm.openWindowPreset('library'); }, 1000); }
+auth.onLoginSuccess = () => { setTimeout(() => { wm.openWindowPreset('library'); }, 1000); }
 
 auth.onLogout = () => {
     wm.openWindowPreset('login', () => {
