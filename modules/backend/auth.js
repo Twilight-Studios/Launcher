@@ -11,6 +11,7 @@ let currentUser = {
 exports.onLoginSuccess = null;
 exports.onLogout = null;
 exports.onAuthLost = null;
+exports.bypassAuth = false;
 
 exports.getUser = () => { return currentUser; }
 
@@ -40,6 +41,7 @@ exports.setUser = function (accessKey, serverUrl) {
 }
 
 exports.authenticateUser = async function () {
+    if (exports.bypassAuth) return { ok: true };
     if (!exports.isUserValid) { return { ok: false, status: -1 }; }
 
     try {

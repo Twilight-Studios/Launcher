@@ -89,7 +89,7 @@ exports.closeMainWindow = function () {
 }
 
 ipcMain.on('reload', (event) => {
-    exports.reloadCurrentWindow(() => { exports.sendNotification("Success", "Reloaded your window", 3000) });
+    exports.reloadCurrentWindow();
 });
 
 ipcMain.on('open-window-preset', (event, fileName) => {

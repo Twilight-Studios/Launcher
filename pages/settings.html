@@ -124,23 +124,17 @@
     background-color: black;
   }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-gap: 10px;
+  .content {
     padding-top: 30px;
     padding-left: 20px;
-    overflow-y: auto;
-  }
-
-  .grid::-webkit-scrollbar {
-    display: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 66vh;
   }
 
   .loader {
-    grid-column: span 3;
-    grid-row: span 3;
-    margin-top: 175px;
     display: none;
     justify-content: center;
     align-items: center;
@@ -173,66 +167,6 @@
   @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
-  }
-
-  .game {
-    width: 380px;
-    height: 230px;
-    margin-bottom: 35px;
-  }
-
-  .thumbnail {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 200px;
-    border-radius: 5px;
-    overflow: hidden;
-    background-size: cover;
-    background-position: center;
-  }
-
-  .thumbnail img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: all ease-in-out 0.2s;
-  }
-
-  .thumbnail:hover img {
-    filter: blur(3px) brightness(0.8);
-    transform: scale(1.2);
-  }
-
-  .game > h3 {
-    margin-top: 10px;
-    color: white;
-    font-weight: 600;
-    pointer-events: none;
-  }
-
-  .open {
-    position: absolute;
-    padding: 15px;
-    border-radius: 10px;
-    background-color: white;
-    color: black;
-    z-index: 2;
-    opacity: 0;
-    transition: all ease-in-out 0.2s;
-    cursor: pointer;
-    font-weight: 800;
-  }
-
-  .open:hover {
-    background-color: black;
-    color: white;
-  }
-
-  .thumbnail:hover .open {
-    opacity: 1;
   }
 
   .popout {
@@ -324,8 +258,19 @@
         <div class="header-button" id="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
     </div>
   </div>
-  <div class="grid">
+  <div class="content">
     <div class="loader active"></div>
+    <!--
+    Planned settings options:
+    1) Open games location
+    2) Launch/stop local server
+
+    3) Check for updates
+    4) Set update channel
+    5) Toggle auto-update
+    
+    6) Auth fail behaviour (Auto logout, or stay logged in)
+    -->
   </div>
 </div>
 </html>
