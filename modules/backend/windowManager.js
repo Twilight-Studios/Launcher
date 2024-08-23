@@ -7,7 +7,7 @@ let currentWindowPreset;
 exports.getMainWindow = () => { return mainWindow; }
 exports.getPatchNotesWindow = () => { return patchNotesWindow; }
 
-exports.devMode = false;
+exports.enableDevTools = false;
 exports.onWindowPresetOpened = null; // onWindowPresetOpened must be asynchronous
 
 let windowPresets = {};
@@ -55,8 +55,8 @@ function createWindow(fileName, width, height, callback) {
     });
     
     mainWindow.loadFile(`./pages/${fileName}.html`);
-    mainWindow.setResizable(exports.devMode);
-    if (!exports.devMode) { Menu.setApplicationMenu(null); }
+    mainWindow.setResizable(exports.enableDevTools);
+    if (!exports.enableDevTools) { Menu.setApplicationMenu(null); }
 
     if (callback) { mainWindow.webContents.once('did-finish-load', () => { callback(); }); }
     mainWindow.once('ready-to-show', () => { mainWindow.show(); });

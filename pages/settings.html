@@ -129,9 +129,12 @@
     padding-left: 20px;
     display: flex;
     flex-direction: column;
+    height: 66vh;
+  }
+
+  .content.center {
     justify-content: center;
     align-items: center;
-    height: 66vh;
   }
 
   .loader {
@@ -231,6 +234,47 @@
     background-color: red;
     color: white;
   }
+
+  .setting {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .setting > .text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-right: 20px;
+    width: 400px;
+  }
+
+  .text > span {
+    font-weight: 700;
+    color: white;
+    font-size: 20px;
+  }
+
+  .text > p {
+    font-weight: 400;
+    color: white;
+    font-size: 16px;
+  }
+
+  .settingsbutton {
+    background: var(--primary-color);
+    background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+    padding: 10px;
+    width: fit-content;
+    height: fit-content;
+    color: white;
+    border-radius: 10px;
+    margin-right: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+  }
   
 </style>
 <div class="popout">
@@ -250,27 +294,60 @@
   </div>
   <div class="header">
     <div class="hero">
-      <div class="login-info">Coming Soon</div>
+      <div class="login-info">Loading...</div>
       <h1>Settings</h1>
     </div>
     <div class="header-buttons">
         <div class="header-button" id="library" style="margin-right: 10px;"><i class="fa-solid fa-house"></i></div>
+        <div class="header-button" id="reload" style="margin-right: 10px;"><i class="fa-solid fa-arrows-rotate"></i></div>
         <div class="header-button" id="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
     </div>
   </div>
   <div class="content">
-    <div class="loader active"></div>
-    <!--
-    Planned settings options:
-    1) Open games location
-    2) Launch/stop local server
 
-    3) Check for updates
-    4) Set update channel
-    5) Toggle auto-update
-    
-    6) Auth fail behaviour (Auto logout, or stay logged in)
-    -->
+      <div class="setting">
+        <div class="text">
+          <span>Games Folder</span>
+          <p>All games are stored in your %appdata% folder...</p>
+        </div>
+        <div class="settingsbutton">Open Folder</div>
+      </div>
+
+      <div class="setting">
+        <div class="text">
+          <span>Local Server</span>
+          <p>Run a local games server directly to GitHub</p>
+        </div>
+        <div class="settingsbutton">Start Server</div>
+        <div class="settingsbutton">Reset Server</div>
+      </div>
+
+      <div class="setting">
+        <div class="text">
+          <span>Version</span>
+          <p>Currently on version: 0.4.0</p>
+        </div>
+        <div class="settingsbutton">Check for updates</div>
+        <div class="settingsbutton">Disable auto update</div>
+      </div>
+
+      <div class="setting">
+        <div class="text">
+          <span>Update Channel</span>
+          <p>Updates are currently retrieved from...</p>
+        </div>
+        <div class="settingsbutton">Change update server</div>
+        <div class="settingsbutton">Change update channel</div>
+      </div>
+
+      <div class="setting">
+        <div class="text">
+          <span>Authentication Fail</span>
+          <p>What to do in case your credentials can't be authenticated</p>
+        </div>
+        <div class="settingsbutton">Set behaviour</div>
+      </div>
+
   </div>
 </div>
 </html>

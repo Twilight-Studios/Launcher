@@ -9,7 +9,7 @@ const utils = require("./modules/utils");
 const DEFAULT_SERVER_URL = "https://twilightdev.replit.app"; // Only used as an automatic value for the server value for login
 
 // Dev/testing tools (MUST BE SET TO FALSE BEFORE LEAVING DEV ENVIRONMENT)
-wm.devMode = false; // Used to provide access to chromium dev tools 
+wm.enableDevTools = false; // Used to provide access to chromium dev tools 
 auth.bypassAuth = false; // Used to skip auth to access UI offline
 
 wm.addWindowPreset('update', 400, 600, () => {
