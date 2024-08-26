@@ -8,7 +8,8 @@ let appVersion = app.getVersion();
 let cachedSettings = null;
 let eventsToIgnore = 0;
 
-fs.watch('settings.json', function (event, filename) {
+fm.createJson('settings.json');
+fs.watch('settings.json', { persistent: false }, function (event, filename) {
     if (eventsToIgnore > 0) {
         eventsToIgnore--;
         return;
