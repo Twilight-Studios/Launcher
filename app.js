@@ -2,6 +2,7 @@ const { app } = require('electron');
 
 const wm = require("./modules/backend/windowManager");
 const gm = require("./modules/backend/gameManager");
+const sm = require("./modules/backend/settingsManager");
 const updateManager = require("./modules/backend/updateManager");
 const auth = require("./modules/backend/auth");
 const utils = require("./modules/utils");
@@ -11,6 +12,8 @@ const DEFAULT_SERVER_URL = "https://twilightdev.replit.app"; // Only used as an 
 // Dev/testing tools (MUST BE SET TO FALSE BEFORE LEAVING DEV ENVIRONMENT)
 wm.enableDevTools = false; // Used to provide access to chromium dev tools 
 auth.bypassAuth = false; // Used to skip auth to access UI offline
+
+let currentSettings = {};
 
 wm.addWindowPreset('update', 400, 600, () => {
     updateManager.checkForUpdates().then(updateAvailable => { 
@@ -35,16 +38,36 @@ wm.addWindowPreset('library', 1280, 720, async () => {
     wm.sendMessage('library-loaded', gamesData, auth.getUser());
 });
 
-wm.addWindowPreset('settings', 1280, 720, null);
+wm.addWindowPreset('settings', 1280, 720, () => {
+    wm.sendMessage("settings-loaded", currentSettings, auth.getUser());
+});
 
 wm.onWindowPresetOpened = async function (fileName) {
+    currentSettings = sm.getSettings();
+    
     if (fileName == "login" || fileName == "update") return;
 
     let {ok, status} = await auth.authenticateUser();
 
     if (!ok) {
-        auth.onAuthLost(status);
-        return false; // The preset should not be opened
+        
+        // AUTH FAIL BEHAVIOURS ARE HANDLED HERE
+        let behaviour = currentSettings.authFailBehaviour;
+        
+        if (behaviour == 0) { // Default behaviour, should logout as usual and the window should not be loaded.
+            auth.onAuthLost(status);
+            return false; 
+        }
+        
+        if (behaviour == 1) { // Logout but game files should be kept (To be added)
+            auth.onAuthLost(status);
+            return false; 
+        }
+
+        if (behaviour == 2) { // Simply notify that access was failed and continue as usual
+            wm.sendNotification('Failed to Authenticate', utils.getErrorMessage(status), 3000);
+            return true;
+        }
     }
     
     return true;

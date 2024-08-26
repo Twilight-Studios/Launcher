@@ -71,7 +71,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (!libraryLoaded) notify(notificationObject, "Please Wait", "Your library hasn't loaded yet!", 2000, false, null);
         else {
             reloadStarted = true;
-            notify(notificationObject, "Reloading", "Started reloading library...", 3000, false, null);
+            notify(notificationObject, "Reloading", "Reloading library...", 3000, false, null);
             ipcRenderer.send("reload");
         }
     });

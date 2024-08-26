@@ -1,6 +1,7 @@
 const { autoUpdater } = require("electron-updater");
 
 autoUpdater.autoDownload = false;
+autoUpdater.allowDowngrade = true;
 exports.onError = null;
 
 autoUpdater.on("update-downloaded", () => {
