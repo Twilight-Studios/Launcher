@@ -16,55 +16,113 @@ exports.getErrorMessage = function (status) {
 }
 
 exports.getSettingMetadata = function (key, value) {
+
+    /*
+    Legend for action metadata (NONE CAN BE NULL IF ACTION IS NOT NULL)
+
+    Type: open
+        target: explorer, browser
+        path: string (i.e. a path to a file or URL)
+    
+    Type: ipc
+        channel: string (the channel on which the IPC message is sent)
+        params: array (params for the message)
+
+    Type: toggle
+        title: string (title of the toggle popout)
+        desc: string (description of the toggle popout)
+
+    Type: dropdown
+        title: string (title of the dropdown popout)
+        desc: string (description of the toggle popout)
+        options: [ [alias, value], [alias, value], ...]
+
+    Type: input
+        title: string (title of the input popout)
+        desc: string (description of the input popout)
+        sanitize: null, url, path
+
+    */
+
     switch (key) {
         case 'gamesPath':
             return { 
                 "title" : "Games Folder", 
-                "desc": "Where all games are installed",
-                "button": "Open Folder",
-                "restart": false
+                "desc" : "Where all games are installed",
+                "button" : "Open Folder",
+                "action" : {
+                    "type" : "open",
+                    "target" : "explorer",
+                    "path" : value,
+                }
             };
         case 'appVersion':
             return { 
                 "title" : "App Version", 
-                "desc": `The current version of the app is ${value}`,
-                "button": "Check for Updates",
-                "restart": false
+                "desc" : `The current version of the app is ${value}`,
+                "button" : "Check for Updates",
+                "action" : {
+                    "type" : "ipc",
+                    "channel" : "check-for-updates",
+                    "params" : []
+                }
             };
         case 'betaEnabled':
             return { 
                 "title" : "Experimental Branch", 
-                "desc": `Use the experimental build of the launcher. Currently ${ value ? "enabled" : "disabled" }`,
-                "button": "Toggle Branch",
-                "restart": false
+                "desc" : `Use the experimental build of the launcher. Currently ${ value ? "enabled" : "disabled" }`,
+                "button" : "Toggle Branch",
+                "action" : {
+                    "type" : "toggle",
+                    "title" : value ? "Return to Stable Branch" : "Enable Experimental Branch",
+                    "desc" : value ? "By returning to the stable branch, all experimental updates will be reverted and the launcher will restart." : "By enabling the experimental branch, you may be using a non-stable version of the launcher with possible bugs."
+                }
             };
         case 'autoUpdateEnabled':
             return { 
                 "title" : "Auto Update", 
                 "desc": `Update the launcher automatically on startup. Currently ${ value ? "enabled" : "disabled" }`,
                 "button": "Toggle Auto Update",
-                "restart": false
+                "action" : {
+                    "type" : "toggle",
+                    "title" : value ? "Disable Auto Update" : "Enable Auto Update",
+                    "desc" : value ? "By disabling auto update, all updates need to be manually downloaded by checking for updates, and critical updates can be missed." : "By enabling auto update, the launcher will automatically check for the latest launcher version and install it on startup."
+                }
             };
         case 'updateServer':
             return { 
                 "title" : "Update Server", 
-                "desc": "From where to download new launcher updates",
-                "button": "Change Update Server",
-                "restart": false
+                "desc" : "From where to download new launcher updates",
+                "button" : "Change Update Server",
+                "action" : {
+                    "type" : "input",
+                    "title" : "Change Update Server",
+                    "desc" : "By changing the update server, the app will restart and download all updates from the new URL.",
+                    "sanitize" : "url"
+                }
             };
         case 'authFailBehaviour':
             return { 
                 "title" : "On Authentication Fail", 
-                "desc": "What to do in case your credentials can't be authenticated",
-                "button": "Set Behaviour",
-                "restart": false
+                "desc" : "What to do in case your credentials can't be authenticated",
+                "button" : "Set Behaviour",
+                "action" : {
+                    "type" : "dropwdown",
+                    "title" : "Authentication Fail Behaviour",
+                    "desc" : "What to do when the launcher fails to authenticate a logged-in user.",
+                    "options" : [
+                        ["Logout and remove game files", 0],
+                        ["Logout and keep game files", 1],
+                        ["Do not logout", 2],
+                    ]
+                }
             };
         default:
             return  { 
                 "title" : `Unknown Setting: ${key}`, 
-                "desc": "This setting is unknown and has no meta data",
-                "button": `Value: ${value}`,
-                "restart": false
+                "desc" : "This setting is unknown and has no meta data",
+                "button" : `Value: ${value}`,
+                "action" : null
             };
     }
 }
