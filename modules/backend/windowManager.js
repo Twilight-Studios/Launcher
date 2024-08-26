@@ -1,4 +1,5 @@
-const { BrowserWindow, Menu, ipcMain } = require('electron');
+const { BrowserWindow, Menu, ipcMain, shell } = require('electron');
+const fs = require('fs');
 const path = require('path');
 
 let mainWindow;
@@ -96,4 +97,13 @@ ipcMain.on('reload', (event) => {
 
 ipcMain.on('open-window-preset', (event, fileName) => {
     exports.openWindowPreset(fileName);
+});
+
+ipcMain.on('open-file', (event, filePath) => {
+    if (!fs.existsSync(filePath)) return;
+    shell.showItemInFolder(filePath)
+});
+
+ipcMain.on('open-external-url', (event, url) => {
+    shell.openExternal(url);
 });

@@ -19,7 +19,7 @@ window.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.login-info').textContent = `> Logged in as ${accessKey} on ${serverUrl}`;
 
         for (const [key, value] of Object.entries(settings)) {
-            const { title, desc, button, restart } = utils.getSettingMetadata(key, value);
+            const { title, desc, button, action } = utils.getSettingMetadata(key, value);
 
             let setting = document.createElement('div');
             setting.classList.add('setting');
@@ -30,9 +30,36 @@ window.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="settingsbutton">${button}</div>`
 
-            content.appendChild(setting);
+            let buttonEl = content.appendChild(setting).querySelector('.settingsbutton');
+            let actionCallback = createActionCallback(action, key, value);
+
+            buttonEl.addEventListener('click', (event) => { actionCallback(); })
         }
     });
+
+    function createActionCallback(action, key, value) {
+        if (action.type == 'open') {
+            if (action.target == 'explorer') return () => { ipcRenderer.send('open-file', action.path); }
+            else if (action.target == 'browser') return () => { ipcRenderer.send('open-external-url', action.path); }
+        }
+
+        else if (action.type == 'ipc') {
+            return () => { ipcRenderer.send(action.channel, action.params); }
+        }
+
+        else if (action.type == 'toggle') {
+            return () => { popout.activate(
+                action.title,
+                action.desc,
+                "Confirm",
+                value ? "remove" : "add",
+                () => {
+                    ipcRenderer.send('new-settings-value', key, !value);
+                    ipcRenderer.send('reload');
+                }
+            ) }
+        }
+    }
 
     document.querySelector('#reload').addEventListener("click", (event) => {
         if (reloadStarted) return;

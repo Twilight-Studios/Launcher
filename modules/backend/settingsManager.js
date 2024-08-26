@@ -1,4 +1,4 @@
-const { app } = require('electron');
+const { app, ipcMain } = require('electron');
 const fm = require('./fileManager');
 const path = require('path');
 const fs = require('fs');
@@ -54,3 +54,15 @@ exports.writeSettings = (settings) => {
     eventsToIgnore++;
     fm.saveJson(settings, 'settings.json');  
 }
+
+ipcMain.on('new-settings-value', (event, key, newValue) => {
+    let settings = exports.getSettings();
+
+    if (!(key in settings)) {
+        console.error(`Tried to write new value for ${key} setting, which doesn't exist.`);
+        return;
+    }
+
+    settings[key] = newValue;
+    exports.writeSettings(settings);
+})
