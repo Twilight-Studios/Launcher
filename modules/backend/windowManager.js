@@ -58,8 +58,10 @@ function createWindow(fileName, width, height, callback) {
     mainWindow.setResizable(exports.enableDevTools);
     if (!exports.enableDevTools) { Menu.setApplicationMenu(null); }
 
-    if (callback) { mainWindow.webContents.once('did-finish-load', () => { callback(); }); }
-    mainWindow.once('ready-to-show', () => { mainWindow.show(); });
+    if (callback) { mainWindow.webContents.once('did-finish-load', () => { 
+        callback();
+        mainWindow.show()
+    });}
 }
 
 exports.reloadCurrentWindow = async (callback) => {

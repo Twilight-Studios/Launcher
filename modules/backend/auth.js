@@ -1,6 +1,6 @@
 const { ipcMain } = require('electron');
 const axios = require('axios');
-const fileManager = require('./fileManager');
+const fm = require('./fileManager');
 const utils = require('../utils');
 
 let currentUser = {
@@ -18,7 +18,7 @@ exports.getUser = () => { return currentUser; }
 exports.isUserValid = () => { return (currentUser.accessKey !== null && currentUser.serverUrl !== null); }
 
 exports.loadUser = function () {
-    userJson = fileManager.readJson('credentials.json');
+    userJson = fm.readJson('credentials.json');
 
     if (!userJson) {
         currentUser.accessKey = null;
@@ -31,7 +31,7 @@ exports.loadUser = function () {
 }
 
 exports.saveUser = function () {
-    fileManager.saveJson(currentUser, "credentials.json");
+    fm.saveJson(currentUser, "credentials.json");
 }
 
 exports.setUser = function (accessKey, serverUrl) {
@@ -70,7 +70,7 @@ exports.login = async function () {
 
 exports.logout = function () {
     exports.setUser(null, null);
-    fileManager.removePath("credentials.json");
+    fm.removePath("credentials.json");
     if (exports.onLogout) exports.onLogout();
 }
 
