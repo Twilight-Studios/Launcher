@@ -1,20 +1,31 @@
 const { app } = require('electron');
 const fm = require('./fileManager');
 const path = require('path');
+const fs = require('fs');
 
 let appVersion = app.getVersion();
 
-let cachedSettings = {};
+let cachedSettings = null;
+let eventsToIgnore = 0;
+
+fs.watch('settings.json', function (event, filename) {
+    if (eventsToIgnore > 0) {
+        eventsToIgnore--;
+        return;
+    }
+
+    cachedSettings = null;
+});
 
 exports.getSettings = function () {
+    if (cachedSettings) return cachedSettings;
+
     let settings = {};
 
+    eventsToIgnore++;
     let loadedSettings = fm.readJson('settings.json');
-    if (!loadedSettings || typeof loadedSettings != "object") loadedSettings = {};
 
-    if (JSON.stringify(loadedSettings) == JSON.stringify(cachedSettings)) {
-        return cachedSettings;
-    }
+    if (!loadedSettings || typeof loadedSettings != "object") loadedSettings = {};
 
     if (!('gamesPath' in loadedSettings)) settings.gamesPath = path.join(app.getPath('userData'), 'games');
     else settings.gamesPath = loadedSettings.gamesPath;
@@ -36,7 +47,9 @@ exports.getSettings = function () {
     return settings;
 }
 
-exports.writeSettings = (settings) => { 
+exports.writeSettings = (settings) => {
     cachedSettings = settings;
+
+    eventsToIgnore++;
     fm.saveJson(settings, 'settings.json');  
 }

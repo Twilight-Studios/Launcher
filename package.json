@@ -15,6 +15,7 @@
     "directories": {
       "output": "dist"
     },
+    "generateUpdatesFilesForAllChannels": true,
     "dmg": {
       "background": null,
       "backgroundColor": "#ffffff",
