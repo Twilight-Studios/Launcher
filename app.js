@@ -1,11 +1,11 @@
 const { app } = require('electron');
 
-const wm = require("./modules/backend/windowManager");
-const gm = require("./modules/backend/gameManager");
-const sm = require("./modules/backend/settingsManager");
-const updateManager = require("./modules/backend/updateManager");
-const auth = require("./modules/backend/auth");
-const utils = require("./modules/utils");
+const wm = require("./src/backend/windowManager");
+const gm = require("./src/backend/gameManager");
+const sm = require("./src/backend/settingsManager");
+const updateManager = require("./src/backend/updateManager");
+const auth = require("./src/backend/auth");
+const utils = require("./src/utils");
 
 const DEFAULT_SERVER_URL = "https://twilightdev.replit.app"; // Only used as an automatic value for the server value for login
 

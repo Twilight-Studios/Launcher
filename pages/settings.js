@@ -1,7 +1,7 @@
 const { ipcRenderer } = require('electron');
-const { notify } = require("./../modules/frontend/notification");
-const popout = require("./../modules/frontend/popout");
-const utils = require("./../modules/utils");
+const { notify } = require("../src/frontend/notification");
+const popout = require("../src/frontend/popout");
+const utils = require("../src/utils");
 
 window.addEventListener('DOMContentLoaded', () => {
     let reloadStarted = false;
