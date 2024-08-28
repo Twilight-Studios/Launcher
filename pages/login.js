@@ -1,5 +1,5 @@
 const { ipcRenderer } = require('electron');
-const { notify } = require("./../modules/frontend/notification");
+const { notify } = require("../src/frontend/notification");
 
 window.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('#form');
