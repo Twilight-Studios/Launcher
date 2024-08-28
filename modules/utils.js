@@ -107,7 +107,7 @@ exports.getSettingMetadata = function (key, value) {
                 "desc" : "What to do in case your credentials can't be authenticated",
                 "button" : "Set Behaviour",
                 "action" : {
-                    "type" : "dropwdown",
+                    "type" : "dropdown",
                     "title" : "Authentication Fail Behaviour",
                     "desc" : "What to do when the launcher fails to authenticate a logged-in user.",
                     "options" : [

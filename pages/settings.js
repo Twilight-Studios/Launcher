@@ -59,6 +59,33 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
             ) }
         }
+
+        else if (action.type == 'dropdown') {
+            console.log("please");
+            let dropdownOptions = [];
+
+            action.options.forEach(option => {
+                dropdownOptions.push({
+                    alias: option[0],
+                    value: option[1],
+                    selected: option[1] == value 
+                });
+            });
+
+            console.log(dropdownOptions);
+
+            return () => { popout.activate(
+                action.title,
+                action.desc,
+                "Confirm",
+                "add",
+                (dropwdownValue) => {
+                    ipcRenderer.send('new-settings-value', key, dropwdownValue);
+                    ipcRenderer.send('reload');
+                },
+                dropdownOptions
+            ) }
+        }
     }
 
     document.querySelector('#reload').addEventListener("click", (event) => {

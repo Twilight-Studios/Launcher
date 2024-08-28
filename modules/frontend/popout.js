@@ -2,6 +2,7 @@ let currentCallback = null;
 let popout = null;
 let primaryButton = null;
 let cancelButton = null;
+let extraContent = null;
 
 exports.clear = () => {
     if (primaryButton) {
@@ -16,10 +17,13 @@ exports.clear = () => {
         old_element.parentNode.replaceChild(new_element, old_element);
     }
 
+    if (extraContent) extraContent.innerHTML = '';
+
     currentCallback = null;
     popout = null;
     primaryButton = null;
     cancelButton = null;
+    extraContent = null;
 }
 
 exports.setup = function (popoutEl, primaryEl, cancelEl) {
@@ -28,10 +32,17 @@ exports.setup = function (popoutEl, primaryEl, cancelEl) {
     popout = popoutEl;
     primaryButton = primaryEl;
     cancelButton = cancelEl;
+    extraContent = popoutEl.querySelector('.extra');
 
     primaryButton.addEventListener("click", () => {
         popout.classList.remove('active');
-        currentCallback();
+
+        let extraValue = null;
+
+        let dropdown = extraContent.querySelector('select');
+        if (dropdown != null) extraValue = dropdown.value;
+
+        currentCallback(extraValue);
     });
     
     cancelButton.addEventListener("click", (event) => {
@@ -39,7 +50,7 @@ exports.setup = function (popoutEl, primaryEl, cancelEl) {
     });
 }
 
-exports.activate = function (title, description, buttonText, buttonClass, successCallback) {
+exports.activate = function (title, description, buttonText, buttonClass, successCallback, dropdownOptions=null, inputFieldPlaceholder=null) {
     if (!document.contains(popout)) {
         exports.clear();
         return;
@@ -50,13 +61,30 @@ exports.activate = function (title, description, buttonText, buttonClass, succes
 
     currentCallback = successCallback;
 
-    primaryButton.classList.remove(buttonClass);
+    primaryButton.classList.remove(...primaryButton.classList);
     primaryButton.textContent = buttonText;
-    currentClass = buttonClass;
+    primaryButton.classList.add('button');
     primaryButton.classList.add(buttonClass);
 
     popout.children[0].getElementsByTagName("h2")[0].textContent = title;
     popout.children[0].getElementsByTagName("p")[0].textContent = description;
+
+    extraContent.innerHTML = '';
+
+    if (dropdownOptions) {
+        let selectEl = document.createElement('select');
+        selectEl.classList.add('dropdown');
+        selectEl = extraContent.appendChild(selectEl);
+
+        dropdownOptions.forEach(option => {
+            let optionEl = document.createElement('option');
+            optionEl.value = option.value;
+            optionEl.innerText = option.alias;
+            optionEl.selected = option.selected;
+
+            selectEl.appendChild(optionEl);
+        });
+    }
 
     popout.classList.add('active');
 }
