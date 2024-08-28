@@ -17,6 +17,8 @@ window.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.on('settings-loaded', (event, settings, { accessKey, serverUrl }) => {
         settingsLoaded = true;
         document.querySelector('.login-info').textContent = `> Logged in as ${accessKey} on ${serverUrl}`;
+        document.querySelector('.loader').classList.remove('active');
+        document.querySelector('.content').classList.remove('center')
 
         for (const [key, value] of Object.entries(settings)) {
             const { title, desc, button, action } = utils.getSettingMetadata(key, value);
@@ -86,7 +88,47 @@ window.addEventListener('DOMContentLoaded', () => {
                 dropdownOptions
             ) }
         }
+
+        else if (action.type == 'input') {        
+            return () => { popout.activate(
+                action.title,
+                action.desc,
+                "Confirm",
+                "add",
+                (inputValue) => {
+                    ipcRenderer.send('new-settings-value', key, inputValue);
+                    ipcRenderer.send('reload');
+                },
+                null,
+                value
+            ) }
+        }
     }
+
+    document.querySelector('#library').addEventListener("click", (event) => {
+        if (reloadStarted) return;
+        if (!settingsLoaded) notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
+
+        ipcRenderer.send("open-window-preset", 'library');
+    });
+
+    document.querySelector('#reset').addEventListener("click", (event) => {
+        if (reloadStarted) return;
+        if (!settingsLoaded) notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
+
+        let logoutDesc = "Are you sure? By resetting your settings, you irreversibly delete all previous configurations.";
+        
+        popout.activate(
+            "Reset Settings",
+            logoutDesc,
+            "Reset",
+            "remove",
+            () => {
+                ipcRenderer.send('reset-settings');
+                ipcRenderer.send('reload');
+            }
+        );
+    });
 
     document.querySelector('#reload').addEventListener("click", (event) => {
         if (reloadStarted) return;
@@ -97,13 +139,6 @@ window.addEventListener('DOMContentLoaded', () => {
             notify(null, "Reloading", "Reloading settings...", 3000, false, null);
             ipcRenderer.send("reload");
         }
-    });
-
-    document.querySelector('#library').addEventListener("click", (event) => {
-        if (reloadStarted) return;
-        if (!settingsLoaded) notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
-
-        ipcRenderer.send("open-window-preset", 'library');
     });
 
     document.querySelector('#logout').addEventListener("click", (event) => {

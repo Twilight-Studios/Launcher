@@ -42,6 +42,9 @@ exports.setup = function (popoutEl, primaryEl, cancelEl) {
         let dropdown = extraContent.querySelector('select');
         if (dropdown != null) extraValue = dropdown.value;
 
+        let input = extraContent.querySelector('input');
+        if (input != null) extraValue = input.value;
+
         currentCallback(extraValue);
     });
     
@@ -84,6 +87,13 @@ exports.activate = function (title, description, buttonText, buttonClass, succes
 
             selectEl.appendChild(optionEl);
         });
+    }
+    
+    if (inputFieldPlaceholder) {
+        let inputEl = document.createElement('input');
+        inputEl.classList.add('inputfield');
+        inputEl.placeholder = inputFieldPlaceholder;
+        extraContent.appendChild(inputEl);
     }
 
     popout.classList.add('active');

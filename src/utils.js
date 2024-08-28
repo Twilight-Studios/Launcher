@@ -40,7 +40,6 @@ exports.getSettingMetadata = function (key, value) {
     Type: input
         title: string (title of the input popout)
         desc: string (description of the input popout)
-        sanitize: null, url, path
 
     */
 
@@ -97,8 +96,7 @@ exports.getSettingMetadata = function (key, value) {
                 "action" : {
                     "type" : "input",
                     "title" : "Change Update Server",
-                    "desc" : "By changing the update server, the app will restart and download all updates from the new URL.",
-                    "sanitize" : "url"
+                    "desc" : "By changing the update server, the app will restart and download all updates from the new URL."
                 }
             };
         case 'authFailBehaviour':

@@ -19,14 +19,16 @@ fs.watch('settings.json', { persistent: false }, function (event, filename) {
 });
 
 exports.getSettings = function () {
-    if (cachedSettings) return cachedSettings;
-
     let settings = {};
+    let loadedSettings;
 
-    eventsToIgnore++;
-    let loadedSettings = fm.readJson('settings.json');
-
-    if (!loadedSettings || typeof loadedSettings != "object") loadedSettings = {};
+    if (cachedSettings) loadedSettings = cachedSettings;
+    else {
+        eventsToIgnore++;
+        fm.createJson('settings.json');
+        loadedSettings = fm.readJson('settings.json');
+        if (!loadedSettings || typeof loadedSettings != "object") loadedSettings = {};
+    }
 
     if (!('gamesPath' in loadedSettings)) settings.gamesPath = path.join(app.getPath('userData'), 'games');
     else settings.gamesPath = loadedSettings.gamesPath;
@@ -55,6 +57,12 @@ exports.writeSettings = (settings) => {
     fm.saveJson(settings, 'settings.json');  
 }
 
+exports.resetSettings = (settings) => {
+    cachedSettings = null;
+    eventsToIgnore++;
+    fm.removePath('settings.json');
+}
+
 ipcMain.on('new-settings-value', (event, key, newValue) => {
     let settings = exports.getSettings();
 
@@ -65,4 +73,8 @@ ipcMain.on('new-settings-value', (event, key, newValue) => {
 
     settings[key] = newValue;
     exports.writeSettings(settings);
+});
+
+ipcMain.on('reset-settings', (event) => {
+    exports.resetSettings();
 })
