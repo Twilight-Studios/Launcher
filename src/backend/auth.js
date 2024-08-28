@@ -41,7 +41,7 @@ exports.setUser = function (accessKey, serverUrl) {
 }
 
 exports.authenticateUser = async function () {
-    if (exports.bypassAuth) return { ok: true };
+    if (exports.bypassAuth) return { ok: true, status: 200 };
     if (!exports.isUserValid) { return { ok: false, status: -1 }; }
 
     try {
@@ -82,8 +82,4 @@ ipcMain.handle('login', async (event, { accessKey, serverUrl }) => {
 
 ipcMain.on('logout', (event) => {
     exports.logout();
-})
-
-ipcMain.on('auth-lost', (event, code) => {
-    if (exports.onAuthLost) exports.onAuthLost(code);
 });

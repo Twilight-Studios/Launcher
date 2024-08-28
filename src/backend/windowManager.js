@@ -28,15 +28,13 @@ exports.openWindowPreset = function (fileName, additionalCallback) {
     let wp = windowPresets[fileName];
     currentWindowPreset = fileName;
 
-    if (exports.onWindowPresetOpened) {
+    createWindow(fileName, wp.width, wp.height, () => {
         exports.onWindowPresetOpened(fileName).then(shouldContinue => {
             if (shouldContinue === false) return;
-            createWindow(fileName, wp.width, wp.height, () => {
-                if (wp.defaultCallback) wp.defaultCallback();
-                if (additionalCallback) additionalCallback();
-            });
+            if (wp.defaultCallback) wp.defaultCallback();
+            if (additionalCallback) additionalCallback();
         });
-    }
+    });
 }
 
 function createWindow(fileName, width, height, callback) {
@@ -61,7 +59,7 @@ function createWindow(fileName, width, height, callback) {
 
     if (callback) { mainWindow.webContents.once('did-finish-load', () => { 
         callback();
-        mainWindow.show()
+        mainWindow.show();
     });}
 }
 

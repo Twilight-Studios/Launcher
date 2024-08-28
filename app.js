@@ -48,28 +48,8 @@ wm.onWindowPresetOpened = async function (fileName) {
     if (fileName == "login" || fileName == "update") return;
 
     let {ok, status} = await auth.authenticateUser();
+    if (!ok) return auth.onAuthLost(status);
 
-    if (!ok) {
-        
-        // AUTH FAIL BEHAVIOURS ARE HANDLED HERE
-        let behaviour = currentSettings.authFailBehaviour;
-        
-        if (behaviour == 0) { // Default behaviour, should logout as usual and the window should not be loaded.
-            auth.onAuthLost(status);
-            return false; 
-        }
-        
-        if (behaviour == 1) { // Logout but game files should be kept (To be added)
-            auth.onAuthLost(status);
-            return false; 
-        }
-
-        if (behaviour == 2) { // Simply notify that access was failed and continue as usual
-            wm.sendNotification('Failed to Authenticate', utils.getErrorMessage(status), 3000);
-            return true;
-        }
-    }
-    
     return true;
 }
 
@@ -82,9 +62,28 @@ auth.onLogout = () => {
 };
 
 auth.onAuthLost = function (code) {
-    wm.openWindowPreset('login', () => {
-        wm.sendNotification("Your access has been lost!", utils.getErrorMessage(code), 3000);
-    });
+    let behaviour = currentSettings.authFailBehaviour;
+
+    if (behaviour == 2) { // Simply notify that access was failed and continue as usual
+        wm.sendNotification('Failed to Authenticate', utils.getErrorMessage(code), 3000);
+        return true;
+    }
+        
+    if (behaviour == 0) { // Default behaviour, should logout as usual and the window should not be loaded.
+        wm.openWindowPreset('login', () => {
+            wm.sendNotification("Your access has been lost!", utils.getErrorMessage(code), 3000);
+        });
+        return true;
+    }
+            
+    if (behaviour == 1) { // Logout but game files should be kept (To be added)
+        wm.openWindowPreset('login', () => {
+            wm.sendNotification("Your access has been lost!", utils.getErrorMessage(code), 3000);
+        });
+        return true;
+    }
+
+    return true;
 }
 
 updateManager.onError = (error) => { wm.sendMessage('update-error', error.message) }
