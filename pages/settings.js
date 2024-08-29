@@ -46,7 +46,11 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         else if (action.type == 'ipc') {
-            return () => { ipcRenderer.send(action.channel, action.params); }
+            return () => {
+                action.callbacks.forEach(([channel, params]) => {
+                    ipcRenderer.send(channel, ...params);
+                });
+            }
         }
 
         else if (action.type == 'toggle') {

@@ -13,23 +13,23 @@ exports.onWindowPresetOpened = null; // onWindowPresetOpened must be asynchronou
 
 let windowPresets = {};
 
-exports.addWindowPreset = function (fileName, width, height, defaultCallback) {
-    if (windowPresets[fileName]) return;
+exports.addWindowPreset = function (presetName, width, height, defaultCallback) {
+    if (windowPresets[presetName]) return;
 
-    windowPresets[fileName] = {
+    windowPresets[presetName] = {
         width: width,
         height: height,
         defaultCallback: defaultCallback
     };
 }
 
-exports.openWindowPreset = function (fileName, additionalCallback) {
-    if (!windowPresets[fileName]) return;
-    let wp = windowPresets[fileName];
-    currentWindowPreset = fileName;
+exports.openWindowPreset = function (presetName, additionalCallback) {
+    if (!windowPresets[presetName]) return;
+    let wp = windowPresets[presetName];
+    currentWindowPreset = presetName;
 
-    createWindow(fileName, wp.width, wp.height, () => {
-        exports.onWindowPresetOpened(fileName).then(shouldContinue => {
+    createWindow(presetName, wp.width, wp.height, () => {
+        exports.onWindowPresetOpened(presetName).then(shouldContinue => {
             if (shouldContinue === false) return;
             if (wp.defaultCallback) wp.defaultCallback();
             if (additionalCallback) additionalCallback();
@@ -57,10 +57,10 @@ function createWindow(fileName, width, height, callback) {
     mainWindow.setResizable(exports.enableDevTools);
     if (!exports.enableDevTools) { Menu.setApplicationMenu(null); }
 
-    if (callback) { mainWindow.webContents.once('did-finish-load', () => { 
-        callback();
+    mainWindow.webContents.once('did-finish-load', () => { 
+        if (callback) callback();
         mainWindow.show();
-    });}
+    });
 }
 
 exports.reloadCurrentWindow = async (callback) => {
@@ -93,8 +93,8 @@ ipcMain.on('reload', (event) => {
     exports.reloadCurrentWindow();
 });
 
-ipcMain.on('open-window-preset', (event, fileName) => {
-    exports.openWindowPreset(fileName);
+ipcMain.on('open-window-preset', (event, presetName) => {
+    exports.openWindowPreset(presetName);
 });
 
 ipcMain.on('open-file', (event, filePath) => {

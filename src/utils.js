@@ -25,8 +25,7 @@ exports.getSettingMetadata = function (key, value) {
         path: string (i.e. a path to a file or URL)
     
     Type: ipc
-        channel: string (the channel on which the IPC message is sent)
-        params: array (params for the message)
+        callbacks: [channel, params[], channel, params[], ...]
 
     Type: toggle
         title: string (title of the toggle popout)
@@ -62,8 +61,10 @@ exports.getSettingMetadata = function (key, value) {
                 button : "Check for Updates",
                 action : {
                     type : "ipc",
-                    channel : "open-window-preset",
-                    params : ['update']
+                    callbacks : [
+                        ["set-window-forward", ['settings']],
+                        ["open-window-preset", ['update']]
+                    ]
                 }
             };
         case 'betaEnabled':

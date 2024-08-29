@@ -1,4 +1,4 @@
-const { app } = require('electron');
+const { app, ipcMain } = require('electron');
 
 const wm = require("./src/backend/windowManager");
 const gm = require("./src/backend/gameManager");
@@ -14,17 +14,24 @@ wm.enableDevTools = false; // Used to provide access to chromium dev tools
 auth.bypassAuth = false; // Used to skip auth to access UI offline
 
 let currentSettings = {};
+let windowForward = null;
 
 wm.addWindowPreset('update', 400, 600, () => {
     updateManager.checkForUpdates().then(updateAvailable => { 
         if (updateAvailable) wm.sendMessage('update-found');
 
-        else wm.openWindowPreset('login', async () => { // Auto-auth occurs here
+        else {
+            if (windowForward) {
+                wm.openWindowPreset(windowForward, null);
+                windowForward = null;
+                return;
+            }
 
-            if (!auth.isUserValid()) return;
-            wm.sendMessage('try-login');
-
-        });
+            wm.openWindowPreset('login', async () => { // Auto-auth occurs here
+                if (!auth.isUserValid()) return;
+                wm.sendMessage('try-login');
+            });
+        }
     });
 });
 
@@ -49,11 +56,10 @@ wm.onWindowPresetOpened = async function (fileName) {
 
     let {ok, status} = await auth.authenticateUser();
     if (!ok) return auth.onAuthLost(status);
-
     return true;
 }
 
-auth.onLoginSuccess = () => { setTimeout(() => { wm.openWindowPreset('library'); }, 1000); }
+auth.onLoginSuccess = () => { setTimeout(() => { wm.openWindowPreset('library'); }, 1250); }
 
 auth.onLogout = () => {
     wm.openWindowPreset('login', () => {
@@ -105,3 +111,5 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') { app.quit(); }
 });
+
+ipcMain.on('set-window-forward', (event, windowToForward) => { windowForward = windowToForward; });
