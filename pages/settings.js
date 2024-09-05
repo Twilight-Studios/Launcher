@@ -111,14 +111,20 @@ window.addEventListener('DOMContentLoaded', () => {
 
     document.querySelector('#library').addEventListener("click", (event) => {
         if (reloadStarted) return;
-        if (!settingsLoaded) notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
+        if (!settingsLoaded) { 
+            notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
+            return;
+        }
 
         ipcRenderer.send("open-window-preset", 'library');
     });
 
     document.querySelector('#reset').addEventListener("click", (event) => {
         if (reloadStarted) return;
-        if (!settingsLoaded) notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
+        if (!settingsLoaded) { 
+            notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
+            return;
+        }
 
         let logoutDesc = "Are you sure? By resetting your settings, you irreversibly delete all previous configurations.";
         
@@ -136,18 +142,22 @@ window.addEventListener('DOMContentLoaded', () => {
 
     document.querySelector('#reload').addEventListener("click", (event) => {
         if (reloadStarted) return;
-
-        if (!settingsLoaded) notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
-        else {
-            reloadStarted = true;
-            notify(null, "Reloading", "Reloading settings...", 3000, false, null);
-            ipcRenderer.send("reload");
+        if (!settingsLoaded) { 
+            notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
+            return;
         }
+
+        reloadStarted = true;
+        notify(null, "Reloading", "Reloading settings...", 3000, false, null);
+        ipcRenderer.send("reload");
     });
 
     document.querySelector('#logout').addEventListener("click", (event) => {
         if (reloadStarted) return;
-        if (!settingsLoaded) notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
+        if (!settingsLoaded) { 
+            notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
+            return;
+        }
 
         let logoutDesc = "By logging out, all your games will be uninstalled for privacy reasons. This is irrreversible!";
         
