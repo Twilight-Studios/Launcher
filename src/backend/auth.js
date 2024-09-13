@@ -37,7 +37,6 @@ exports.saveUser = function () {
 exports.setUser = function (accessKey, serverUrl) {
     currentUser.accessKey = accessKey;
     currentUser.serverUrl = serverUrl;
-    currentUser.authenticated = false;
 }
 
 exports.authenticateUser = async function () {

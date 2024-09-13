@@ -64,6 +64,7 @@ wm.onWindowPresetOpened = async function (fileName) {
 auth.onLoginSuccess = () => { setTimeout(() => { wm.openWindowPreset('library'); }, 1250); }
 
 auth.onLogout = () => {
+    // sm.resetSettings(); This is a maybe, idk if settings should be kept between logout
     wm.openWindowPreset('login', () => {
         wm.sendNotification("Success", "Logged out and uninstalled all games!", 3000);
     });
