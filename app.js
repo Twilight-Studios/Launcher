@@ -3,6 +3,7 @@ const { app, ipcMain } = require('electron');
 const wm = require("./src/backend/windowManager");
 const gm = require("./src/backend/gameManager");
 const sm = require("./src/backend/settingsManager");
+const fm = require("./src/backend/fileManager.js");
 const updateManager = require("./src/backend/updateManager");
 const auth = require("./src/backend/auth");
 const utils = require("./src/utils");
@@ -50,6 +51,7 @@ wm.addWindowPreset('settings', 1280, 720, () => {
 });
 
 wm.onWindowPresetOpened = async function (fileName) {
+    fm.makePath("games", true); // Temporary
     currentSettings = sm.getSettings();
     
     if (fileName == "login" || fileName == "update") return;

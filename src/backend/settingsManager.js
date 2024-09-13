@@ -8,8 +8,8 @@ let appVersion = app.getVersion();
 let cachedSettings = null;
 let eventsToIgnore = 0;
 
-fm.createJson('settings.json');
-fs.watch('settings.json', { persistent: false }, function (event, filename) {
+fm.createJson('settings.json', true);
+fs.watch(path.join(fm.getAppDataPath(), 'settings.json'), { persistent: false }, function (event, filename) {
     if (eventsToIgnore > 0) {
         eventsToIgnore--;
         return;
@@ -25,8 +25,8 @@ exports.getSettings = function () {
     if (cachedSettings) loadedSettings = cachedSettings;
     else {
         eventsToIgnore++;
-        fm.createJson('settings.json');
-        loadedSettings = fm.readJson('settings.json');
+        fm.createJson('settings.json', true);
+        loadedSettings = fm.readJson('settings.json', true);
         if (!loadedSettings || typeof loadedSettings != "object") loadedSettings = {};
     }
 
@@ -54,13 +54,13 @@ exports.writeSettings = (settings) => {
     cachedSettings = settings;
 
     eventsToIgnore++;
-    fm.saveJson(settings, 'settings.json');  
+    fm.saveJson('settings.json', true, settings);  
 }
 
-exports.resetSettings = (settings) => {
+exports.resetSettings = () => {
     cachedSettings = null;
     eventsToIgnore++;
-    fm.removePath('settings.json');
+    fm.removePath('settings.json', true);
 }
 
 ipcMain.on('new-settings-value', (event, key, newValue) => {

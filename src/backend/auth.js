@@ -18,7 +18,7 @@ exports.getUser = () => { return currentUser; }
 exports.isUserValid = () => { return (currentUser.accessKey !== null && currentUser.serverUrl !== null); }
 
 exports.loadUser = function () {
-    userJson = fm.readJson('credentials.json');
+    userJson = fm.readJson('credentials.json', true);
 
     if (!userJson) {
         currentUser.accessKey = null;
@@ -31,7 +31,7 @@ exports.loadUser = function () {
 }
 
 exports.saveUser = function () {
-    fm.saveJson(currentUser, "credentials.json");
+    fm.saveJson("credentials.json", true, currentUser);
 }
 
 exports.setUser = function (accessKey, serverUrl) {
@@ -70,7 +70,7 @@ exports.login = async function () {
 
 exports.logout = function () {
     exports.setUser(null, null);
-    fm.removePath("credentials.json");
+    fm.removePath("credentials.json", true);
     if (exports.onLogout) exports.onLogout();
 }
 
