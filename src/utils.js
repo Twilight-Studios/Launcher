@@ -116,6 +116,22 @@ exports.getSettingMetadata = function (key, value) {
                     ]
                 }
             };
+        case 'language' : {
+            return { 
+                title : "Language", 
+                desc : "[WIP] Language used for app content",
+                button : "Change Launguage",
+                action : {
+                    type : "dropdown",
+                    title : "Change Language",
+                    desc : "Set your new application language. If content is unavailable in your language, it will be displayed in English by default.",
+                    options : [
+                        ["English", 'en'],
+                        ["Russian", 'ru'],
+                    ]
+                }
+            };
+        }
         default:
             return  { 
                 title : `Unknown Setting: ${key}`, 

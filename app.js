@@ -14,6 +14,10 @@ const DEFAULT_SERVER_URL = "https://twilightdev.replit.app"; // Only used as an 
 wm.enableDevTools = false; // Used to provide access to chromium dev tools 
 auth.bypassAuth = false; // Used to skip auth to access UI offline
 
+// Localisation setup
+let localisationStrings = fm.mergeJsons("./resources/localisations/", false);
+ipcMain.handle('get-localisation-strings', () => { return localisationStrings; });
+
 let currentSettings = {};
 let windowForward = null;
 
@@ -50,15 +54,20 @@ wm.addWindowPreset('settings', 1280, 720, () => {
     wm.sendMessage("settings-loaded", currentSettings, auth.getUser());
 });
 
-wm.onWindowPresetOpened = async function (fileName) {
+wm.onWindowPresetOpened = function (fileName) {
     fm.makePath("games", true); // Temporary
     currentSettings = sm.getSettings();
-    
-    if (fileName == "login" || fileName == "update") return;
 
-    let {ok, status} = await auth.authenticateUser();
-    if (!ok) return auth.onAuthLost(status);
-    return true;
+    return {
+        domCallbacks : { 'set-language' : currentSettings.language },
+        asyncTask : async () => {
+            if (fileName == "login" || fileName == "update") return;
+            
+            let {ok, status} = await auth.authenticateUser();
+            if (!ok) return auth.onAuthLost(status);
+            return true;
+        }
+    }
 }
 
 auth.onLoginSuccess = () => { setTimeout(() => { wm.openWindowPreset('library'); }, 1250); }

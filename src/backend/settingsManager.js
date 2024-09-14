@@ -46,6 +46,9 @@ exports.getSettings = function () {
     if (!('authFailBehaviour' in loadedSettings)) settings.authFailBehaviour = 0; // Default authFailBehaviour
     else settings.authFailBehaviour = loadedSettings.authFailBehaviour;
 
+    if (!('language' in loadedSettings)) settings.language = 'en';
+    else settings.language = loadedSettings.language;
+
     if (JSON.stringify(settings) !== JSON.stringify(loadedSettings)) exports.writeSettings(settings);
     return settings;
 }

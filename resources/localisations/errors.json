@@ -1,0 +1,29 @@
+{
+    "403": {
+        "en": "Your access key is not valid",
+        "ru": "Ваш ключ доступа недействителен"
+    },
+    "404": {
+        "en": "The server address is invalid",
+        "ru": "Неверный адрес сервера"
+    },
+    "406": {
+        "en": "The resource couldn't be found",
+        "ru": "Ресурс не найден"
+    },
+    "500": {
+        "en": "The server faced an error",
+        "ru": "Сервер столкнулся с ошибкой"
+    },
+    "0": {
+        "en": "The server couldn't be reached",
+        "ru": "Не удалось подключиться к серверу"
+    },
+    "invalidSchema": {
+        "en": "The server sent an invalid schema"
+    },
+    "unknownError": {
+        "en": "An unknown error occurred",
+        "ru": "Произошла неизвестная ошибка"
+    }
+}

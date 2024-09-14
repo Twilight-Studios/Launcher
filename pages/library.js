@@ -1,11 +1,13 @@
 const { ipcRenderer } = require('electron');
 const { notify } = require("../src/frontend/notification");
 const popout = require("../src/frontend/popout");
-const utils = require("../src/utils");
+const localiser = require("../src/frontend/localiser");
 
 window.addEventListener('DOMContentLoaded', () => {
     let libraryLoaded = false;
     let reloadStarted = false;
+    
+    localiser.onLanguageChanged = () => { localiser.localiseHtml(); };
 
     const grid = document.querySelector('.grid');
     const reloadButton = document.querySelector("#reload");
@@ -34,7 +36,7 @@ window.addEventListener('DOMContentLoaded', () => {
         let thumbnailUrl = "data:image/png;base64," + game.art.cover;
         
         gameElement.innerHTML = `<div class="thumbnail">\
-        <div class="open">Open</div>\
+        <div class="open">${localiser.getLocalString('open')}</div>\
         <img src="${thumbnailUrl}" id="thumbnail">\
         </div>\
         <h3>${title}</h3>`;
@@ -47,39 +49,36 @@ window.addEventListener('DOMContentLoaded', () => {
         grid.innerHTML = '';
         let games = response.payload;
 
-        document.querySelector('.login-info').textContent = `> Logged in as ${accessKey} on ${serverUrl}`;
+        document.querySelector('.login-info').textContent = localiser.getLocalString('loginInfo', { accessKey, serverUrl });
 
-        if (!response.success) displayMessage(`Failed to load games library. ${utils.getErrorMessage(response.status)}.`);
-        else if (!games || !(games instanceof Array)) displayMessage("Failed to load games library! Server sent an invalid payload.");
-        else if (games.length === 0) displayMessage("You don't have any games in your library");
+        if (!response.success) displayMessage(`${localiser.getLocalString('libraryLoadFailed')} ${localiser.getLocalString(response.status)}.`);
+        else if (!games || !(games instanceof Array)) displayMessage(`${localiser.getLocalString('libraryLoadFailed')} ${localiser.getLocalString('invalidSchema')}`);
+        else if (games.length === 0) displayMessage(localiser.getLocalString('emptyLibrary'));
+
         else {
             games.forEach(game => {
                 let gameElement = createGameElement(game);
-
                 gameElement.querySelector('.open').addEventListener("click", (event) => { ipcRenderer.send('open-game', game); });
             });
         }
     });
 
-    ipcRenderer.on('success-reload', (event) => {
-        notify(notificationObject, "Success", "Reloaded your library!", 3000, false, null);
-    });
-
     reloadButton.addEventListener("click", (event) => {
         if (reloadStarted) return;
 
-        if (!libraryLoaded) notify(notificationObject, "Please Wait", "Your library hasn't loaded yet!", 2000, false, null);
+        if (!libraryLoaded) notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000, false, null);
         else {
             reloadStarted = true;
-            notify(notificationObject, "Reloading", "Reloading library...", 3000, false, null);
-            ipcRenderer.send("reload");
+            notify(notificationObject, localiser.getLocalString('reloading'), localiser.getLocalString("libraryReloading"), 500, false, () => {
+                ipcRenderer.send("reload");
+            });
         }
     });
 
     settingsButton.addEventListener("click", (event) => {
         if (reloadStarted) return;
 
-        if (!libraryLoaded) notify(notificationObject, "Please Wait", "Your library hasn't loaded yet!", 2000, false, null);
+        if (!libraryLoaded) notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000, false, null);
         else ipcRenderer.send("open-window-preset", 'settings');
     });
 
@@ -87,21 +86,21 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!libraryLoaded) {
-            notify(notificationObject, "Please Wait", "Your library hasn't loaded yet!", 2000, false, null);
+            if (!libraryLoaded) notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000, false, null);
             return;
         }
 
         let logoutDesc = "By logging out, all your games will be uninstalled for privacy reasons. This is irrreversible!";
         
         popout.activate(
-            "Are you sure?",
+            localiser.getLocalString("areYouSure"),
             logoutDesc,
-            "Logout",
+            localiser.getLocalString("logout"),
             "remove",
             () => { notify(
                 notificationObject, 
-                "Logging Out", 
-                "Clearing your session...", 
+                localiser.getLocalString("loggingOut"), 
+                localiser.getLocalString("clearingSession"), 
                 1500, 
                 false, 
                 () => { ipcRenderer.send("logout"); }) 

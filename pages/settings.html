@@ -127,14 +127,22 @@
   .content {
     padding-top: 30px;
     padding-left: 20px;
+    padding-bottom: 20px;
     display: flex;
     flex-direction: column;
-    height: 66vh;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .content::-webkit-scrollbar {
+    display: none;
   }
 
   .content.center {
     justify-content: center;
     align-items: center;
+    height: 66vh;
+    padding-bottom: 0px;
   }
 
   .loader {

@@ -1,0 +1,18 @@
+{
+    "loading": {
+        "en": "Loading",
+        "ru": "Загрузка"
+    },
+    "reloading": {
+        "en": "Reloading"
+    },
+    "success": {
+        "en": "Success"
+    },
+    "wait": {
+        "en": "Please Wait"
+    },
+    "areYouSure": {
+        "en": "Are you sure?"
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "libraryReloading": {
+        "en": "Reloading library..."
+    },
+    "libraryLoadFailed": {
+        "en": "Failed to load library!"
+    },
+    "libraryLoadNotFinished": {
+        "en": "Your library hasn't loaded yet!"
+    },
+    "myLibrary": {
+        "en": "My Library",
+        "ru": "Моя Библиотека"
+    },
+    "emptyLibrary": {
+        "en": "You don't have any games in your library"
+    },
+    "open": {
+        "en": "Open"
+    }
+}

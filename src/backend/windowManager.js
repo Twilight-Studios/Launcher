@@ -29,11 +29,17 @@ exports.openWindowPreset = function (presetName, additionalCallback) {
     currentWindowPreset = presetName;
 
     createWindow(presetName, wp.width, wp.height, () => {
-        exports.onWindowPresetOpened(presetName).then(shouldContinue => {
+        let { domCallbacks, asyncTask } = exports.onWindowPresetOpened(presetName);
+        
+        for (const [channel, value] of Object.entries(domCallbacks)) {
+            exports.sendMessage(channel, value);
+        }
+
+        asyncTask().then(shouldContinue => {
             if (shouldContinue === false) return;
             if (wp.defaultCallback) wp.defaultCallback();
             if (additionalCallback) additionalCallback();
-        });
+        })    
     });
 }
 

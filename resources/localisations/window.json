@@ -1,0 +1,6 @@
+{
+    "loginInfo": {
+        "en": "> Logged in as {accessKey} on {serverUrl}",
+        "ru": "> Вы вошли как {accessKey} на {serverUrl}"
+    }
+}
