@@ -1,10 +1,12 @@
 const { ipcRenderer } = require('electron');
 const { notify } = require("../src/frontend/notification");
+const localiser = require("../src/frontend/localiser");
 
 window.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('#form');
     const button = document.querySelector('button');
     const notificationObject = document.querySelector('.notification');
+    document.getElementById('accesskey').ariaPlaceholder = localiser.getLocalString("accessKeyPlaceholder");
 
     let inLogin = false;
 
@@ -15,18 +17,18 @@ window.addEventListener('DOMContentLoaded', () => {
         const accessKey = document.getElementById('accesskey').value;
         const serverUrl = document.getElementById('serverurl').value;
         
-        notify(notificationObject, "Logging in", "Trying to log you in...", 3000, false, null);
+        notify(notificationObject, localiser.getLocalString("loggingIn"), localiser.getLocalString("attemptingLogin"), 3000, false, null);
         button.classList.add("disabled");
-        button.textContent = "Logging in...";
+        button.textContent = localiser.getLocalString("loggingIn");
         
         const response = await ipcRenderer.invoke('login', { accessKey, serverUrl });
 
-        if (response.success) notify(notificationObject, "Success", "Loading library...", 1000, false, null)
+        if (response.success) notify(notificationObject, localiser.getLocalString("success"), localiser.getLocalString("loading"), 1000, false, null)
         else {
             inLogin = false;
             button.classList.remove("disabled");
-            button.textContent = "Login";
-            notify(notificationObject, "Failed to Login", response.message || "Something went wrong!", 3000, false, null);
+            button.textContent = localiser.getLocalString("login");
+            notify(notificationObject, localiser.getLocalString("loginFailed"), localiser.getLocalString(response.status), 3000, false, null);
         }
     }
 

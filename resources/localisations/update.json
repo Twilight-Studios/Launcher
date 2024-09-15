@@ -1,0 +1,10 @@
+{
+    "checkForUpdates" : {
+        "en": "Check For Updates",
+        "ru": "Проверить обновления"
+    },
+    "checkingForUpdates" : {
+        "en": "Checking for updates",
+        "ru": "Проверка обновлений"
+    }
+}

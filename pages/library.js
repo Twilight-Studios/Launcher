@@ -6,8 +6,6 @@ const localiser = require("../src/frontend/localiser");
 window.addEventListener('DOMContentLoaded', () => {
     let libraryLoaded = false;
     let reloadStarted = false;
-    
-    localiser.onLanguageChanged = () => { localiser.localiseHtml(); };
 
     const grid = document.querySelector('.grid');
     const reloadButton = document.querySelector("#reload");
@@ -66,13 +64,13 @@ window.addEventListener('DOMContentLoaded', () => {
     reloadButton.addEventListener("click", (event) => {
         if (reloadStarted) return;
 
-        if (!libraryLoaded) notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000, false, null);
-        else {
-            reloadStarted = true;
-            notify(notificationObject, localiser.getLocalString('reloading'), localiser.getLocalString("libraryReloading"), 500, false, () => {
-                ipcRenderer.send("reload");
-            });
+        if (!libraryLoaded) {
+            notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000, false, null);
+            return;
         }
+
+        reloadStarted = true;
+        ipcRenderer.send("reload");
     });
 
     settingsButton.addEventListener("click", (event) => {
@@ -89,12 +87,10 @@ window.addEventListener('DOMContentLoaded', () => {
             if (!libraryLoaded) notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000, false, null);
             return;
         }
-
-        let logoutDesc = "By logging out, all your games will be uninstalled for privacy reasons. This is irrreversible!";
         
         popout.activate(
             localiser.getLocalString("areYouSure"),
-            logoutDesc,
+            localiser.getLocalString("logoutDesc"),
             localiser.getLocalString("logout"),
             "remove",
             () => { notify(

@@ -1,6 +1,7 @@
 const { ipcRenderer } = require('electron');
 const { notify } = require("../src/frontend/notification");
 const popout = require("../src/frontend/popout");
+const localiser = require("../src/frontend/localiser");
 const utils = require("../src/utils");
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -16,15 +17,35 @@ window.addEventListener('DOMContentLoaded', () => {
 
     ipcRenderer.on('settings-loaded', (event, settings, { accessKey, serverUrl }) => {
         settingsLoaded = true;
-        document.querySelector('.login-info').textContent = `> Logged in as ${accessKey} on ${serverUrl}`;
+        document.querySelector('.login-info').textContent = localiser.getLocalString('loginInfo', { accessKey, serverUrl });
         document.querySelector('.loader').classList.remove('active');
-        document.querySelector('.content').classList.remove('center')
+        document.querySelector('.content').classList.remove('center');
 
         for (const [key, value] of Object.entries(settings)) {
-            const { title, desc, button, action } = utils.getSettingMetadata(key, value);
+            const action = utils.getSettingAction(key, value);
 
             let setting = document.createElement('div');
             setting.classList.add('setting');
+
+            let title;
+            let desc;
+            let button;
+
+            if (action.type == 'unknown') {
+                title = localiser.getLocalString("unknown", { setting: key });
+                desc = localiser.getLocalString("unknownDesc");
+                button = localiser.getLocalString("currentValue", { value: value })
+            }
+            else {
+                title = localiser.getLocalString(key);
+                console.log(action);
+                if (action.valueInDesc) desc = localiser.getLocalString(`${key}Desc`, { value: value });
+                else desc = localiser.getLocalString(`${key}Desc`);
+            }
+
+            if (action.type == 'open' || action.type == 'ipc') button = localiser.getLocalString(action.button);
+            if (action.type == 'toggle') button = localiser.getLocalString('toggle');
+            if (action.type == 'input' || action.type == 'dropdown') button = localiser.getLocalString('change');
 
             setting.innerHTML = `<div class="text">
                 <span>${title}</span>
@@ -55,9 +76,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
         else if (action.type == 'toggle') {
             return () => { popout.activate(
-                action.title,
-                action.desc,
-                "Confirm",
+                `${localiser.getLocalString("toggle")} ${localiser.getLocalString(key)}`,
+                localiser.getLocalString(`${key}Toggle${value ? "Off" : "On"}`),
+                localiser.getLocalString("confirm"),
                 value ? "remove" : "add",
                 () => {
                     ipcRenderer.send('new-settings-value', key, !value);
@@ -67,23 +88,20 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         else if (action.type == 'dropdown') {
-            console.log("please");
             let dropdownOptions = [];
 
             action.options.forEach(option => {
                 dropdownOptions.push({
-                    alias: option[0],
-                    value: option[1],
-                    selected: option[1] == value 
+                    alias: localiser.getLocalString(`${key}_${option}`),
+                    value: option,
+                    selected: option == value 
                 });
             });
 
-            console.log(dropdownOptions);
-
             return () => { popout.activate(
-                action.title,
-                action.desc,
-                "Confirm",
+                `${localiser.getLocalString("change")} ${localiser.getLocalString(key)}`,
+                localiser.getLocalString(`${key}PopoutDesc`),
+                localiser.getLocalString("confirm"),
                 "add",
                 (dropwdownValue) => {
                     ipcRenderer.send('new-settings-value', key, dropwdownValue);
@@ -95,9 +113,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
         else if (action.type == 'input') {        
             return () => { popout.activate(
-                action.title,
-                action.desc,
-                "Confirm",
+                `${localiser.getLocalString("change")} ${localiser.getLocalString(key)}`,
+                localiser.getLocalString(`${key}PopoutDesc`),
+                localiser.getLocalString("confirm"),
                 "add",
                 (inputValue) => {
                     ipcRenderer.send('new-settings-value', key, inputValue);
@@ -112,7 +130,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#library').addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
-            notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
+            notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
             return;
         }
 
@@ -122,16 +140,14 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#reset').addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
-            notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
+            notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
             return;
         }
-
-        let logoutDesc = "Are you sure? By resetting your settings, you irreversibly delete all previous configurations.";
         
         popout.activate(
-            "Reset Settings",
-            logoutDesc,
-            "Reset",
+            localiser.getLocalString("resetSettings"),
+            localiser.getLocalString("resetSettingsDesc"),
+            localiser.getLocalString("reset"),
             "remove",
             () => {
                 ipcRenderer.send('reset-settings');
@@ -143,33 +159,31 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#reload').addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
-            notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
+            notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
             return;
         }
 
         reloadStarted = true;
-        notify(null, "Reloading", "Reloading settings...", 3000, false, null);
         ipcRenderer.send("reload");
     });
 
     document.querySelector('#logout').addEventListener("click", (event) => {
         if (reloadStarted) return;
+
         if (!settingsLoaded) { 
-            notify(null, "Please Wait", "Your settings haven't loaded yet!", 2000, false, null);
+            notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
             return;
         }
-
-        let logoutDesc = "By logging out, all your games will be uninstalled for privacy reasons. This is irrreversible!";
         
         popout.activate(
-            "Are you sure?",
-            logoutDesc,
-            "Logout",
+            localiser.getLocalString("areYouSure"),
+            localiser.getLocalString("logoutDesc"),
+            localiser.getLocalString("logout"),
             "remove",
             () => { notify(
-                null, 
-                "Logging Out", 
-                "Clearing your session...", 
+                notificationObject, 
+                localiser.getLocalString("loggingOut"), 
+                localiser.getLocalString("clearingSession"), 
                 1500, 
                 false, 
                 () => { ipcRenderer.send("logout"); }) 

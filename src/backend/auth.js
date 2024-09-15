@@ -1,7 +1,6 @@
 const { ipcMain } = require('electron');
 const axios = require('axios');
 const fm = require('./fileManager');
-const utils = require('../utils');
 
 let currentUser = {
     accessKey: null,
@@ -64,7 +63,7 @@ exports.login = async function () {
         return { success: true };
     }
 
-    return { success: false, message: utils.getErrorMessage(status) };
+    return { success: false, status: status };
 }
 
 exports.logout = function () {
