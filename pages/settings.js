@@ -130,7 +130,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#library').addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
-            notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
+            notify(null, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
             return;
         }
 
@@ -140,7 +140,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#reset').addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
-            notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
+            notify(null, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
             return;
         }
         
@@ -159,7 +159,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#reload').addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
-            notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
+            notify(null, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
             return;
         }
 
@@ -171,7 +171,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!settingsLoaded) { 
-            notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
+            notify(null, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
             return;
         }
         
@@ -181,7 +181,7 @@ window.addEventListener('DOMContentLoaded', () => {
             localiser.getLocalString("logout"),
             "remove",
             () => { notify(
-                notificationObject, 
+                null, 
                 localiser.getLocalString("loggingOut"), 
                 localiser.getLocalString("clearingSession"), 
                 1500, 

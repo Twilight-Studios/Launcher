@@ -62,3 +62,7 @@ exports.removePath = function (pathToRemove, inAppData) {
     if (inAppData) pathToRemove = path.join(exports.getAppDataPath(), pathToRemove);
     if (fs.existsSync(pathToRemove)) { fs.rmSync(pathToRemove, { recursive: true }); }
 }
+
+exports.getPathInAppDir = function(pathInAppDir) {
+    return path.join(app.getAppPath(), pathInAppDir);
+}

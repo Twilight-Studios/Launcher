@@ -6,7 +6,6 @@ const sm = require("./src/backend/settingsManager");
 const fm = require("./src/backend/fileManager.js");
 const updateManager = require("./src/backend/updateManager");
 const auth = require("./src/backend/auth");
-const utils = require("./src/utils");
 
 const DEFAULT_SERVER_URL = "https://twilightdev.replit.app"; // Only used as an automatic value for the server value for login
 
@@ -15,7 +14,7 @@ wm.enableDevTools = false; // Used to provide access to chromium dev tools
 auth.bypassAuth = false; // Used to skip auth to access UI offline
 
 // Localisation setup
-let localisationStrings = fm.mergeJsons("./resources/localisations/", false);
+let localisationStrings = fm.mergeJsons(fm.getPathInAppDir("/resources/localisations/"), false);
 ipcMain.handle('get-localisation-strings', () => { return localisationStrings; });
 
 let currentSettings = {};
@@ -75,7 +74,7 @@ auth.onLoginSuccess = () => { setTimeout(() => { wm.openWindowPreset('library');
 auth.onLogout = () => {
     // sm.resetSettings(); This is a maybe, idk if settings should be kept between logout
     wm.openWindowPreset('login', () => {
-        wm.sendNotification("Success", "Logged out and uninstalled all games!", 3000);
+        wm.sendNotification("success", "successLogoutText", 3000);
     });
 };
 
@@ -83,20 +82,20 @@ auth.onAuthLost = function (code) {
     let behaviour = currentSettings.authFailBehaviour;
 
     if (behaviour == 2) { // Simply notify that access was failed and continue as usual
-        wm.sendNotification('Failed to Authenticate', utils.getErrorMessage(code), 3000);
+        wm.sendNotification('loginFail', code, 3000);
         return true;
     }
         
     if (behaviour == 0) { // Default behaviour, should logout as usual and the window should not be loaded.
         wm.openWindowPreset('login', () => {
-            wm.sendNotification("Your access has been lost!", utils.getErrorMessage(code), 3000);
+            wm.sendNotification("accessLost", code, 3000);
         });
         return true;
     }
             
     if (behaviour == 1) { // Logout but game files should be kept (To be added)
         wm.openWindowPreset('login', () => {
-            wm.sendNotification("Your access has been lost!", utils.getErrorMessage(code), 3000);
+            wm.sendNotification("accessLost", code, 3000);
         });
         return true;
     }
