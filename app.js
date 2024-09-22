@@ -14,7 +14,16 @@ wm.enableDevTools = false; // Used to provide access to chromium dev tools
 auth.bypassAuth = false; // Used to skip auth to access UI offline
 
 // Localisation setup
-let localisationStrings = fm.mergeJsons(fm.getPathInAppDir("/resources/localisations/"), false);
+let localisationStrings = {};
+
+fm.getAllJsons(fm.getPathInAppDir("/resources/locales/")).forEach(([fileName, jsonPath]) => {
+    localeContent = fm.readJson(jsonPath);
+    for (const [key, value] of Object.entries(localeContent)) {
+        if (!(key in localisationStrings)) localisationStrings[key] = {};
+        localisationStrings[key][fileName.split(".")[0]] = value;
+    }
+});
+
 ipcMain.handle('get-localisation-strings', () => { return localisationStrings; });
 
 let currentSettings = {};

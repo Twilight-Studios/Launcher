@@ -18,27 +18,27 @@ exports.readJson = function (pathToRead, inAppData) {
     return null;
 }
 
-exports.mergeJsons = function (jsonsPath, inAppData) {
+exports.getAllJsons = function (jsonsPath, inAppData) {
     if (inAppData) jsonsPath = path.join(exports.getAppDataPath(), jsonsPath);
 
     try {
+        console.log(jsonsPath)
         if (!fs.existsSync(jsonsPath)) return null;
 
         const files = fs.readdirSync(jsonsPath);
-        let mergedJson = {};
+        let foundJsons = [];
 
         for (const file of files) {
             if (path.extname(file) === '.json') {
                 const filePath = path.join(jsonsPath, file);
-                const fileContent = exports.readJson(filePath, false);
-                mergedJson = { ...mergedJson, ...fileContent };
+                foundJsons.push([path.basename(filePath) ,filePath]);
             }
         }
 
-        return mergedJson;
+        return foundJsons;
     }
     catch (err) {
-        console.error(`An error occured while merging JSONs at ${jsonsPath}`, err);
+        console.error(`An error occured while getting all JSONs at ${jsonsPath}`, err);
         return null;
     }
 }
