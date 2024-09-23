@@ -1,9 +1,9 @@
 const { ipcMain } = require('electron');
 const axios = require('axios');
-const fm = require('./fileManager');
+const fm = require('../fileManager');
 
 let currentUser = {
-    accessKey: null,
+    playtesterId: null,
     serverUrl: null
 }
 
@@ -14,18 +14,18 @@ exports.bypassAuth = false;
 
 exports.getUser = () => { return currentUser; }
 
-exports.isUserValid = () => { return (currentUser.accessKey !== null && currentUser.serverUrl !== null); }
+exports.isUserValid = () => { return (currentUser.playtesterId !== null && currentUser.serverUrl !== null); }
 
 exports.loadUser = function () {
     userJson = fm.readJson('credentials.json', true);
 
     if (!userJson) {
-        currentUser.accessKey = null;
+        currentUser.playtesterId = null;
         currentUser.serverUrl = null;
         return;
     }
     
-    currentUser.accessKey = userJson.accessKey;
+    currentUser.playtesterId = userJson.playtesterId;
     currentUser.serverUrl = userJson.serverUrl;
 }
 
@@ -33,8 +33,8 @@ exports.saveUser = function () {
     fm.saveJson("credentials.json", true, currentUser);
 }
 
-exports.setUser = function (accessKey, serverUrl) {
-    currentUser.accessKey = accessKey;
+exports.setUser = function (playtesterId, serverUrl) {
+    currentUser.playtesterId = playtesterId;
     currentUser.serverUrl = serverUrl;
 }
 
@@ -43,7 +43,7 @@ exports.authenticateUser = async function () {
     if (!exports.isUserValid) { return { ok: false, status: -1 }; }
 
     try {
-        const resp = await axios.post(`${currentUser.serverUrl}/api/validate-access`, { key: currentUser.accessKey });
+        const resp = await axios.post(`${currentUser.serverUrl}/api/validate-access`, { playtester_id: currentUser.playtesterId });
         return { ok: resp.status === 200, status: resp.status };
     } 
     catch (error) {
@@ -72,8 +72,8 @@ exports.logout = function () {
     if (exports.onLogout) exports.onLogout();
 }
 
-ipcMain.handle('login', async (event, { accessKey, serverUrl }) => {
-    exports.setUser(accessKey, serverUrl);
+ipcMain.handle('login', async (event, { playtesterId, serverUrl }) => {
+    exports.setUser(playtesterId, serverUrl);
     let response = await exports.login();
     return response;
 });

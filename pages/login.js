@@ -6,7 +6,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('#form');
     const button = document.querySelector('button');
     const notificationObject = document.querySelector('.notification');
-    document.getElementById('accesskey').ariaPlaceholder = localiser.getLocalString("accessKeyPlaceholder");
+    document.getElementById('playtesterid').ariaPlaceholder = localiser.getLocalString("playtesterIdPlaceholder");
 
     let inLogin = false;
 
@@ -14,14 +14,14 @@ window.addEventListener('DOMContentLoaded', () => {
         if (inLogin) return;
         inLogin = true;
 
-        const accessKey = document.getElementById('accesskey').value;
+        const playtesterId = document.getElementById('playtesterid').value;
         const serverUrl = document.getElementById('serverurl').value;
         
         notify(notificationObject, localiser.getLocalString("loggingIn"), localiser.getLocalString("attemptingLogin"), 3000, false, null);
         button.classList.add("disabled");
         button.textContent = localiser.getLocalString("loggingIn");
         
-        const response = await ipcRenderer.invoke('login', { accessKey, serverUrl });
+        const response = await ipcRenderer.invoke('login', { playtesterId, serverUrl });
 
         if (response.success) notify(notificationObject, localiser.getLocalString("success"), localiser.getLocalString("loading"), 1000, false, null)
         else {
@@ -41,10 +41,10 @@ window.addEventListener('DOMContentLoaded', () => {
         await login();
     })
 
-    ipcRenderer.on('fill-input-fields', (event, { accessKey, serverUrl }, defaultServerUrl) => {
+    ipcRenderer.on('fill-input-fields', (event, { playtesterId, serverUrl }, defaultServerUrl) => {
         document.getElementById('serverurl').value = defaultServerUrl;
 
-        if (accessKey) { document.getElementById('accesskey').value = accessKey; }
+        if (playtesterId) { document.getElementById('playtesterid').value = playtesterId; }
         if (serverUrl) { document.getElementById('serverurl').value = serverUrl; }
     });
 });

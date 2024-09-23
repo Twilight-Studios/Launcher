@@ -35,11 +35,17 @@ exports.openWindowPreset = function (presetName, additionalCallback) {
             exports.sendMessage(channel, value);
         }
 
-        asyncTask().then(shouldContinue => {
-            if (shouldContinue === false) return;
+        if (asyncTask) {
+            asyncTask().then(shouldContinue => {
+                if (shouldContinue === false) return;
+                if (wp.defaultCallback) wp.defaultCallback();
+                if (additionalCallback) additionalCallback();
+            })    
+        }
+        else {
             if (wp.defaultCallback) wp.defaultCallback();
             if (additionalCallback) additionalCallback();
-        })    
+        }
     });
 }
 
@@ -102,6 +108,8 @@ ipcMain.on('reload', (event) => {
 ipcMain.on('open-window-preset', (event, presetName) => {
     exports.openWindowPreset(presetName);
 });
+
+ipcMain.on('reflect', (event, channel, message) => { exports.sendMessage(channel, message) });
 
 ipcMain.on('open-file', (event, filePath) => {
     if (!fs.existsSync(filePath)) return;

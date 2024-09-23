@@ -15,9 +15,9 @@ window.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.cancel.button')
     );
 
-    ipcRenderer.on('settings-loaded', (event, settings, { accessKey, serverUrl }) => {
+    ipcRenderer.on('settings-loaded', (event, settings, { playtesterId, serverUrl }) => {
         settingsLoaded = true;
-        document.querySelector('.login-info').textContent = localiser.getLocalString('loginInfo', { accessKey, serverUrl });
+        document.querySelector('.login-info').textContent = localiser.getLocalString('loginInfo', { playtesterId, serverUrl });
         document.querySelector('.loader').classList.remove('active');
         document.querySelector('.content').classList.remove('center');
 
@@ -38,7 +38,6 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             else {
                 title = localiser.getLocalString(key);
-                console.log(action);
                 if (action.valueInDesc) desc = localiser.getLocalString(`${key}Desc`, { value: value });
                 else desc = localiser.getLocalString(`${key}Desc`);
             }

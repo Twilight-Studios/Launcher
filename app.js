@@ -3,11 +3,11 @@ const { app, ipcMain } = require('electron');
 const wm = require("./src/backend/windowManager");
 const gm = require("./src/backend/gameManager");
 const sm = require("./src/backend/settingsManager");
-const fm = require("./src/backend/fileManager.js");
 const updateManager = require("./src/backend/updateManager");
 const auth = require("./src/backend/auth");
+const fm = require("./src/fileManager.js");
 
-const DEFAULT_SERVER_URL = "https://twilightdev.replit.app"; // Only used as an automatic value for the server value for login
+const DEFAULT_SERVER_URL = "http://127.0.0.1:5000"; // Only used as an automatic value for the server value for login
 
 // Dev/testing tools (MUST BE SET TO FALSE BEFORE LEAVING DEV ENVIRONMENT)
 wm.enableDevTools = false; // Used to provide access to chromium dev tools 
@@ -55,6 +55,9 @@ wm.addWindowPreset('login', 400, 600, () => {
 
 wm.addWindowPreset('library', 1280, 720, async () => {
     let gamesData = await gm.getAllGameData(auth.getUser(), true);
+    if (!gamesData.success) {
+        if (!auth.onAuthLost(gamesData.status)) return;
+    }
     wm.sendMessage('library-loaded', gamesData, auth.getUser());
 });
 
@@ -67,14 +70,16 @@ wm.onWindowPresetOpened = function (fileName) {
     currentSettings = sm.getSettings();
 
     return {
-        domCallbacks : { 'set-language' : currentSettings.language },
-        asyncTask : async () => {
+        domCallbacks : { 'localise' : currentSettings.language },
+
+        // This section should be uncommented if users should be manually authenticated on page loads. Currently unused as all server requests handle this logic behind the scenes.
+        /* asyncTask : async () => {
             if (fileName == "login" || fileName == "update") return;
             
             let {ok, status} = await auth.authenticateUser();
             if (!ok) return auth.onAuthLost(status);
             return true;
-        }
+        } */
     }
 }
 
@@ -83,7 +88,7 @@ auth.onLoginSuccess = () => { setTimeout(() => { wm.openWindowPreset('library');
 auth.onLogout = () => {
     // sm.resetSettings(); This is a maybe, idk if settings should be kept between logout
     wm.openWindowPreset('login', () => {
-        wm.sendNotification("success", "successLogoutText", 3000);
+        wm.sendNotification("[!:success]", "[!:successLogoutText]", 3000);
     });
 };
 
@@ -91,25 +96,25 @@ auth.onAuthLost = function (code) {
     let behaviour = currentSettings.authFailBehaviour;
 
     if (behaviour == 2) { // Simply notify that access was failed and continue as usual
-        wm.sendNotification('loginFail', code, 3000);
+        wm.sendNotification('[!:loginFailed]', `[!:${code}]`, 3000);
         return true;
     }
         
     if (behaviour == 0) { // Default behaviour, should logout as usual and the window should not be loaded.
         wm.openWindowPreset('login', () => {
-            wm.sendNotification("accessLost", code, 3000);
+            wm.sendNotification('[!:accessLost]', `[!:${code}]`, 3000);
         });
-        return true;
+        return false;
     }
             
     if (behaviour == 1) { // Logout but game files should be kept (To be added)
         wm.openWindowPreset('login', () => {
-            wm.sendNotification("accessLost", code, 3000);
+            wm.sendNotification('[!:accessLost]', `[!:${code}]`, 3000);
         });
-        return true;
+        return false;
     }
 
-    return true;
+    return false;
 }
 
 updateManager.onError = (error) => { wm.sendMessage('update-error', error.message) }

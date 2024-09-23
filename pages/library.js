@@ -30,8 +30,8 @@ window.addEventListener('DOMContentLoaded', () => {
         let gameElement = document.createElement("div");
         gameElement.classList.add("game");
     
-        let title = `${game.settings.name} - ${game.branch}`;
-        let thumbnailUrl = "data:image/png;base64," + game.art.cover;
+        let title = `${game.settings.name}`;
+        let thumbnailUrl = "data:image/png;base64," + game.cover;
         
         gameElement.innerHTML = `<div class="thumbnail">\
         <div class="open">${localiser.getLocalString('open')}</div>\
@@ -42,12 +42,12 @@ window.addEventListener('DOMContentLoaded', () => {
         return grid.appendChild(gameElement);    
     }
     
-    ipcRenderer.on('library-loaded', (event, response, { accessKey, serverUrl }) => {
+    ipcRenderer.on('library-loaded', (event, response, { playtesterId, serverUrl }) => {
         libraryLoaded = true;
         grid.innerHTML = '';
         let games = response.payload;
 
-        document.querySelector('.login-info').textContent = localiser.getLocalString('loginInfo', { accessKey, serverUrl });
+        document.querySelector('.login-info').textContent = localiser.getLocalString('loginInfo', { playtesterId, serverUrl });
 
         if (!response.success) displayMessage(`${localiser.getLocalString('libraryLoadFailed')} ${localiser.getLocalString(response.status)}.`);
         else if (!games || !(games instanceof Array)) displayMessage(`${localiser.getLocalString('libraryLoadFailed')} ${localiser.getLocalString('invalidSchema')}`);

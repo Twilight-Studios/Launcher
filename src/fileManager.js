@@ -22,7 +22,6 @@ exports.getAllJsons = function (jsonsPath, inAppData) {
     if (inAppData) jsonsPath = path.join(exports.getAppDataPath(), jsonsPath);
 
     try {
-        console.log(jsonsPath)
         if (!fs.existsSync(jsonsPath)) return null;
 
         const files = fs.readdirSync(jsonsPath);

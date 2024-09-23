@@ -27,6 +27,6 @@ exports.notify = function (notificationObject, title, description, length, notif
 }
 
 ipcRenderer.on('notification', (event, title, description, length) => {
-    // TODO: Localisation???
     exports.notify(null, title, description, length, false, null);
+    ipcRenderer.send("reflect", "localise", null);
 });

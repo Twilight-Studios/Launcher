@@ -1,5 +1,5 @@
 const { app, ipcMain } = require('electron');
-const fm = require('./fileManager');
+const fm = require('../fileManager');
 const path = require('path');
 const fs = require('fs');
 

@@ -44,7 +44,7 @@ exports.localiseHtml = function () {
     replaceTextNodes(document.body);
 }
 
-ipcRenderer.on('set-language', (event, newLang) => {
-    lang = newLang;
+ipcRenderer.on('localise', (event, newLang) => {
+    if (newLang) lang = newLang;
     exports.localiseHtml();
 });
