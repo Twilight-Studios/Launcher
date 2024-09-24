@@ -105,8 +105,8 @@ ipcMain.on('reload', (event) => {
     exports.reloadCurrentWindow();
 });
 
-ipcMain.on('open-window-preset', (event, presetName) => {
-    exports.openWindowPreset(presetName);
+ipcMain.on('open-window-preset', (event, presetName, additionalCallback) => {
+    exports.openWindowPreset(presetName, additionalCallback);
 });
 
 ipcMain.on('reflect', (event, channel, message) => { exports.sendMessage(channel, message) });

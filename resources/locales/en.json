@@ -72,5 +72,15 @@
     "language_en": "English",
     "language_ru": "Русский",
     "checkForUpdates": "Check For Updates",
-    "checkingForUpdates": "Checking for Updates"
+    "checkingForUpdates": "Checking for Updates",
+    "forceStop": "Force Stop",
+    "availablePlatforms": "Available Platforms",
+    "dependencies": "Dependencies",
+    "unavailable": "Unavailable",
+    "launchDependency": "{dependency} must be launched",
+    "platformCompatible": "Compatible with {platform}",
+    "onlineRequired": "Requires an internet connection",
+    "patchNotes": "Patch Notes",
+    "gameLoadFailed": "Failed to load game!",
+    "gameLoadNotFinished": "Your game hasn't loaded yet!"
 }

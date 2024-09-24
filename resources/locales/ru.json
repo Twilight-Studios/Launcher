@@ -19,6 +19,7 @@
     "406": "Ресурс не найден",
     "500": "Сервер столкнулся с ошибкой",
     "0": "Не удалось подключиться к серверу",
+    "invalidSchema": "Сервер отправил неверную схему",
     "unknownError": "Произошла неизвестная ошибка",
     "slogan": "Тестирование игр стало проще",
     "loading": "Загрузка...",
@@ -71,5 +72,15 @@
     "language_en": "English",
     "language_ru": "Русский",
     "checkForUpdates": "Проверить обновления",
-    "checkingForUpdates": "Проверка обновлений"
+    "checkingForUpdates": "Проверка обновлений",
+    "forceStop": "Остановить принудительно",
+    "availablePlatforms": "Доступные платформы",
+    "dependencies": "Зависимости",
+    "unavailable": "Недоступно",
+    "launchDependency": "Для запуска необходимо: {dependency}",
+    "platformCompatible": "Совместимо с {platform}",
+    "onlineRequired": "Требуется подключение к интернету",
+    "patchNotes": "Примечания к обновлению",
+    "gameLoadFailed": "Не удалось загрузить игру!",
+    "gameLoadNotFinished": "Игра ещё не загрузилась!"
 }

@@ -30,7 +30,7 @@ window.addEventListener('DOMContentLoaded', () => {
         let gameElement = document.createElement("div");
         gameElement.classList.add("game");
     
-        let title = `${game.settings.name}`;
+        let title = `${game.name}`;
         let thumbnailUrl = "data:image/png;base64," + game.cover;
         
         gameElement.innerHTML = `<div class="thumbnail">\
@@ -54,10 +54,18 @@ window.addEventListener('DOMContentLoaded', () => {
         else if (games.length === 0) displayMessage(localiser.getLocalString('emptyLibrary'));
 
         else {
-            games.forEach(game => {
-                let gameElement = createGameElement(game);
-                gameElement.querySelector('.open').addEventListener("click", (event) => { ipcRenderer.send('open-game', game); });
-            });
+            try {
+                games.forEach(game => {
+                    let gameElement = createGameElement(game);
+                    gameElement.querySelector('.open').addEventListener("click", (event) => { 
+                        ipcRenderer.send("set-current-game", game)
+                        ipcRenderer.send('open-window-preset', 'game'); 
+                    });
+                });
+            }
+            catch (err) {
+                displayMessage(`${localiser.getLocalString('libraryLoadFailed')} ${localiser.getLocalString('unknownError')}`)
+            }
         }
     });
 

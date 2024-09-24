@@ -55,10 +55,14 @@ wm.addWindowPreset('login', 400, 600, () => {
 
 wm.addWindowPreset('library', 1280, 720, async () => {
     let gamesData = await gm.getAllGameData(auth.getUser(), true);
-    if (!gamesData.success) {
-        if (!auth.onAuthLost(gamesData.status)) return;
-    }
+    if (!gamesData.success && !auth.onAuthLost(gamesData.status)) return;
     wm.sendMessage('library-loaded', gamesData, auth.getUser());
+});
+
+wm.addWindowPreset('game', 1280, 720, async () => {
+    let gameData = await gm.getGameData(auth.getUser(), null, false);
+    if (!gameData.success && !auth.onAuthLost(gameData.status)) return;
+    wm.sendMessage("game-loaded", gameData);
 });
 
 wm.addWindowPreset('settings', 1280, 720, () => {
