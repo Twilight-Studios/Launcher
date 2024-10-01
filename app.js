@@ -94,9 +94,11 @@ wm.onWindowPresetOpened = function (fileName) {
 
 auth.onLoginSuccess = () => { setTimeout(() => { wm.openWindowPreset('library'); }, 1250); }
 
-auth.onLogout = () => {
+auth.onLogout = (silent) => {
     // sm.resetSettings(); This is a maybe, idk if settings should be kept between logout
     gm.clearGameDataCache();
+    if (silent) return;
+
     wm.openWindowPreset('login', () => {
         wm.sendNotification("[!:success]", "[!:successLogoutText]", 3000);
     });
@@ -114,6 +116,7 @@ function onFailedRequest(code) {
     }
         
     if (behaviour == 0) { // Default behaviour, should logout as usual and the window should not be loaded.
+        auth.logout(true);
         wm.openWindowPreset('login', () => {
             wm.sendNotification('[!:accessLost]', `[!:${code}]`, 3000);
         });
@@ -121,6 +124,7 @@ function onFailedRequest(code) {
     }
             
     if (behaviour == 1) { // Logout but game files should be kept (To be added)
+        auth.logout(true);
         wm.openWindowPreset('login', () => {
             wm.sendNotification('[!:accessLost]', `[!:${code}]`, 3000);
         });

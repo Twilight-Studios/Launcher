@@ -65,10 +65,10 @@ exports.login = async function () {
     return { success: false, status: status };
 }
 
-exports.logout = function () {
+exports.logout = function (silent=false) {
     exports.setUser(null, null);
     fm.removePath("credentials.json", true);
-    if (exports.onLogout) exports.onLogout();
+    if (exports.onLogout) exports.onLogout(silent);
 }
 
 ipcMain.handle('login', async (event, { playtesterId, serverUrl }) => {
@@ -78,5 +78,5 @@ ipcMain.handle('login', async (event, { playtesterId, serverUrl }) => {
 });
 
 ipcMain.on('logout', (event) => {
-    exports.logout();
+    exports.logout(false);
 });
