@@ -17,6 +17,16 @@ exports.getSettingAction = function (key, value) {
                     ["open-window-preset", ['update']]
                 ]
             };
+        case 'gameDataCache':
+            return {
+                type : "ipc",
+                valueInDesc: false,
+                button: "clearCache",
+                callbacks : [
+                    ["clear-game-data-cache", []],
+                    ["reflect", ["notification", "[!:success]", "[!:clearedGameDataCache]", 3000]]
+                ]
+            };
         case 'betaEnabled':
             return { type : "toggle" };
         case 'autoUpdateEnabled':

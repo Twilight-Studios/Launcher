@@ -34,6 +34,7 @@ exports.getSettings = function () {
     else settings.gamesPath = loadedSettings.gamesPath;
     
     settings.appVersion = appVersion;
+    settings.gameDataCache = null;
 
     if (!('betaEnabled' in loadedSettings)) settings.betaEnabled = false;
     else settings.betaEnabled = loadedSettings.betaEnabled;
