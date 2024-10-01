@@ -35,3 +35,23 @@ exports.getSettingAction = function (key, value) {
             return  {type: "unknown" };
     }
 }
+
+exports.mergeObjects = function (baseObject, overlayedObject) {
+    for (const [key, value] of Object.entries(overlayedObject)) baseObject[key] = value;
+    return baseObject;
+}
+
+exports.mergeObjectLists = function (baseList, overlayedList) {
+    const mergedList = baseList.map((baseItem, index) => {
+        const overlayedItem = overlayedList[index];
+
+        if (overlayedItem) return Object.assign({}, baseItem, overlayedItem);
+        return baseItem;
+    });
+
+    if (overlayedList.length > baseList.length) {
+        mergedList.push(...overlayedList.slice(baseList.length));
+    }
+
+    return mergedList;
+}

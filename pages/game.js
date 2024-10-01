@@ -6,9 +6,11 @@ const localiser = require("../src/frontend/localiser");
 window.addEventListener('DOMContentLoaded', () => {
     let gameLoaded = false;
     let reloadStarted = false;
+    let branches = [];
 
     const libraryButton = document.querySelector("#library");
     const reloadButton = document.querySelector("#reload");
+    const branchButton = document.querySelector("#branch");
     const logoutButton = document.querySelector("#logout");
     const notificationObject = document.querySelector('.notification');
 
@@ -30,6 +32,10 @@ window.addEventListener('DOMContentLoaded', () => {
         document.querySelector(".news").style.backgroundImage = `url('data:image/png;base64, ${game.patch}')`;
         document.querySelector(".tag").textContent = localiser.getLocalString("patchNotes");
         document.querySelector("h3").textContent = localiser.getLocalString("unavailable");
+
+        for (const [branchId, branch] of Object.entries(game.game_branches)) {
+            branches.push({ value: branch.name, alias: branchId }); 
+        }
 
         platforms = ['windows', 'linux', 'macos'];
         platformAliases = ['Windows 10/11', "Linux", "MacOS"];
@@ -78,6 +84,24 @@ window.addEventListener('DOMContentLoaded', () => {
 
         reloadStarted = true;
         ipcRenderer.send("reload");
+    });
+
+    branchButton.addEventListener("click", (event) => {
+        if (reloadStarted) return;
+
+        if (!gameLoaded) {
+            notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000, false, null);
+            return;
+        }
+
+        popout.activate(
+            localiser.getLocalString("changeBranch"),
+            localiser.getLocalString("changeBranchDesc"),
+            localiser.getLocalString("confirm"),
+            "add",
+            () => { },
+            branches
+        );
     });
 
     logoutButton.addEventListener("click", (event) => {

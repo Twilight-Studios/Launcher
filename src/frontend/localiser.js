@@ -10,7 +10,7 @@ exports.getLocalString = function (tag, variables = {}) {
 
     if (!(tag in localisationStrings)) {
         console.error(`Tried to localise tag ${tag}, which doesn't exist.`);
-        return;
+        return `[!:${tag}]`;
     }
 
     let localisedString = localisationStrings[tag][lang] || localisationStrings[tag].en;

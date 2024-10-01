@@ -54,14 +54,19 @@ wm.addWindowPreset('login', 400, 600, () => {
 })
 
 wm.addWindowPreset('library', 1280, 720, async () => {
-    let gamesData = await gm.getAllGameData(auth.getUser(), true);
-    if (!gamesData.success && !auth.onAuthLost(gamesData.status)) return;
+    let gamesData = await gm.getAllGameData(auth.getUser());
+    if (!gamesData.success && !onFailedRequest(gamesData.status)) return;
     wm.sendMessage('library-loaded', gamesData, auth.getUser());
 });
 
 wm.addWindowPreset('game', 1280, 720, async () => {
-    let gameData = await gm.getGameData(auth.getUser(), null, false);
-    if (!gameData.success && !auth.onAuthLost(gameData.status)) return;
+    let gameData = await gm.getGameData(auth.getUser(), null);
+
+    if (!gameData.success) {
+        if (!onFailedRequest(gameData.status)) return;
+        wm.openWindowPreset('library', () => { wm.sendNotification('[!:gameLoadFailed]', `[!:${gameData.status}]`, 3000); });
+    }
+
     wm.sendMessage("game-loaded", gameData);
 });
 
@@ -81,7 +86,7 @@ wm.onWindowPresetOpened = function (fileName) {
             if (fileName == "login" || fileName == "update") return;
             
             let {ok, status} = await auth.authenticateUser();
-            if (!ok) return auth.onAuthLost(status);
+            if (!ok) return onFailedRequest(status);
             return true;
         } */
     }
@@ -91,13 +96,17 @@ auth.onLoginSuccess = () => { setTimeout(() => { wm.openWindowPreset('library');
 
 auth.onLogout = () => {
     // sm.resetSettings(); This is a maybe, idk if settings should be kept between logout
+    gm.clearGameDataCache();
     wm.openWindowPreset('login', () => {
         wm.sendNotification("[!:success]", "[!:successLogoutText]", 3000);
     });
 };
 
-auth.onAuthLost = function (code) {
+function onFailedRequest(code) {
     let behaviour = currentSettings.authFailBehaviour;
+    let logoutCodes = [0, 403, 500]
+
+    if (!logoutCodes.includes(code)) return true;
 
     if (behaviour == 2) { // Simply notify that access was failed and continue as usual
         wm.sendNotification('[!:loginFailed]', `[!:${code}]`, 3000);

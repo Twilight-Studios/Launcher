@@ -9,7 +9,6 @@ let currentUser = {
 
 exports.onLoginSuccess = null;
 exports.onLogout = null;
-exports.onAuthLost = null;
 exports.bypassAuth = false;
 
 exports.getUser = () => { return currentUser; }
