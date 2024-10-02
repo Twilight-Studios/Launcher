@@ -30,11 +30,16 @@ exports.getSettings = function () {
         if (!loadedSettings || typeof loadedSettings != "object") loadedSettings = {};
     }
 
+    settings.appVersion = appVersion;
+
+    if (!('language' in loadedSettings)) settings.language = 'en';
+    else settings.language = loadedSettings.language;
+
+    if (!('authFailBehaviour' in loadedSettings)) settings.authFailBehaviour = 0; // Default authFailBehaviour
+    else settings.authFailBehaviour = loadedSettings.authFailBehaviour;
+
     if (!('gamesPath' in loadedSettings)) settings.gamesPath = path.join(app.getPath('userData'), 'games');
     else settings.gamesPath = loadedSettings.gamesPath;
-    
-    settings.appVersion = appVersion;
-    settings.gameDataCache = null;
 
     if (!('betaEnabled' in loadedSettings)) settings.betaEnabled = false;
     else settings.betaEnabled = loadedSettings.betaEnabled;
@@ -43,12 +48,8 @@ exports.getSettings = function () {
     else settings.autoUpdateEnabled = loadedSettings.autoUpdateEnabled;
 
     settings.updateServer = "https://github.com/TheNebulo/ForgeKit";
-    
-    if (!('authFailBehaviour' in loadedSettings)) settings.authFailBehaviour = 0; // Default authFailBehaviour
-    else settings.authFailBehaviour = loadedSettings.authFailBehaviour;
 
-    if (!('language' in loadedSettings)) settings.language = 'en';
-    else settings.language = loadedSettings.language;
+    settings.gameDataCache = null;
 
     if (JSON.stringify(settings) !== JSON.stringify(loadedSettings)) exports.writeSettings(settings);
     return settings;

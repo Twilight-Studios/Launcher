@@ -82,10 +82,15 @@
     "availablePlatforms": "Available Platforms",
     "dependencies": "Dependencies",
     "unavailable": "Unavailable",
-    "launchDependency": "{dependency} must be launched",
+    "requiredLaunchDependency": "{dependency} must be launched",
+    "notRequiredLaunchDependency": "{dependency} is not required",
     "platformCompatible": "Compatible with {platform}",
+    "platformNotCompatible": "No {platform} support",
     "onlineRequired": "Requires an internet connection",
+    "onlineNotRequired": "Can be played offline",
     "patchNotes": "Patch Notes",
     "gameLoadFailed": "Failed to load game!",
-    "gameLoadNotFinished": "Your game hasn't loaded yet!"
+    "gameLoadNotFinished": "Your game hasn't loaded yet!",
+    "changeBranch": "Change Branch",
+    "changeBranchDesc": "Change the game branch you are currently using, each loading a different version of the game."
 }

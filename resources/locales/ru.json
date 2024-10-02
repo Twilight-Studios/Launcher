@@ -82,10 +82,15 @@
     "availablePlatforms": "Доступные платформы",
     "dependencies": "Зависимости",
     "unavailable": "Недоступно",
-    "launchDependency": "Для запуска необходимо: {dependency}",
+    "requiredLaunchDependency": "{dependency} должен быть запущен",
+    "notRequiredLaunchDependency": "{dependency} не требуется",
     "platformCompatible": "Совместимо с {platform}",
+    "platformNotCompatible": "Поддержка {platform} отсутствует",
     "onlineRequired": "Требуется подключение к интернету",
+    "onlineNotRequired": "Можно играть в оффлайн-режиме",
     "patchNotes": "Примечания к обновлению",
     "gameLoadFailed": "Не удалось загрузить игру!",
-    "gameLoadNotFinished": "Игра ещё не загрузилась!"
+    "gameLoadNotFinished": "Игра ещё не загрузилась!",
+    "changeBranch": "Изменить ветку",
+    "changeBranchDesc": "Измените текущую ветку игры, каждая из которых загружает другую версию игры."
 }
