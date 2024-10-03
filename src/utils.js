@@ -23,7 +23,7 @@ exports.getSettingAction = function (key, value) {
                 valueInDesc: false,
                 button: "clearCache",
                 callbacks : [
-                    ["clear-game-data-cache", []],
+                    ["clear-all-game-data-caches", []],
                     ["reflect", ["notification", "[!:success]", "[!:clearedGameDataCache]", 3000]]
                 ]
             };
@@ -49,19 +49,4 @@ exports.getSettingAction = function (key, value) {
 exports.mergeObjects = function (baseObject, overlayedObject) {
     for (const [key, value] of Object.entries(overlayedObject)) baseObject[key] = value;
     return baseObject;
-}
-
-exports.mergeObjectLists = function (baseList, overlayedList) {
-    const mergedList = baseList.map((baseItem, index) => {
-        const overlayedItem = overlayedList[index];
-
-        if (overlayedItem) return Object.assign({}, baseItem, overlayedItem);
-        return baseItem;
-    });
-
-    if (overlayedList.length > baseList.length) {
-        mergedList.push(...overlayedList.slice(baseList.length));
-    }
-
-    return mergedList;
 }

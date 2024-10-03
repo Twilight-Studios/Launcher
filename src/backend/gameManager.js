@@ -3,24 +3,17 @@ const { ipcMain } = require("electron");
 const utils = require("../utils");
 
 var currentGame = null;
-
-var cachedGamesList = null;
-var recacheGameListTimeout = null;
 var caches = {};
 const CACHE_TIMEOUT = 300000;
 
 exports.getCurrentGame = () => { return currentGame; };
 
-exports.clearGameDataCache = () => {
-    cachedGamesList = null;
-    if (recacheGameListTimeout) clearTimeout(recacheGameListTimeout);
-    recacheGameListTimeout = null;
-
-    for (let key in caches) {
-        clearTimeout(caches[key].timeout);
-    }
+exports.clearAllGameDataCaches = () => {
+    for (let key in caches) clearTimeout(caches[key].timeout);
     caches = {};
 }
+
+exports.clearGameDataCache = (gameId) => { if (caches[gameId]) delete caches[gameId]; }
 
 exports.getGameData = async function (user, game) {
     if (!game) game = currentGame;
@@ -30,22 +23,24 @@ exports.getGameData = async function (user, game) {
         let payload = {
             playtester_id: user.playtesterId,
             game_id: game.id,
-            get_all: (cached) ? false : true
+            get_all: (cached && caches[game.id].containsArt) ? false : true
         }
 
         const resp = await axios.post(`${user.serverUrl}/api/get-game`, payload);
-        let data = resp.data;
+        let gameData = resp.data;
 
-        if (cached) data = utils.mergeObjects(caches[game.id].data, data); // TODO: An additional version check should occur, to see if patch notes ant etc are to be reloaded
+        if (cached) {
+            gameData = utils.mergeObjects(caches[game.id].data, gameData); // TODO: An additional version check should occur, to see if patch notes ant etc are to be reloaded
+            clearTimeout(caches[game.id].timeout);
+        }
         
         caches[game.id] = {
-            data: data,
-            timeout: setTimeout(() => {
-                delete caches[game.id];
-            }, CACHE_TIMEOUT)
+            data: gameData,
+            containsArt: true,
+            timeout: setTimeout(() => { exports.clearGameDataCache(game.id) }, CACHE_TIMEOUT)
         };
 
-        return { success: true, payload: data };
+        return { success: true, payload: gameData };
     } 
     catch (error) {
         let status = 0; // Default status for no internet connection
@@ -57,24 +52,29 @@ exports.getGameData = async function (user, game) {
 
 exports.getAllGameData = async function (user) {
     try {
-        let payload = {
-            playtester_id: user.playtesterId,
-            get_cover: (cachedGamesList) ? false : true
+        const resp = await axios.post(`${user.serverUrl}/api/get-all-games`, { playtester_id: user.playtesterId, get_cover: true });
+
+        let rawGamesData = resp.data;
+        let gamesData = [];
+
+        for (let game of rawGamesData) {
+            let cached = caches[game.id] && caches[game.id].data;
+
+            if (cached) {
+                game = utils.mergeObjects(caches[game.id].data, game);
+                clearTimeout(caches[game.id].timeout);
+            }
+
+            gamesData.push(game);
+
+            caches[game.id] = {
+                data: game,
+                containsArt: (cached && caches[game.id].containsArt) ? true : false,
+                timeout: setTimeout(() => { exports.clearGameDataCache(game.id) }, CACHE_TIMEOUT)
+            };
         }
 
-        const resp = await axios.post(`${user.serverUrl}/api/get-all-games`, payload);
-        let data = resp.data;
-
-        if (cachedGamesList) data = utils.mergeObjectLists(cachedGamesList, data);
-        cachedGamesList = data;
-        
-        if (recacheGameListTimeout) clearTimeout(recacheGameListTimeout);
-        recacheGameListTimeout = setTimeout(() => {
-            cachedGamesList = null;
-            recacheGameListTimeout = null;
-        }, CACHE_TIMEOUT);
-
-        return { success: true, payload: data };
+        return { success: true, payload: gamesData };
     }
     catch (error) {
         let status = 0; // Default status for no internet connection
@@ -84,5 +84,5 @@ exports.getAllGameData = async function (user) {
     }
 }
 
-ipcMain.on("clear-game-data-cache", (event) => { exports.clearGameDataCache(); });
+ipcMain.on("clear-all-game-data-caches", (event) => { exports.clearAllGameDataCaches(); });
 ipcMain.on("set-current-game", (event, game) => { currentGame = game; });

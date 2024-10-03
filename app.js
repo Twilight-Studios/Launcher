@@ -96,7 +96,7 @@ auth.onLoginSuccess = () => { setTimeout(() => { wm.openWindowPreset('library');
 
 auth.onLogout = (silent) => {
     // sm.resetSettings(); This is a maybe, idk if settings should be kept between logout
-    gm.clearGameDataCache();
+    gm.clearAllGameDataCaches();
     if (silent) return;
 
     wm.openWindowPreset('login', () => {
