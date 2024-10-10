@@ -1,5 +1,6 @@
 const axios = require("axios");
 const { ipcMain } = require("electron");
+const fm = require("../fileManager")
 const utils = require("../utils");
 
 var currentGame = null;
@@ -14,6 +15,40 @@ exports.clearAllGameDataCaches = () => {
 }
 
 exports.clearGameDataCache = (gameId) => { if (caches[gameId]) delete caches[gameId]; }
+
+exports.loadGameLaunchSettings = function (game) {
+    let gameSettings = fm.readJson(`games/${game.id}/settings.json`, true);
+    if (!gameSettings) return exports.setupGameLaunchSettings(game);
+    return gameSettings;
+}
+
+exports.updateActiveBranch = function (game, newBranch) {
+    let gameSettings = exports.loadGameLaunchSettings(game);
+    gameSettings.activeBranchId = newBranch.name; // Should be id, not name, but GitHub jsons need to be adjusted first
+    fm.saveJson(`games/${game.id}/settings.json`, true, gameSettings);
+}
+
+exports.resetGameLaunchSettings = function (game) {
+    fm.removePath(`games/${game.id}/settings.json`, true);
+    exports.setupGameLaunchSettings(game);
+}
+
+exports.setupGameLaunchSettings = function (game) {
+    fm.makePath(`games/${game.id}/`, true);
+    fm.createJson(`games/${game.id}/settings.json`, true);
+    let gameSettings = fm.readJson(`games/${game.id}/settings.json`, true);
+    
+    if (!gameSettings) {
+        gameSettings = {
+            activeBranchId: Object.values(game.branches)[0].name, // Should be id, not name, but GitHub jsons need to be adjusted first
+            downloadedVersions: null // Should be an array or object looking like: { version: [branchUsingVersion, anotherBranchUsingVersion, etc...] }
+        }
+
+        fm.saveJson(`games/${game.id}/settings.json`, true, gameSettings);
+    }
+
+    return gameSettings;
+}
 
 exports.getGameData = async function (user, game) {
     if (!game) game = currentGame;
@@ -30,9 +65,11 @@ exports.getGameData = async function (user, game) {
         let gameData = resp.data;
 
         if (cached) {
-            gameData = utils.mergeObjects(caches[game.id].data, gameData); // TODO: An additional version check should occur, to see if patch notes ant etc are to be reloaded
+            gameData = utils.mergeObjects(caches[game.id].data, gameData); // TODO: An additional version check should occur, to see if patch notes ant etc are to be reloaded, and gameFiles are to be rewritten
             clearTimeout(caches[game.id].timeout);
         }
+
+        exports.setupGameLaunchSettings(gameData);
         
         caches[game.id] = {
             data: gameData,
@@ -65,6 +102,7 @@ exports.getAllGameData = async function (user) {
                 clearTimeout(caches[game.id].timeout);
             }
 
+            exports.setupGameLaunchSettings(game);
             gamesData.push(game);
 
             caches[game.id] = {
@@ -84,5 +122,7 @@ exports.getAllGameData = async function (user) {
     }
 }
 
+ipcMain.on("reset-game-launch-settings", (event, game) => { exports.resetGameLaunchSettings(game); } )
+ipcMain.on("update-active-branch", (event, game, newBranch) => { exports.updateActiveBranch(game, newBranch) });
 ipcMain.on("clear-all-game-data-caches", (event) => { exports.clearAllGameDataCaches(); });
 ipcMain.on("set-current-game", (event, game) => { currentGame = game; });

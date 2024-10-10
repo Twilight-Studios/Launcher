@@ -67,6 +67,7 @@ wm.addWindowPreset('game', 1280, 720, async () => {
         wm.openWindowPreset('library', () => { wm.sendNotification('[!:gameLoadFailed]', `[!:${gameData.status}]`, 3000); });
     }
 
+    gameData.launchSettings = gm.loadGameLaunchSettings(gameData.payload);
     wm.sendMessage("game-loaded", gameData);
 });
 

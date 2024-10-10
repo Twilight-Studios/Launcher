@@ -4,6 +4,8 @@ const popout = require("../src/frontend/popout");
 const localiser = require("../src/frontend/localiser");
 
 window.addEventListener('DOMContentLoaded', () => {
+    let game = null;
+    let launchSettings = null;
     let gameLoaded = false;
     let reloadStarted = false;
     let activeBranch = null;
@@ -24,27 +26,36 @@ window.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.on('game-loaded', (event, response) => {
         document.querySelector('.loader-wrapper').classList.remove('active');
         gameLoaded = true;
-        let game = response.payload;
+        game = response.payload;
+        launchSettings = response.launchSettings
 
         logo = document.querySelector("img");
         logo.src = "data:image/png;base64, " + game.logo;
         document.querySelector(".window").style.backgroundImage = `url('data:image/png;base64, ${game.background}')`;
 
         document.querySelector(".news").style.backgroundImage = `url('data:image/png;base64, ${game.patch}')`;
-        document.querySelector(".tag").textContent = localiser.getLocalString("patchNotes");
-        document.querySelector("h3").textContent = localiser.getLocalString("unavailable");
 
-        for (const [branchId, branch] of Object.entries(game.game_branches)) {
-            branches.push({ value: branch.name, alias: `${branchId} [${branch.latest_version}]` }); // TODO: Rename latest_version to version on the server side
+        let activeBranchFound = false;
+        for (let branch of Object.values(game.branches)) {
+            if (branch.name == launchSettings.activeBranchId) activeBranchFound = branch; // Temporary fix
+            branches.push({ value: branch.name, alias: `${branch.id} [${branch.version}]`, selected: (branch.name == launchSettings.activeBranchId) });
         }
+        
+        if (!activeBranchFound) { // Should be !Object.keys(game.branches).includes(launchSettings.activeBranchId) but GitHub jsons are to be updated
+            ipcRenderer.send("reset-game-launch-settings", game);
+            ipcRenderer.send("reload");
+            return;
+        }
+        activeBranch = activeBranchFound;
 
-        // Temporary active branch allocation
-        let firstBranchId = Object.keys(game.game_branches)[0];
-        activeBranch = game.game_branches[firstBranchId];
-        activeBranch.id = firstBranchId;
+        if (branches.length <= 1) branchButton.remove();
 
-        platforms = ['windows', 'linux', 'macos'];
-        platformAliases = ['Windows 10/11', "Linux", "MacOS"];
+        document.querySelector(".tag").textContent = activeBranch.version;
+        document.querySelector("h3").textContent = game.patch_notes_metadata[activeBranch.version].title;
+        document.querySelector(".news").addEventListener("click", (event) => { notify(notificationObject, localiser.getLocalString("patchNotesLoadFailed"), localiser.getLocalString("notReadyYet"), 2000, false, null) })
+
+        let platforms = ['windows', 'linux', 'macos'];
+        let platformAliases = ['Windows 10/11', "Linux", "MacOS"];
 
         for (let i = 0; i < platforms.length; i++) {
             let platform = platforms[i];
@@ -76,8 +87,8 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         
 
-        requirements = ['steam', "xbox"];
-        requirementAliases = ['Steam', "Xbox Launcher"];
+        let requirements = ['steam', "xbox"];
+        let requirementAliases = ['Steam', "Xbox Launcher"];
 
         for (let i = 0; i < requirements.length; i++) {
             let requirement = requirements[i];
@@ -133,7 +144,10 @@ window.addEventListener('DOMContentLoaded', () => {
             localiser.getLocalString("changeBranchDesc"),
             localiser.getLocalString("confirm"),
             "add",
-            () => { },
+            (branchValue) => {
+                ipcRenderer.send('update-active-branch', game, { name: branchValue }); // Update to ID once GitHub jsons are converted
+                ipcRenderer.send('reload');
+            },
             branches
         );
     });
