@@ -1,5 +1,5 @@
 const { ipcRenderer } = require('electron');
-const { notify } = require("../src/frontend/notification");
+const notification = require("../src/frontend/notification");
 const popout = require("../src/frontend/popout");
 const localiser = require("../src/frontend/localiser");
 const utils = require("../src/utils");
@@ -8,6 +8,8 @@ window.addEventListener('DOMContentLoaded', () => {
     let reloadStarted = false;
     let settingsLoaded = false;
     const content = document.querySelector('.content');
+
+    notification.injectUi();
 
     popout.setup(
         document.querySelector('.popout'), 
@@ -129,7 +131,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#library').addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
-            notify(null, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
+            notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
             return;
         }
 
@@ -139,7 +141,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#reset').addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
-            notify(null, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
+            notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
             return;
         }
         
@@ -158,7 +160,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#reload').addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
-            notify(null, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
+            notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
             return;
         }
 
@@ -170,7 +172,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!settingsLoaded) { 
-            notify(null, localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000, false, null);
+            notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
             return;
         }
         
@@ -179,8 +181,7 @@ window.addEventListener('DOMContentLoaded', () => {
             localiser.getLocalString("logoutDesc"),
             localiser.getLocalString("logout"),
             "remove",
-            () => { notify(
-                null, 
+            () => { notification.notify( 
                 localiser.getLocalString("loggingOut"), 
                 localiser.getLocalString("clearingSession"), 
                 1500, 

@@ -1,11 +1,12 @@
 const { ipcRenderer } = require('electron');
-const { notify } = require("../src/frontend/notification");
+const notification = require("../src/frontend/notification");
 const localiser = require("../src/frontend/localiser");
 
 window.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('#form');
     const button = document.querySelector('button');
-    const notificationObject = document.querySelector('.notification');
+    notification.injectUi(null, false);
+
     document.getElementById('playtesterid').ariaPlaceholder = localiser.getLocalString("playtesterIdPlaceholder");
 
     let inLogin = false;
@@ -17,18 +18,18 @@ window.addEventListener('DOMContentLoaded', () => {
         const playtesterId = document.getElementById('playtesterid').value;
         const serverUrl = document.getElementById('serverurl').value;
         
-        notify(notificationObject, localiser.getLocalString("loggingIn"), localiser.getLocalString("attemptingLogin"), 3000, false, null);
+        notification.notify(localiser.getLocalString("loggingIn"), localiser.getLocalString("attemptingLogin"), 3000);
         button.classList.add("disabled");
         button.textContent = localiser.getLocalString("loggingIn");
         
         const response = await ipcRenderer.invoke('login', { playtesterId, serverUrl });
 
-        if (response.success) notify(notificationObject, localiser.getLocalString("success"), localiser.getLocalString("loading"), 1000, false, null)
+        if (response.success) notification.notify(localiser.getLocalString("success"), localiser.getLocalString("loading"), 1000)
         else {
             inLogin = false;
             button.classList.remove("disabled");
             button.textContent = localiser.getLocalString("login");
-            notify(notificationObject, localiser.getLocalString("loginFailed"), localiser.getLocalString(response.status), 3000, false, null);
+            notification.notify(localiser.getLocalString("loginFailed"), localiser.getLocalString(response.status), 3000);
         }
     }
 

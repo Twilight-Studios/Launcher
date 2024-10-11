@@ -1,5 +1,5 @@
 const { ipcRenderer } = require('electron');
-const { notify } = require("../src/frontend/notification");
+const notification = require("../src/frontend/notification");
 const popout = require("../src/frontend/popout");
 const localiser = require("../src/frontend/localiser");
 
@@ -11,7 +11,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const reloadButton = document.querySelector("#reload");
     const settingsButton = document.querySelector("#settings");
     const logoutButton = document.querySelector("#logout");
-    const notificationObject = document.querySelector('.notification');
+    
+    notification.injectUi();
 
     popout.setup(
         document.querySelector('.popout'), 
@@ -73,7 +74,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!libraryLoaded) {
-            notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000, false, null);
+            notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000);
             return;
         }
 
@@ -84,7 +85,7 @@ window.addEventListener('DOMContentLoaded', () => {
     settingsButton.addEventListener("click", (event) => {
         if (reloadStarted) return;
 
-        if (!libraryLoaded) notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000, false, null);
+        if (!libraryLoaded) notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000);
         else ipcRenderer.send("open-window-preset", 'settings');
     });
 
@@ -92,7 +93,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!libraryLoaded) {
-            if (!libraryLoaded) notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000, false, null);
+            if (!libraryLoaded) notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000);
             return;
         }
         
@@ -101,8 +102,7 @@ window.addEventListener('DOMContentLoaded', () => {
             localiser.getLocalString("logoutDesc"),
             localiser.getLocalString("logout"),
             "remove",
-            () => { notify(
-                notificationObject, 
+            () => { notification.notify(
                 localiser.getLocalString("loggingOut"), 
                 localiser.getLocalString("clearingSession"), 
                 1500, 

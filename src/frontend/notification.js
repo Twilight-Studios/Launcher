@@ -1,13 +1,66 @@
 const { Notification, ipcRenderer } = require("electron");
 const path = require("path");
 
+let notificationObject = null;
 let activateNotifications = 0;
 
-exports.notify = function (notificationObject, title, description, length, notifyOs, onEndCallback) {
-    if (!notificationObject) notificationObject = document.querySelector('.notification');
+exports.injectUi = function (parentNode=null, injectStyling=true) {
+    let defaultStyling = `
+        .notification {
+            position: absolute;
+            top: 0;
+            padding-top: 4px;
+            padding-bottom: 8px;
+            height: 115px;
+            width: 100vw;
+            background: var(--primary-color);
+            background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: all ease-in-out 0.25s;
+            z-index: 1000;
+            pointer-events: none;
+        }
 
-    notificationObject.querySelector('#noti-title').textContent = title;
-    notificationObject.querySelector('#noti-desc').textContent = description;
+        .notification > h1 {
+            margin-top: 16.5px;
+            margin-left: 20px;
+            color: white;
+            font-weight: 700;
+            font-size: 30px;
+        }
+
+        .notification > span {
+            margin-left: 20px;
+            color: white;
+            font-size: 20px;
+        }
+
+        .notification.active {
+            pointer-events: all;
+            opacity: 1;
+        }
+    `
+
+    if (injectStyling) {
+        let styleSheet = document.createElement("style");
+        styleSheet.textContent = defaultStyling;
+        document.head.appendChild(styleSheet);
+    }
+
+    notificationObject = document.createElement("div");
+    notificationObject.classList.add("notification");
+    notificationObject.innerHTML = "<h1></h1><span></span>";
+
+    if (parentNode) parentNode.appendChild(notificationObject);
+    else document.body.appendChild(notificationObject);
+}
+
+exports.notify = function (title, description, length, notifyOs=false, onEndCallback=null) {
+    if (!notificationObject) exports.injectUi();
+
+    notificationObject.querySelector('h1').textContent = title;
+    notificationObject.querySelector('span').textContent = description;
     notificationObject.classList.add('active');
     activateNotifications++;
 
@@ -27,6 +80,6 @@ exports.notify = function (notificationObject, title, description, length, notif
 }
 
 ipcRenderer.on('notification', (event, title, description, length) => {
-    exports.notify(null, title, description, length, false, null);
-    ipcRenderer.send("reflect", "localise", null);
+    exports.notify(title, description, length);
+    ipcRenderer.send("reflect", "localise");
 });

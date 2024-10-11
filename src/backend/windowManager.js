@@ -109,7 +109,7 @@ ipcMain.on('open-window-preset', (event, presetName, additionalCallback) => {
     exports.openWindowPreset(presetName, additionalCallback);
 });
 
-ipcMain.on('reflect', (event, channel, ...args) => { exports.sendMessage(channel, ...args) });
+ipcMain.on('reflect', (event, channel, ...args) => { exports.sendMessage(channel, ...args); });
 
 ipcMain.on('open-file', (event, filePath) => {
     if (!fs.existsSync(filePath)) return;

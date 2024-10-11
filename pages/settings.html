@@ -34,40 +34,6 @@
     flex-direction: column;
   }
 
-  .notification {
-    position: absolute;
-    padding-top: 4px;
-    padding-bottom: 8px;
-    height: 115px;
-    width: 100vw;
-    background: var(--primary-color);
-    background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
-    box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    transition: all ease-in-out 0.25s;
-    z-index: 1000;
-    pointer-events: none;
-  }
-
-  .notification > h1 {
-    margin-top: 16.5px;
-    margin-left: 20px;
-    color: white;
-    font-weight: 700;
-    font-size: 30px;
-  }
-
-  .notification > span {
-    margin-left: 20px;
-    color: white;
-    font-size: 20px;
-  }
-
-  .notification.active {
-    pointer-events: all;
-    opacity: 1;
-  }
-
   .header {
     display: flex;
     flex-direction: row;
@@ -339,10 +305,6 @@
   </div>
 </div>
 <div class="window">
-  <div class="notification">
-    <h1 id="noti-title">Notification</h1>
-    <span id="noti-desc">Description</span>
-  </div>
   <div class="header">
     <div class="hero">
       <div class="login-info">[!:loading]</div>

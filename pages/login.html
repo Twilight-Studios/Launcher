@@ -110,8 +110,9 @@
     box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
   }
 
-  .notification {
+  .notification { /* TODO: Take the style modifications to the module, not hard coded */
     position: absolute;
+    top: 0;
     height: 80px;
     width: 100vw;
     background: var(--primary-color);
@@ -119,13 +120,11 @@
     box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
     opacity: 0;
     transition: all ease-in-out 0.25s;
+    z-index: 1000;
+    pointer-events: none;
   }
 
-  .notification.active {
-    opacity: 1;
-  }
-
-  h1 {
+  .notification > h1 {
     margin-top: 10px;
     margin-left: 15px;
     color: white;
@@ -133,10 +132,15 @@
     font-size: 22px;
   }
 
-  span {
+  .notification > span {
     margin-left: 15px;
     color: white;
   }
+
+  .notification.active {
+    pointer-events: all;
+    opacity: 1;
+}
 
   p {
     margin-top: 10px;
@@ -149,10 +153,6 @@
   
 </style>
 <div class="window">
-  <div class="notification">
-    <h1 id="noti-title">Notification</h1>
-    <span id="noti-desc">Description</span>
-  </div>
   <div class="logo">
     <img src="../resources/logo.png">
   </div>

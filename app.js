@@ -111,7 +111,7 @@ function onFailedRequest(code) {
 
     if (!logoutCodes.includes(code)) return true;
 
-    if (behaviour == 2) { // Simply notify that access was failed and continue as usual
+    if (behaviour == 2 || auth.bypassAuth) { // Simply notify that access was failed and continue as usual
         wm.sendNotification('[!:loginFailed]', `[!:${code}]`, 3000);
         return true;
     }

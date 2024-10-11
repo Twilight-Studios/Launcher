@@ -1,5 +1,5 @@
 const { ipcRenderer } = require('electron');
-const { notify } = require("../src/frontend/notification");
+const { notify, injectUi } = require("../src/frontend/notification");
 const popout = require("../src/frontend/popout");
 const localiser = require("../src/frontend/localiser");
 
@@ -15,7 +15,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const reloadButton = document.querySelector("#reload");
     const branchButton = document.querySelector("#branch");
     const logoutButton = document.querySelector("#logout");
-    const notificationObject = document.querySelector('.notification');
+
+    injectUi();
 
     popout.setup(
         document.querySelector('.popout'), 
@@ -52,7 +53,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         document.querySelector(".tag").textContent = activeBranch.version;
         document.querySelector("h3").textContent = game.patch_notes_metadata[activeBranch.version].title;
-        document.querySelector(".news").addEventListener("click", (event) => { notify(notificationObject, localiser.getLocalString("patchNotesLoadFailed"), localiser.getLocalString("notReadyYet"), 2000, false, null) })
+        document.querySelector(".news").addEventListener("click", (event) => { notify(null, localiser.getLocalString("patchNotesLoadFailed"), localiser.getLocalString("notReadyYet"), 2000, false, null) })
 
         let platforms = ['windows', 'linux', 'macos'];
         let platformAliases = ['Windows 10/11', "Linux", "MacOS"];
@@ -115,7 +116,7 @@ window.addEventListener('DOMContentLoaded', () => {
     libraryButton.addEventListener("click", (event) => {
         if (reloadStarted) return;
 
-        if (!gameLoaded) notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000, false, null);
+        if (!gameLoaded) notify(null, localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000, false, null);
         else ipcRenderer.send("open-window-preset", 'library');
     });
 
@@ -123,7 +124,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!gameLoaded) {
-            notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000, false, null);
+            notify(null, localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000, false, null);
             return;
         }
 
@@ -135,7 +136,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!gameLoaded) {
-            notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000, false, null);
+            notify(null, localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000, false, null);
             return;
         }
 
@@ -156,7 +157,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!gameLoaded) {
-            if (!gameLoaded) notify(notificationObject, localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000, false, null);
+            if (!gameLoaded) notify(null, localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000, false, null);
             return;
         }
         
@@ -166,7 +167,7 @@ window.addEventListener('DOMContentLoaded', () => {
             localiser.getLocalString("logout"),
             "remove",
             () => { notify(
-                notificationObject, 
+                null, 
                 localiser.getLocalString("loggingOut"), 
                 localiser.getLocalString("clearingSession"), 
                 1500, 
