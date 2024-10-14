@@ -76,7 +76,7 @@ exports.notify = function (title, description, length, notifyOs=false, onEndCall
 
     }, length);
 
-    if (notifyOs) new Notification({ title: title, body: description, icon: path.join(__dirname, 'resources/logo.ico') }).show();
+    if (notifyOs) ipcRenderer.send('notify-os', title, description);
 }
 
 ipcRenderer.on('notification', (event, title, description, length) => {

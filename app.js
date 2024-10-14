@@ -10,7 +10,8 @@ const fm = require("./src/fileManager.js");
 const DEFAULT_SERVER_URL = "http://127.0.0.1:5000"; // Only used as an automatic value for the server value for login
 
 // Dev/testing tools (MUST BE SET TO FALSE BEFORE LEAVING DEV ENVIRONMENT)
-wm.enableDevTools = false; // Used to provide access to chromium dev tools 
+wm.enableDevTools = false; // Used to provide access to chromium dev tools
+let enableCallbackConsole = false; // Used to open a developer IPC callback console
 auth.bypassAuth = false; // Used to skip auth to access UI offline
 
 // Localisation setup
@@ -75,6 +76,8 @@ wm.addWindowPreset('settings', 1280, 720, () => {
     wm.sendMessage("settings-loaded", currentSettings, auth.getUser());
 });
 
+if (enableCallbackConsole) wm.addPopoutWindowPreset('console', 600, 900, true);
+
 wm.onWindowPresetOpened = function (fileName) {
     fm.makePath("games", true); // Temporary
     currentSettings = sm.getSettings();
@@ -91,6 +94,11 @@ wm.onWindowPresetOpened = function (fileName) {
             return true;
         } */
     }
+}
+
+wm.onPopoutWindowPresetOpened = function (fileName) { 
+    currentSettings = sm.getSettings();
+    return { domCallbacks : { 'localise' : currentSettings.language } }
 }
 
 auth.onLoginSuccess = () => { setTimeout(() => { wm.openWindowPreset('library'); }, 1250); }
@@ -142,6 +150,7 @@ if (!app.requestSingleInstanceLock()) { app.quit(); }
 app.on("ready", () => {
     if (process.platform == 'win32') { app.setAppUserModelId("com.thenebulo.forgekitlauncher"); }
     wm.openWindowPreset('update');
+    if (enableCallbackConsole) wm.openPopoutWindowPreset('console');
 });
 
 app.on('second-instance', (event, commandLine, workingDirectory) => {
