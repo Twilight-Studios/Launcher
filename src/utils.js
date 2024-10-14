@@ -41,6 +41,15 @@ exports.getSettingAction = function (key, value) {
                 options : ['en','ru']
             };
         }
+        case 'devConsole':
+            return {
+                type : "ipc",
+                valueInDesc: false,
+                button: "openDevConsole",
+                callbacks : [
+                    ["open-popout-window-preset", ["console"]]
+                ]
+            };
         default:
             return  {type: "unknown" };
     }

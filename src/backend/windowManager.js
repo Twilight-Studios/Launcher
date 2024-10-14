@@ -70,9 +70,9 @@ exports.openPopoutWindowPreset = function (presetName, additionalCallback) {
 
     createPopoutWindow(presetName, wp.width, wp.height, wp.persistent, () => {
         let { domCallbacks, asyncTask } = exports.onPopoutWindowPresetOpened(presetName);
-        
+
         for (const [channel, value] of Object.entries(domCallbacks)) {
-            exports.sendMessage(channel, value);
+            exports.sendPopoutMessage(presetName, channel, value);
         }
 
         if (asyncTask) {
@@ -157,17 +157,35 @@ function createPopoutWindow(fileName, width, height, persistent, callback) {
     });
 }
 
-exports.reloadCurrentWindow = async (callback) => {
+exports.reloadCurrentWindow = (callback) => {
     exports.openWindowPreset(currentWindowPreset, () => {
         if (callback) callback();
     });
 }
+
+exports.reloadPopoutWindow = (presetName, callback) => {
+    exports.openPopoutWindowPreset(presetName, () => {
+        if (callback) callback();
+    });
+}
+
+exports.reloadAllPopoutWindows = () => {
+    Object.keys(popoutWindows).forEach(presetName => {
+        exports.reloadPopoutWindow(presetName);
+    })
+} 
 
 exports.sendMessage = (channel, ...args) => {
     if (mainWindow && mainWindow.webContents) {
         mainWindow.webContents.send(channel, ...args);
     }
 };
+
+exports.sendPopoutMessage = (presetName, channel, ...args) => {
+    if (popoutWindows[presetName] && popoutWindows[presetName].webContents) {
+        popoutWindows[presetName].webContents.send(channel, ...args);
+    }
+}
 
 exports.sendNotification = function (title, description, length) {
     exports.sendMessage('notification', title, description, length);

@@ -11,7 +11,7 @@ const DEFAULT_SERVER_URL = "http://127.0.0.1:5000"; // Only used as an automatic
 
 // Dev/testing tools (MUST BE SET TO FALSE BEFORE LEAVING DEV ENVIRONMENT)
 wm.enableDevTools = false; // Used to provide access to chromium dev tools
-let enableCallbackConsole = false; // Used to open a developer IPC callback console
+let forceOpenCallbackConsole = false; // Used to force open a developer IPC callback console
 auth.bypassAuth = false; // Used to skip auth to access UI offline
 
 // Localisation setup
@@ -66,6 +66,7 @@ wm.addWindowPreset('game', 1280, 720, async () => {
     if (!gameData.success) {
         if (!onFailedRequest(gameData.status)) return;
         wm.openWindowPreset('library', () => { wm.sendNotification('[!:gameLoadFailed]', `[!:${gameData.status}]`, 3000); });
+        return;
     }
 
     gameData.launchSettings = gm.loadGameLaunchSettings(gameData.payload);
@@ -76,7 +77,7 @@ wm.addWindowPreset('settings', 1280, 720, () => {
     wm.sendMessage("settings-loaded", currentSettings, auth.getUser());
 });
 
-if (enableCallbackConsole) wm.addPopoutWindowPreset('console', 600, 900, true);
+wm.addPopoutWindowPreset('console', 600, 900, forceOpenCallbackConsole);
 
 wm.onWindowPresetOpened = function (fileName) {
     fm.makePath("games", true); // Temporary
@@ -99,6 +100,11 @@ wm.onWindowPresetOpened = function (fileName) {
 wm.onPopoutWindowPresetOpened = function (fileName) { 
     currentSettings = sm.getSettings();
     return { domCallbacks : { 'localise' : currentSettings.language } }
+};
+
+sm.onSettingsChanged = (key, value) => {
+    wm.reloadCurrentWindow();
+    wm.reloadAllPopoutWindows(); 
 }
 
 auth.onLogout = (silent) => {
@@ -148,7 +154,7 @@ if (!app.requestSingleInstanceLock()) { app.quit(); }
 app.on("ready", () => {
     if (process.platform == 'win32') { app.setAppUserModelId("com.thenebulo.forgekitlauncher"); }
     wm.openWindowPreset('update');
-    if (enableCallbackConsole) wm.openPopoutWindowPreset('console');
+    if (forceOpenCallbackConsole) wm.openPopoutWindowPreset('console');
 });
 
 app.on('second-instance', (event, commandLine, workingDirectory) => {

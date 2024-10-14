@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dev Console</title>
+    <title>ForgeKit Launcher</title>
     <style>
         @import url('../resources/fonts/poppins.css');
 
@@ -120,36 +120,36 @@
     </style>
 </head>
 <body>
-    <header>Dev Console</header>
+    <header>[!:devConsole]</header>
     <div id="output"></div>
     <div id="console">
         <div class="form-row">
-            <label for="ipc-mode">Mode:</label>
+            <label for="ipc-mode">[!:mode]:</label>
             <select id="ipc-mode">
-                <option value="ipcMain">Send to ipcMain</option>
-                <option value="ipcRenderer">Send to ipcRenderer</option>
+                <option value="ipcMain">[!:sendToIpcMain]</option>
+                <option value="ipcRenderer">[!:sendToIpcRenderer]</option>
             </select>
         </div>
         <div class="form-row">
-            <label for="ipc-invoke">Message Type:</label>
+            <label for="ipc-invoke">[!:messageType]:</label>
             <select id="ipc-invoke">
-                <option value="send">Send</option>
-                <option value="invoke">Invoke (Only for ipcMain)</option>
+                <option value="send">[!:send]</option>
+                <option value="invoke">[!:invoke] ([!:ipcMainOnly])</option>
             </select>
         </div>
         <div class="form-row">
-            <label for="method">Method:</label>
-            <input type="text" id="method" placeholder="Enter method name" />
+            <label for="channel">[!:channel]:</label>
+            <input type="text" id="channel" placeholder="[!:channelPlaceholder]" />
         </div>
         <div class="form-row">
-            <label for="arg-value">Argument Value:</label>
-            <input type="text" id="arg-value" placeholder="Enter argument value (e.g., string, number, or object)" />
+            <label for="arg-value">[!:argumentValue]:</label>
+            <input type="text" id="arg-value" placeholder="[!:addArgumentPlaceholder]" />
         </div>
         <div id="arguments-list"></div>
-        <button id="add-argument">Add Argument</button>
+        <button id="add-argument">[!:addArgument]</button>
         <div class="button-row">
-            <button id="send">Send</button>
-            <button id="clear">Clear Console</button>
+            <button id="send">[!:send]</button>
+            <button id="clear">[!:clearConsole]</button>
         </div>
     </div>
 </body>

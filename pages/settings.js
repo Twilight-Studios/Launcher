@@ -83,7 +83,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 value ? "remove" : "add",
                 () => {
                     ipcRenderer.send('new-settings-value', key, !value);
-                    ipcRenderer.send('reload');
                 }
             ) }
         }
@@ -106,7 +105,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 "add",
                 (dropwdownValue) => {
                     ipcRenderer.send('new-settings-value', key, dropwdownValue);
-                    ipcRenderer.send('reload');
                 },
                 dropdownOptions
             ) }
@@ -120,7 +118,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 "add",
                 (inputValue) => {
                     ipcRenderer.send('new-settings-value', key, inputValue);
-                    ipcRenderer.send('reload');
                 },
                 null,
                 value

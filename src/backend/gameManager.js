@@ -51,7 +51,11 @@ exports.setupGameLaunchSettings = function (game) {
 }
 
 exports.getGameData = async function (user, game) {
-    if (!game) game = currentGame;
+    if (!game) {
+        if (!currentGame) return { success: false, status: -1 } // Default status for invalid parameters 
+        game = currentGame;
+    }
+
     let cached = caches[game.id] && caches[game.id].data
 
     try {

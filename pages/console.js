@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron');
+const localiser = require("../src/frontend/localiser");
 
 let argumentsList = [];
 
@@ -6,7 +7,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const output = document.getElementById('output');
     const modeSelector = document.getElementById('ipc-mode');
     const invokeSelector = document.getElementById('ipc-invoke');
-    const methodInput = document.getElementById('method');
+    const channelInput = document.getElementById('channel');
     const argValueInput = document.getElementById('arg-value');
     const argumentsListDiv = document.getElementById('arguments-list');
     const addArgumentButton = document.getElementById('add-argument');
@@ -42,21 +43,21 @@ window.addEventListener('DOMContentLoaded', () => {
             }
     
             argumentsList.push(parsedValue);
-            printToConsole(`Added argument: ${JSON.stringify(parsedValue)}`);
+            printToConsole(localiser.getLocalString("addedArgument", { argument : JSON.stringify(parsedValue) }));
             argValueInput.value = '';
     
             const listItem = document.createElement('div');
             listItem.textContent = JSON.stringify(parsedValue);
             argumentsListDiv.appendChild(listItem);
         } else {
-            printToConsole('Please enter a valid argument.', true);
+            printToConsole(localiser.getLocalString("enterValidArgument"), true);
         }
     });
     
     sendButton.addEventListener('click', () => {
-        const method = methodInput.value.trim();
-        if (!method) {
-            printToConsole('Please specify a method name.', true);
+        const channel = channelInput.value.trim();
+        if (!channel) {
+            printToConsole(localiser.getLocalString("enterValidChannel"), true);
             return;
         }
     
@@ -65,20 +66,20 @@ window.addEventListener('DOMContentLoaded', () => {
     
         if (mode === 'ipcMain') {
             if (invokeType === 'invoke') {
-                ipcRenderer.invoke(method, ...argumentsList)
+                ipcRenderer.invoke(channel, ...argumentsList)
                     .then(response => {
-                        printToConsole(`Response from ipcMain: ${JSON.stringify(response)}`);
+                        printToConsole(localiser.getLocalString("ipcMainResponse", { response: JSON.stringify(response) }));
                     })
                     .catch(error => {
-                        printToConsole(`Error from ipcMain: ${error.message}`, true);
+                        printToConsole(localiser.getLocalString("ipcMainError", { error: error.message }), true);
                     });
             } else {
-                ipcRenderer.send(method, ...argumentsList);
-                printToConsole(`Sent to ipcMain: ${method} with arguments ${JSON.stringify(argumentsList)}`);
+                ipcRenderer.send(channel, ...argumentsList);
+                printToConsole(localiser.getLocalString("ipcMainSent", { channel: channel, arguments: JSON.stringify(argumentsList) }));
             }
         } else {
-            ipcRenderer.send('reflect', method, ...argumentsList);
-            printToConsole(`Sent to ipcRenderer (via reflect): ${method} with arguments ${JSON.stringify(argumentsList)}`);
+            ipcRenderer.send('reflect', channel, ...argumentsList);
+            printToConsole(localiser.getLocalString("ipcRendererSent", { channel: channel, arguments: JSON.stringify(argumentsList) }));
         }
     
         argumentsList = [];

@@ -8,6 +8,8 @@ let appVersion = app.getVersion();
 let cachedSettings = null;
 let eventsToIgnore = 0;
 
+exports.onSettingsChanged = null;
+
 fm.createJson('settings.json', true);
 fs.watch(path.join(fm.getAppDataPath(), 'settings.json'), { persistent: false }, function (event, filename) {
     if (eventsToIgnore > 0) {
@@ -31,6 +33,7 @@ exports.getSettings = function () {
     }
 
     settings.appVersion = appVersion;
+    settings.devConsole = null;
 
     if (!('language' in loadedSettings)) settings.language = 'en';
     else settings.language = loadedSettings.language;
@@ -77,6 +80,7 @@ ipcMain.on('new-settings-value', (event, key, newValue) => {
     }
 
     settings[key] = newValue;
+    exports.onSettingsChanged(key, newValue);
     exports.writeSettings(settings);
 });
 
