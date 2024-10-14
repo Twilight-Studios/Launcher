@@ -24,7 +24,11 @@ window.addEventListener('DOMContentLoaded', () => {
         
         const response = await ipcRenderer.invoke('login', { playtesterId, serverUrl });
 
-        if (response.success) notification.notify(localiser.getLocalString("success"), localiser.getLocalString("loading"), 1000)
+        if (response.success) {
+            notification.notify(localiser.getLocalString("success"), localiser.getLocalString("loading"), 1000, false, () => {
+                ipcRenderer.send("open-window-preset", "library");
+            });
+        }
         else {
             inLogin = false;
             button.classList.remove("disabled");

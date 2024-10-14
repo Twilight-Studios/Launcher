@@ -101,8 +101,6 @@ wm.onPopoutWindowPresetOpened = function (fileName) {
     return { domCallbacks : { 'localise' : currentSettings.language } }
 }
 
-auth.onLoginSuccess = () => { setTimeout(() => { wm.openWindowPreset('library'); }, 1250); }
-
 auth.onLogout = (silent) => {
     // sm.resetSettings(); This is a maybe, idk if settings should be kept between logout
     gm.clearAllGameDataCaches();

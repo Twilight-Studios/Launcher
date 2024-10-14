@@ -206,6 +206,10 @@ ipcMain.on('open-window-preset', (event, presetName, additionalCallback) => {
     exports.openWindowPreset(presetName, additionalCallback);
 });
 
+ipcMain.on('open-popout-window-preset', (event, presetName, additionalCallback) => {
+    exports.openPopoutWindowPreset(presetName, additionalCallback);
+});
+
 ipcMain.on('reflect', (event, channel, ...args) => { exports.sendMessage(channel, ...args); });
 
 ipcMain.on('notify-os', (event, title, description) => { new Notification({ title: title, body: description, icon: 'resources/logo.ico' }).show(); })

@@ -7,7 +7,6 @@ let currentUser = {
     serverUrl: null
 }
 
-exports.onLoginSuccess = null;
 exports.onLogout = null;
 exports.bypassAuth = false;
 
@@ -58,7 +57,6 @@ exports.login = async function () {
 
     if (ok) {
         exports.saveUser();
-        if (exports.onLoginSuccess) { exports.onLoginSuccess(); }
         return { success: true };
     }
 
