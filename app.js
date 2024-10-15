@@ -77,6 +77,17 @@ wm.addWindowPreset('settings', 1280, 720, () => {
     wm.sendMessage("settings-loaded", currentSettings, auth.getUser());
 });
 
+wm.addPopoutWindowPreset('patchnotes', 1000, 600, false, () => {
+    let game = gm.getCurrentGame();
+
+    if (!game) {
+        wm.closePopoutWindow("patchnotes");
+        wm.sendNotification("[!:patchnoteLoadFailed]", "[!:-1]", 3000);
+    }
+
+    wm.sendMessage("patchnotes-loaded", game);
+})
+
 wm.addPopoutWindowPreset('console', 600, 900, forceOpenCallbackConsole);
 
 wm.onWindowPresetOpened = function (fileName) {

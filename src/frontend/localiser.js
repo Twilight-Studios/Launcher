@@ -28,16 +28,19 @@ exports.localiseHtml = function () {
 
     function replaceInTextNode(node) {
         let textNodeValue = node.nodeValue;
-        let match;
-        customTagPattern.lastIndex = 0;  // Reset regex state for each text node
-        while ((match = customTagPattern.exec(textNodeValue)) !== null) {
-            const tag = match[1];
-            const localString = exports.getLocalString(tag);
-            textNodeValue = textNodeValue.replace(match[0], localString);
-            customTagPattern.lastIndex = 0;  // Reset again to ensure proper handling
+        const matches = [...textNodeValue.matchAll(customTagPattern)];
+
+        if (matches.length > 0) {
+            matches.forEach(match => {
+                const tag = match[1];
+                const localString = exports.getLocalString(tag);
+                textNodeValue = textNodeValue.replace(match[0], localString);
+            });
         }
+
         node.nodeValue = textNodeValue;
     }
+    
 
     function replaceInAttributes(node) {
         const attributes = node.attributes;

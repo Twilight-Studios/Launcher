@@ -117,9 +117,9 @@ function createWindow(fileName, width, height, callback) {
         isMainWindowClosing = true;
     });
 
-    mainWindow.webContents.once('did-finish-load', () => { 
+    mainWindow.webContents.once('did-finish-load', () => {
+        mainWindow.show(); 
         if (callback) callback();
-        mainWindow.show();
     });
 }
 
@@ -151,9 +151,9 @@ function createPopoutWindow(fileName, width, height, persistent, callback) {
         }
     });
 
-    popoutWindows[fileName].webContents.once('did-finish-load', () => { 
+    popoutWindows[fileName].webContents.once('did-finish-load', () => {
+        popoutWindows[fileName].show(); 
         if (callback) callback();
-        popoutWindows[fileName].show();
     });
 }
 
