@@ -82,10 +82,30 @@ wm.addPopoutWindowPreset('patchnotes', 1000, 600, false, () => {
 
     if (!game) {
         wm.closePopoutWindow("patchnotes");
-        wm.sendNotification("[!:patchnoteLoadFailed]", "[!:-1]", 3000);
+        wm.sendNotification("[!:patchNotesLoadFailed]", "[!:-1]", 3000);
+        return;
     }
 
-    wm.sendMessage("patchnotes-loaded", game);
+    let patch_notes = {};
+    for (let i = 0; i < game.patch_notes.length; i++) {
+        let version = Object.keys(game.patch_notes_metadata)[i];
+        let { title, type } = Object.values(game.patch_notes_metadata)[i];
+        let content = game.patch_notes[i];
+
+        patch_notes[version] = {
+            title: title,
+            type: type,
+            content: content
+        };
+    }
+
+    if (Object.keys(patch_notes).length == 0) {
+        wm.closePopoutWindow("patchnotes");
+        wm.sendNotification("[!:patchNotesLoadFailed]", "[!:-1]", 3000);
+        return;
+    }
+
+    wm.sendPopoutMessage("patchnotes", "patchnotes-loaded", game.name, patch_notes);
 })
 
 wm.addPopoutWindowPreset('console', 600, 900, forceOpenCallbackConsole);

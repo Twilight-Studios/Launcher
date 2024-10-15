@@ -3,7 +3,7 @@ const { ipcMain } = require("electron");
 const fm = require("../fileManager")
 const utils = require("../utils");
 
-var currentGame = null;
+var currentGame = null; // TODO: Consider only storing currentGame as an Id, and using cache data for content instead (don't forget about cache timeout)
 var caches = {};
 const CACHE_TIMEOUT = 300000;
 

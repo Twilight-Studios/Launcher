@@ -28,7 +28,9 @@ window.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.loader-wrapper').classList.remove('active');
         gameLoaded = true;
         game = response.payload;
-        launchSettings = response.launchSettings
+        launchSettings = response.launchSettings;
+
+        ipcRenderer.send("set-current-game", game);
 
         logo = document.querySelector("img");
         logo.src = "data:image/png;base64, " + game.logo;
@@ -53,7 +55,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         document.querySelector(".tag").textContent = activeBranch.version;
         document.querySelector("h3").textContent = game.patch_notes_metadata[activeBranch.version].title;
-        document.querySelector(".news").addEventListener("click", (event) => { notification.notify(localiser.getLocalString("patchNotesLoadFailed"), localiser.getLocalString("notReadyYet"), 2000) })
+        document.querySelector(".news").addEventListener("click", (event) => { ipcRenderer.send("open-popout-window-preset", "patchnotes") })
 
         let platforms = ['windows', 'linux', 'macos'];
         let platformAliases = ['Windows 10/11', "Linux", "MacOS"];
@@ -117,7 +119,10 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!gameLoaded) notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000);
-        else ipcRenderer.send("open-window-preset", 'library');
+        else {
+            ipcRenderer.send("close-popout-window", 'patchnotes');
+            ipcRenderer.send("open-window-preset", 'library');
+        }
     });
 
     reloadButton.addEventListener("click", (event) => {

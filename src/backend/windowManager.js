@@ -89,7 +89,7 @@ exports.openPopoutWindowPreset = function (presetName, additionalCallback) {
     });
 }
 
-function createWindow(fileName, width, height, callback) {
+function createWindow(presetName, width, height, callback) {
     if (mainWindow) { 
         isMainWindowClosing = false;
         exports.closeMainWindow(); 
@@ -100,7 +100,7 @@ function createWindow(fileName, width, height, callback) {
         height: height,
         icon: path.join(__dirname, '../../resources/logo.ico'),
         webPreferences: {
-            preload: path.join(__dirname, `../../pages/${fileName}.js`),
+            preload: path.join(__dirname, `../../pages/${presetName}.js`),
             nodeIntegration: false,
             contextIsolation: true,
             enableRemoteModule: false,
@@ -108,7 +108,7 @@ function createWindow(fileName, width, height, callback) {
         }
     });
     
-    mainWindow.loadFile(`./pages/${fileName}.html`);
+    mainWindow.loadFile(`./pages/${presetName}.html`);
     mainWindow.setResizable(exports.enableDevTools);
     if (!exports.enableDevTools) { Menu.setApplicationMenu(null); }
 
@@ -123,15 +123,15 @@ function createWindow(fileName, width, height, callback) {
     });
 }
 
-function createPopoutWindow(fileName, width, height, persistent, callback) {
-    if (popoutWindows[fileName]) { exports.closePopoutWindow(fileName); }
+function createPopoutWindow(presetName, width, height, persistent, callback) {
+    if (popoutWindows[presetName]) { exports.closePopoutWindow(presetName); }
 
-    popoutWindows[fileName] = new BrowserWindow({
+    popoutWindows[presetName] = new BrowserWindow({
         width: width,
         height: height,
         icon: path.join(__dirname, '../../resources/logo.ico'),
         webPreferences: {
-            preload: path.join(__dirname, `../../pages/${fileName}.js`),
+            preload: path.join(__dirname, `../../pages/${presetName}.js`),
             nodeIntegration: false,
             contextIsolation: true,
             enableRemoteModule: false,
@@ -139,20 +139,20 @@ function createPopoutWindow(fileName, width, height, persistent, callback) {
         }
     });
     
-    popoutWindows[fileName].loadFile(`./pages/${fileName}.html`);
-    popoutWindows[fileName].setResizable(exports.enableDevTools);
+    popoutWindows[presetName].loadFile(`./pages/${presetName}.html`);
+    popoutWindows[presetName].setResizable(exports.enableDevTools);
     if (!exports.enableDevTools) { Menu.setApplicationMenu(null); }
 
-    popoutWindows[fileName].on('closed', () => {
+    popoutWindows[presetName].on('closed', () => {
         if (arePopoutWindowsClosing) { arePopoutWindowsClosing = false; return; }
         if (persistent) {
-            delete popoutWindows[fileName];
-            createPopoutWindow(fileName, width, height, persistent, callback);
+            delete popoutWindows[presetName];
+            createPopoutWindow(presetName, width, height, persistent, callback);
         }
     });
 
-    popoutWindows[fileName].webContents.once('did-finish-load', () => {
-        popoutWindows[fileName].show(); 
+    popoutWindows[presetName].webContents.once('did-finish-load', () => {
+        popoutWindows[presetName].show(); 
         if (callback) callback();
     });
 }
@@ -209,9 +209,9 @@ exports.closePopoutWindow = (presetName) => {
     if (popoutWindows[presetName]) {
         try { popoutWindows[presetName].close(); }
         catch (err) { } // It's fine, its probably destroyed anyway
-    }
 
-    delete popoutWindows[presetName];
+        delete popoutWindows[presetName];
+    }
 }
 
 exports.closeAllPopoutWindows = () => { Object.keys(popoutWindows).forEach(presetName => { exports.closePopoutWindow(presetName); }) }
@@ -226,6 +226,10 @@ ipcMain.on('open-window-preset', (event, presetName, additionalCallback) => {
 
 ipcMain.on('open-popout-window-preset', (event, presetName, additionalCallback) => {
     exports.openPopoutWindowPreset(presetName, additionalCallback);
+});
+
+ipcMain.on('close-popout-window', (event, presetName) => {
+    exports.closePopoutWindow(presetName);
 });
 
 ipcMain.on('reflect', (event, channel, ...args) => { exports.sendMessage(channel, ...args); });
