@@ -1,5 +1,4 @@
-const { Notification, ipcRenderer } = require("electron");
-const path = require("path");
+const { ipcRenderer } = require("electron");
 
 let notificationObject = null;
 let activateNotifications = 0;
@@ -56,7 +55,7 @@ exports.injectUi = function (parentNode=null, injectStyling=true) {
     else document.body.appendChild(notificationObject);
 }
 
-exports.notify = function (title, description, length, notifyOs=false, onEndCallback=null) {
+exports.activate = function (title, description, length, notifyOs=false, onEndCallback=null) {
     if (!notificationObject) exports.injectUi();
 
     notificationObject.querySelector('h1').textContent = title;
@@ -80,6 +79,6 @@ exports.notify = function (title, description, length, notifyOs=false, onEndCall
 }
 
 ipcRenderer.on('notification', (event, title, description, length) => {
-    exports.notify(title, description, length);
+    exports.activate(title, description, length);
     ipcRenderer.send("reflect", "localise");
 });

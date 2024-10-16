@@ -18,14 +18,14 @@ window.addEventListener('DOMContentLoaded', () => {
         const playtesterId = document.getElementById('playtesterid').value;
         const serverUrl = document.getElementById('serverurl').value;
         
-        notification.notify(localiser.getLocalString("loggingIn"), localiser.getLocalString("attemptingLogin"), 3000);
+        notification.activate(localiser.getLocalString("loggingIn"), localiser.getLocalString("attemptingLogin"), 3000);
         button.classList.add("disabled");
         button.textContent = localiser.getLocalString("loggingIn");
         
         const response = await ipcRenderer.invoke('login', { playtesterId, serverUrl });
 
         if (response.success) {
-            notification.notify(localiser.getLocalString("success"), localiser.getLocalString("loading"), 1000, false, () => {
+            notification.activate(localiser.getLocalString("success"), localiser.getLocalString("loading"), 1000, false, () => {
                 ipcRenderer.send("open-window-preset", "library");
             });
         }
@@ -33,7 +33,7 @@ window.addEventListener('DOMContentLoaded', () => {
             inLogin = false;
             button.classList.remove("disabled");
             button.textContent = localiser.getLocalString("login");
-            notification.notify(localiser.getLocalString("loginFailed"), localiser.getLocalString(response.status), 3000);
+            notification.activate(localiser.getLocalString("loginFailed"), localiser.getLocalString(response.status), 3000);
         }
     }
 

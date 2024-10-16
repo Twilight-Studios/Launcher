@@ -68,6 +68,7 @@ exports.writeSettings = (settings) => {
 exports.resetSettings = () => {
     cachedSettings = null;
     eventsToIgnore++;
+    exports.onSettingsChanged(null, null);
     fm.removePath('settings.json', true);
 }
 

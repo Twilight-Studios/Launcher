@@ -1,6 +1,6 @@
 const { ipcRenderer } = require('electron');
 const notification = require("../src/frontend/notification");
-const popout = require("../src/frontend/popout");
+const modal = require("../src/frontend/modal");
 const localiser = require("../src/frontend/localiser");
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -17,12 +17,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const logoutButton = document.querySelector("#logout");
 
     notification.injectUi();
-
-    popout.setup(
-        document.querySelector('.popout'), 
-        document.querySelector('.primary.button'), 
-        document.querySelector('.cancel.button')
-    );
+    modal.injectUi();
     
     ipcRenderer.on('game-loaded', (event, response) => {
         document.querySelector('.loader-wrapper').classList.remove('active');
@@ -118,7 +113,7 @@ window.addEventListener('DOMContentLoaded', () => {
     libraryButton.addEventListener("click", (event) => {
         if (reloadStarted) return;
 
-        if (!gameLoaded) notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000);
+        if (!gameLoaded) notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000);
         else {
             ipcRenderer.send("close-popout-window", 'patchnotes');
             ipcRenderer.send("open-window-preset", 'library');
@@ -129,7 +124,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!gameLoaded) {
-            notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000);
+            notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000);
             return;
         }
 
@@ -141,20 +136,20 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!gameLoaded) {
-            notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000);
+            notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000);
             return;
         }
 
-        popout.activate(
+        modal.activate(
             localiser.getLocalString("changeBranch"),
             localiser.getLocalString("changeBranchDesc"),
             localiser.getLocalString("confirm"),
-            "add",
-            (branchValue) => {
-                ipcRenderer.send('update-active-branch', game, { name: branchValue }); // Update to ID once GitHub jsons are converted
+            false,
+            ({ dropdownValue }) => {
+                ipcRenderer.send('update-active-branch', game, { name: dropdownValue }); // Update to ID once GitHub jsons are converted
                 ipcRenderer.send('reload');
             },
-            branches
+            { dropdownOptions: branches }
         );
     });
 
@@ -162,16 +157,16 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!gameLoaded) {
-            if (!gameLoaded) notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000);
+            if (!gameLoaded) notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000);
             return;
         }
         
-        popout.activate(
+        modal.activate(
             localiser.getLocalString("areYouSure"),
             localiser.getLocalString("logoutDesc"),
             localiser.getLocalString("logout"),
-            "remove",
-            () => { notification.notify(
+            true,
+            () => { notification.activate(
                 localiser.getLocalString("loggingOut"), 
                 localiser.getLocalString("clearingSession"), 
                 1500, 

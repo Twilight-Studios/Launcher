@@ -119,111 +119,6 @@
 		background-color: white;
 	}
 
-	.popout {
-		position: fixed;
-		width: 100%;
-		height: 100%;
-		background-color: rgba(0,0,0,0.7);
-		z-index: 10000;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		pointer-events: none;
-		opacity: 0;
-		transition: all ease-in-out 0.2s;
-	}
-	
-	.popout.active {
-		opacity: 1;
-		pointer-events: all;
-	}
-	
-	.popout-case {
-		background: var(--primary-color);
-		background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
-		box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.2);
-		width: 26%;
-		height: fit-content;
-		color: white;
-		padding: 2%;
-		border-radius: 10px;
-	}
-	
-	.popout-case > h2 {
-		font-weight: 700;
-	}
-	
-	.popout-case > p {
-		margin-top: 10px;
-		font-size: 14px;
-	}
-	
-	.buttons {
-		margin-top: 15px;
-		display: flex;
-		flex-direction: row;
-		width: 100%;
-	}
-	
-	.button {
-		padding: 10px;
-		width: fit-content;
-		background-color: black;
-		color: white;
-		border-radius: 10px;
-		margin-right: 10px;
-		font-size: 14px;
-		cursor: pointer;
-		font-weight: 600;
-	}
-	
-	.button.remove {
-		background-color: red;
-		color: white;
-	}
-	
-	.button.add {
-		background-color: green;
-		color: white;
-	}
-	
-	.dropdown {
-		padding: 10px;
-		width: 100%;
-		background-color: white;
-		color: black;
-		margin-top: 10px;
-		border-radius: 10px;
-		font-size: 14px;
-		cursor: pointer;
-		font-weight: 600;
-		border: none;
-		outline: none;
-		appearance: none;
-		background-image: url("./../resources/dropdown-arrow.svg");
-		background-repeat: no-repeat;
-		background-position: right 0.7rem top 50%;
-		background-size: 0.65rem auto;
-	}
-	
-	option {
-		font-weight: 600;
-	}
-	
-	.inputfield {
-		padding: 10px;
-		width: 100%;
-		background-color: white;
-		color: black;
-		margin-top: 10px;
-		border-radius: 10px;
-		font-size: 14px;
-		font-weight: 600;
-		border: none;
-		outline: none;
-		appearance: none;
-	}
-
 	.footer {
 		position: absolute;
 		bottom: 0;
@@ -453,17 +348,6 @@
 <div class="loader-wrapper active">
   <div class="loader"></div>
 </div>
-<div class="popout">
-	<div class="popout-case">
-	  <h2>Popout Title</h2>
-	  <p>Popout text and description</p>
-	  <div class="extra"></div>
-	  <div class="buttons">
-		<div class="primary button">Confirm</div>
-		<div class="cancel button">[!:cancel]</div>
-	  </div>
-	</div>
-  </div>
 <div class="launch-screen">
   <i class="fa-solid fa-rocket fa-beat"></i>
   <span class="launch-text"></span>

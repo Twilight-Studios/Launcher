@@ -1,6 +1,6 @@
 const { ipcRenderer } = require('electron');
 const notification = require("../src/frontend/notification");
-const popout = require("../src/frontend/popout");
+const modal = require("../src/frontend/modal");
 const localiser = require("../src/frontend/localiser");
 const utils = require("../src/utils");
 
@@ -10,12 +10,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const content = document.querySelector('.content');
 
     notification.injectUi();
-
-    popout.setup(
-        document.querySelector('.popout'), 
-        document.querySelector('.primary.button'), 
-        document.querySelector('.cancel.button')
-    );
+    modal.injectUi();
 
     ipcRenderer.on('settings-loaded', (event, settings, { playtesterId, serverUrl }) => {
         settingsLoaded = true;
@@ -76,14 +71,12 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         else if (action.type == 'toggle') {
-            return () => { popout.activate(
+            return () => { modal.activate(
                 `${localiser.getLocalString("toggle")} ${localiser.getLocalString(key)}`,
                 localiser.getLocalString(`${key}Toggle${value ? "Off" : "On"}`),
                 localiser.getLocalString("confirm"),
-                value ? "remove" : "add",
-                () => {
-                    ipcRenderer.send('new-settings-value', key, !value);
-                }
+                value,
+                () => { ipcRenderer.send('new-settings-value', key, !value); }
             ) }
         }
 
@@ -98,29 +91,24 @@ window.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-            return () => { popout.activate(
+            return () => { modal.activate(
                 `${localiser.getLocalString("change")} ${localiser.getLocalString(key)}`,
-                localiser.getLocalString(`${key}PopoutDesc`),
+                localiser.getLocalString(`${key}ModalDesc`),
                 localiser.getLocalString("confirm"),
-                "add",
-                (dropwdownValue) => {
-                    ipcRenderer.send('new-settings-value', key, dropwdownValue);
-                },
-                dropdownOptions
+                false,
+                ({ dropdownValue }) => { ipcRenderer.send('new-settings-value', key, dropdownValue); },
+                { dropdownOptions: dropdownOptions }
             ) }
         }
 
         else if (action.type == 'input') {        
-            return () => { popout.activate(
+            return () => { modal.activate(
                 `${localiser.getLocalString("change")} ${localiser.getLocalString(key)}`,
-                localiser.getLocalString(`${key}PopoutDesc`),
+                localiser.getLocalString(`${key}ModalDesc`),
                 localiser.getLocalString("confirm"),
-                "add",
-                (inputValue) => {
-                    ipcRenderer.send('new-settings-value', key, inputValue);
-                },
-                null,
-                value
+                false,
+                ({ inputValue }) => { ipcRenderer.send('new-settings-value', key, inputValue); },
+                { inputPlaceholder: value }
             ) }
         }
     }
@@ -128,7 +116,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#library').addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
-            notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
+            notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
             return;
         }
 
@@ -138,18 +126,17 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#reset').addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
-            notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
+            notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
             return;
         }
         
-        popout.activate(
+        modal.activate(
             localiser.getLocalString("resetSettings"),
             localiser.getLocalString("resetSettingsDesc"),
             localiser.getLocalString("reset"),
-            "remove",
+            true,
             () => {
                 ipcRenderer.send('reset-settings');
-                ipcRenderer.send('reload');
             }
         );
     });
@@ -157,7 +144,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#reload').addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
-            notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
+            notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
             return;
         }
 
@@ -169,16 +156,16 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!settingsLoaded) { 
-            notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
+            notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
             return;
         }
         
-        popout.activate(
+        modal.activate(
             localiser.getLocalString("areYouSure"),
             localiser.getLocalString("logoutDesc"),
             localiser.getLocalString("logout"),
-            "remove",
-            () => { notification.notify( 
+            true,
+            () => { notification.activate( 
                 localiser.getLocalString("loggingOut"), 
                 localiser.getLocalString("clearingSession"), 
                 1500, 

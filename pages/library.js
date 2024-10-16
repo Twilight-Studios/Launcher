@@ -1,6 +1,6 @@
 const { ipcRenderer } = require('electron');
 const notification = require("../src/frontend/notification");
-const popout = require("../src/frontend/popout");
+const modal = require("../src/frontend/modal");
 const localiser = require("../src/frontend/localiser");
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -13,12 +13,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const logoutButton = document.querySelector("#logout");
     
     notification.injectUi();
-
-    popout.setup(
-        document.querySelector('.popout'), 
-        document.querySelector('.primary.button'), 
-        document.querySelector('.cancel.button')
-    );
+    modal.injectUi();
 
     function displayMessage(message) {
         let messageObject = document.createElement('div');
@@ -74,7 +69,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!libraryLoaded) {
-            notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000);
+            notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000);
             return;
         }
 
@@ -85,7 +80,7 @@ window.addEventListener('DOMContentLoaded', () => {
     settingsButton.addEventListener("click", (event) => {
         if (reloadStarted) return;
 
-        if (!libraryLoaded) notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000);
+        if (!libraryLoaded) notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000);
         else ipcRenderer.send("open-window-preset", 'settings');
     });
 
@@ -93,21 +88,23 @@ window.addEventListener('DOMContentLoaded', () => {
         if (reloadStarted) return;
 
         if (!libraryLoaded) {
-            if (!libraryLoaded) notification.notify(localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000);
+            if (!libraryLoaded) notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('libraryLoadNotFinished'), 2000);
             return;
         }
         
-        popout.activate(
+        modal.activate(
             localiser.getLocalString("areYouSure"),
             localiser.getLocalString("logoutDesc"),
             localiser.getLocalString("logout"),
-            "remove",
-            () => { notification.notify(
-                localiser.getLocalString("loggingOut"), 
-                localiser.getLocalString("clearingSession"), 
-                1500, 
-                false, 
-                () => { ipcRenderer.send("logout"); }) 
+            true,
+            () => { 
+                notification.activate(
+                    localiser.getLocalString("loggingOut"), 
+                    localiser.getLocalString("clearingSession"), 
+                    1500, 
+                    false, 
+                    () => { ipcRenderer.send("logout"); }
+                ) 
             }
         );
     });
