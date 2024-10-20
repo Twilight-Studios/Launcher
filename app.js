@@ -180,9 +180,13 @@ function onFailedRequest(code) {
 
 updateManager.onError = (error) => { wm.sendMessage('update-error', error.message) }
 
-if (!app.requestSingleInstanceLock()) { app.quit(); }
-
 app.on("ready", () => {
+    if (!app.requestSingleInstanceLock()) { 
+        console.error("Failed to obtain instance lock. Quitting...")
+        app.quit();
+        return;
+    }
+
     if (process.platform == 'win32') { app.setAppUserModelId("com.thenebulo.forgekitlauncher"); }
     wm.openWindowPreset('update');
     if (forceOpenCallbackConsole) wm.openPopoutWindowPreset('console');
