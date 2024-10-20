@@ -35,19 +35,18 @@ exports.getSettings = function () {
     settings.appVersion = appVersion;
     settings.devConsole = null;
 
-    if (!('language' in loadedSettings)) settings.language = 'en';
+    if (!('language' in loadedSettings) || !(loadedSettings.language in ['en', 'ru'])) settings.language = 'en';
     else settings.language = loadedSettings.language;
 
-    if (!('authFailBehaviour' in loadedSettings)) settings.authFailBehaviour = 0; // Default authFailBehaviour
+    if (!('authFailBehaviour' in loadedSettings) || !(loadedSettings.authFailBehaviour in [0, 1, 2])) settings.authFailBehaviour = 0; // Default authFailBehaviour
     else settings.authFailBehaviour = loadedSettings.authFailBehaviour;
 
-    if (!('gamesPath' in loadedSettings)) settings.gamesPath = path.join(app.getPath('userData'), 'games');
-    else settings.gamesPath = loadedSettings.gamesPath;
+    settings.gamesPath = path.join(app.getPath('userData'), 'games');
 
-    if (!('betaEnabled' in loadedSettings)) settings.betaEnabled = false;
+    if (!('betaEnabled' in loadedSettings) || typeof loadedSettings.betaEnabled != "boolean") settings.betaEnabled = false;
     else settings.betaEnabled = loadedSettings.betaEnabled;
 
-    if (!('autoUpdateEnabled' in loadedSettings)) settings.autoUpdateEnabled = true;
+    if (!('autoUpdateEnabled' in loadedSettings) || typeof loadedSettings.autoUpdateEnabled != "boolean") settings.autoUpdateEnabled = true;
     else settings.autoUpdateEnabled = loadedSettings.autoUpdateEnabled;
 
     settings.updateServer = "https://github.com/TheNebulo/ForgeKit";
