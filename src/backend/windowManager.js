@@ -216,8 +216,8 @@ exports.closePopoutWindow = (presetName) => {
 
 exports.closeAllPopoutWindows = () => { Object.keys(popoutWindows).forEach(presetName => { exports.closePopoutWindow(presetName); }) }
 
-ipcMain.on('reload', (event) => {
-    exports.reloadCurrentWindow();
+ipcMain.on('reload', (event, additionalCallback) => {
+    exports.reloadCurrentWindow(additionalCallback);
 });
 
 ipcMain.on('open-window-preset', (event, presetName, additionalCallback) => {

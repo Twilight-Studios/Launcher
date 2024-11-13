@@ -21,7 +21,7 @@ window.addEventListener('DOMContentLoaded', () => {
             else document.querySelector("#extra-info").textContent = `Not currently playable`;
         }
         else if (version in branchVersions) {
-            document.querySelector("#extra-info").textContent = `Available to play on branche(s): ${branchVersions[version].join(", ")}`;
+            document.querySelector("#extra-info").textContent = `Available to play on branches: ${branchVersions[version].join(", ")}`;
         } 
         else {
             document.querySelector("#extra-info").textContent = `Not available to play on current branches`;

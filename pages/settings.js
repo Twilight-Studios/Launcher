@@ -7,16 +7,34 @@ const utils = require("../src/utils");
 window.addEventListener('DOMContentLoaded', () => {
     let reloadStarted = false;
     let settingsLoaded = false;
+    let guestMode = false;
+
     const content = document.querySelector('.content');
+    const libraryButton = document.querySelector('#library');
+    const resetButton = document.querySelector('#reset');
+    const reloadButton = document.querySelector('#reload');
+    const logoutButton = document.querySelector('#logout');
 
     notification.injectUi();
     modal.injectUi();
 
-    ipcRenderer.on('settings-loaded', (event, settings, { playtesterId, serverUrl }) => {
+    ipcRenderer.on('settings-loaded', (event, settings, userInfo, openInGuestMode) => {
         settingsLoaded = true;
-        document.querySelector('.login-info').textContent = localiser.getLocalString('loginInfo', { playtesterId, serverUrl });
+        guestMode = openInGuestMode;
+        
+        document.querySelector('.login-info').textContent = localiser.getLocalString('loginInfo', userInfo);
         document.querySelector('.loader').classList.remove('active');
         document.querySelector('.content').classList.remove('center');
+
+        if (openInGuestMode) {
+            document.querySelector('.login-info').textContent = localiser.getLocalString('notLoggedIn');
+            libraryButton.remove();
+    
+            logoutButton.querySelector('i').className = "fa-solid fa-xmark"
+            let newLogoutButton = logoutButton.cloneNode(true);
+            newLogoutButton.addEventListener('click', (event) => { ipcRenderer.send('open-window-preset', 'login'); });
+            logoutButton.replaceWith(newLogoutButton);
+        }
 
         for (const [key, value] of Object.entries(settings)) {
             const action = utils.getSettingAction(key, value);
@@ -67,6 +85,7 @@ window.addEventListener('DOMContentLoaded', () => {
         else if (action.type == 'ipc') {
             return () => {
                 action.callbacks.forEach(([channel, params]) => {
+                    if (guestMode) ipcRenderer.send('open-settings-as-guest');
                     ipcRenderer.send(channel, ...params);
                 });
             }
@@ -78,7 +97,10 @@ window.addEventListener('DOMContentLoaded', () => {
                 localiser.getLocalString(`${key}Toggle${value ? "Off" : "On"}`),
                 localiser.getLocalString("confirm"),
                 value,
-                () => { ipcRenderer.send('new-settings-value', key, !value); }
+                () => {
+                    if (guestMode) ipcRenderer.send('open-settings-as-guest'); 
+                    ipcRenderer.send('new-settings-value', key, !value); 
+                }
             ) }
         }
 
@@ -98,7 +120,10 @@ window.addEventListener('DOMContentLoaded', () => {
                 localiser.getLocalString(`${key}ModalDesc`),
                 localiser.getLocalString("confirm"),
                 false,
-                ({ dropdownValue }) => { ipcRenderer.send('new-settings-value', key, dropdownValue); },
+                ({ dropdownValue }) => {
+                    if (guestMode) ipcRenderer.send('open-settings-as-guest'); 
+                    ipcRenderer.send('new-settings-value', key, dropdownValue); 
+                },
                 { dropdownOptions: dropdownOptions }
             ) }
         }
@@ -109,13 +134,16 @@ window.addEventListener('DOMContentLoaded', () => {
                 localiser.getLocalString(`${key}ModalDesc`),
                 localiser.getLocalString("confirm"),
                 false,
-                ({ inputValue }) => { ipcRenderer.send('new-settings-value', key, inputValue); },
+                ({ inputValue }) => { 
+                    if (guestMode) ipcRenderer.send('open-settings-as-guest');
+                    ipcRenderer.send('new-settings-value', key, inputValue); 
+                },
                 { inputPlaceholder: value }
             ) }
         }
     }
 
-    document.querySelector('#library').addEventListener("click", (event) => {
+    libraryButton.addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
             notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
@@ -125,7 +153,7 @@ window.addEventListener('DOMContentLoaded', () => {
         ipcRenderer.send("open-window-preset", 'library');
     });
 
-    document.querySelector('#reset').addEventListener("click", (event) => {
+    resetButton.addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
             notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
@@ -138,12 +166,13 @@ window.addEventListener('DOMContentLoaded', () => {
             localiser.getLocalString("reset"),
             true,
             () => {
+                if (guestMode) ipcRenderer.send('open-settings-as-guest');
                 ipcRenderer.send('reset-settings');
             }
         );
     });
 
-    document.querySelector('#reload').addEventListener("click", (event) => {
+    reloadButton.addEventListener("click", (event) => {
         if (reloadStarted) return;
         if (!settingsLoaded) { 
             notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('settingsLoadNotFinished'), 2000);
@@ -151,10 +180,11 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         reloadStarted = true;
+        if (guestMode) ipcRenderer.send('open-settings-as-guest');
         ipcRenderer.send("reload");
     });
 
-    document.querySelector('#logout').addEventListener("click", (event) => {
+    logoutButton.addEventListener("click", (event) => {
         if (reloadStarted) return;
 
         if (!settingsLoaded) { 

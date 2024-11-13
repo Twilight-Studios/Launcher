@@ -28,6 +28,7 @@ fm.getAllJsons(fm.getPathInAppDir("/resources/locales/")).forEach(([fileName, js
 ipcMain.handle('get-localisation-strings', () => { return localisationStrings; });
 
 let currentSettings = {};
+let openSettingsAsGuest = false;
 let windowForward = null;
 
 wm.addWindowPreset('update', 400, 600, () => {
@@ -74,7 +75,8 @@ wm.addWindowPreset('game', 1280, 720, async () => {
 });
 
 wm.addWindowPreset('settings', 1280, 720, () => {
-    wm.sendMessage("settings-loaded", currentSettings, auth.getUser());
+    wm.sendMessage("settings-loaded", currentSettings, auth.getUser(), openSettingsAsGuest);
+    openSettingsAsGuest = false;
 });
 
 wm.addPopoutWindowPreset('patchnotes', 1000, 600, false, () => {
@@ -206,4 +208,5 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') { app.quit(); }
 });
 
+ipcMain.on('open-settings-as-guest', (event) => { openSettingsAsGuest = true; })
 ipcMain.on('set-window-forward', (event, windowToForward) => { windowForward = windowToForward; });

@@ -5,6 +5,7 @@ const localiser = require("../src/frontend/localiser");
 window.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('#form');
     const button = document.querySelector('button');
+    const openSettings = document.querySelector('#open-settings');
     notification.injectUi(null, false);
 
     document.getElementById('playtesterid').ariaPlaceholder = localiser.getLocalString("playtesterIdPlaceholder");
@@ -41,6 +42,11 @@ window.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         await login();
     });
+
+    openSettings.addEventListener('click', () => {
+        ipcRenderer.send('open-settings-as-guest');
+        ipcRenderer.send('open-window-preset', 'settings')
+    })
 
     ipcRenderer.on('try-login', async (event) => {
         await login();

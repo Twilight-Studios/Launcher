@@ -27,6 +27,7 @@ exports.getSettingAction = function (key, value) {
                 icon: "fa-solid fa-sd-card",
                 callbacks : [
                     ["clear-all-game-data-caches", []],
+                    ["reload"],
                     ["reflect", ["notification", "[!:success]", "[!:clearedGameDataCache]", 3000]]
                 ]
             };

@@ -35,7 +35,7 @@ exports.getSettings = function () {
     settings.appVersion = appVersion;
     settings.devConsole = null;
 
-    if (!('language' in loadedSettings) || !(loadedSettings.language in ['en', 'ru'])) settings.language = 'en';
+    if (!('language' in loadedSettings) || !(['en', 'ru'].includes(loadedSettings.language))) settings.language = 'en';
     else settings.language = loadedSettings.language;
 
     if (!('authFailBehaviour' in loadedSettings) || !(loadedSettings.authFailBehaviour in [0, 1, 2])) settings.authFailBehaviour = 0; // Default authFailBehaviour
