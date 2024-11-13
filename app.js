@@ -80,7 +80,7 @@ wm.addWindowPreset('settings', 1280, 720, () => {
 wm.addPopoutWindowPreset('patchnotes', 1000, 600, false, () => {
     let game = gm.getCurrentGame();
 
-    if (!game) {
+    if (!game || !game.patch_notes || !game.patch_notes_metadata) {
         wm.closePopoutWindow("patchnotes");
         wm.sendNotification("[!:patchNotesLoadFailed]", "[!:-1]", 3000);
         return;
@@ -105,7 +105,10 @@ wm.addPopoutWindowPreset('patchnotes', 1000, 600, false, () => {
         return;
     }
 
-    wm.sendPopoutMessage("patchnotes", "patchnotes-loaded", game.name, patch_notes);
+    game.patch_notes = patch_notes;
+    delete game.patch_notes_metadata;
+
+    wm.sendPopoutMessage("patchnotes", "patchnotes-loaded", game);
 })
 
 wm.addPopoutWindowPreset('console', 600, 900, forceOpenCallbackConsole);

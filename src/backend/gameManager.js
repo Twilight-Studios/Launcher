@@ -3,11 +3,27 @@ const { ipcMain } = require("electron");
 const fm = require("../fileManager")
 const utils = require("../utils");
 
-var currentGame = null; // TODO: Consider only storing currentGame as an Id, and using cache data for content instead (don't forget about cache timeout)
+var currentGameId = null;
 var caches = {};
 const CACHE_TIMEOUT = 300000;
 
-exports.getCurrentGame = () => { return currentGame; };
+exports.getCurrentGameId = () => { return currentGameId; }
+
+exports.setCurrentGameId = (gameId) => {
+    if (!caches[gameId] || !caches[gameId].data) return false; // Do note that if there are no cached results, a game id cannot be set. This shouldn't cause any issues in practice
+
+    let oldGameId = currentGameId;
+    if (oldGameId) caches[oldGameId].timeout = setTimeout(() => { exports.clearGameDataCache(oldGameId) }, CACHE_TIMEOUT);
+
+    currentGameId = gameId;
+    clearTimeout(caches[currentGameId].timeout);
+    return true;
+}
+
+exports.getCurrentGame = () => {
+    if (!currentGameId) return null;
+    return caches[currentGameId].data;
+};
 
 exports.clearAllGameDataCaches = () => {
     for (let key in caches) clearTimeout(caches[key].timeout);
@@ -54,47 +70,47 @@ exports.setupGameLaunchSettings = function (game) {
     return gameSettings;
 }
 
-exports.getGameData = async function (user, game) {
-    if (!game) {
-        if (!currentGame) return { success: false, status: -1 } // Default status for invalid parameters 
-        game = currentGame;
+exports.getGameData = async function (user, gameId) {
+    if (!gameId) {
+        if (!currentGameId) return { success: false, status: -1 } // Default status for invalid parameters 
+        gameId = currentGameId;
     }
 
-    let cached = caches[game.id] && caches[game.id].data
+    let cached = caches[gameId] && caches[gameId].data;
 
     try {
         let payload = {
             playtester_id: user.playtesterId,
-            game_id: game.id,
-            get_all: (cached && caches[game.id].containsArt) ? false : true
+            game_id: gameId,
+            get_all: (cached && caches[gameId].containsArt) ? false : true
         }
 
         const resp = await axios.post(`${user.serverUrl}/api/get-game`, payload);
-        let gameData = resp.data;
+        let game = resp.data;
 
-        Object.keys(gameData.branches).forEach(key => { // Temporary fix for server compatibility
-            let branchId = gameData.branches[key].name;
-            gameData.branches[branchId] = gameData.branches[key];
-            delete gameData.branches[key];
+        Object.keys(game.branches).forEach(key => { // Temporary fix for server compatibility
+            let branchId = game.branches[key].name;
+            game.branches[branchId] = game.branches[key];
+            delete game.branches[key];
 
-            gameData.branches[branchId].name = gameData.branches[branchId].id;
-            delete gameData.branches[branchId].id;
+            game.branches[branchId].name = game.branches[branchId].id;
+            delete game.branches[branchId].id;
         });
 
         if (cached) {
-            gameData = utils.mergeObjects(caches[game.id].data, gameData); // TODO: An additional version check should occur, to see if patch notes ant etc are to be reloaded, and gameFiles are to be rewritten
-            clearTimeout(caches[game.id].timeout);
+            game = utils.mergeObjects(caches[gameId].data, game); // TODO: An additional version check should occur, to see if patch notes ant etc are to be reloaded, and gameFiles are to be rewritten
+            clearTimeout(caches[gameId].timeout);
         }
 
-        exports.setupGameLaunchSettings(gameData);
+        exports.setupGameLaunchSettings(game);
         
-        caches[game.id] = {
-            data: gameData,
+        caches[gameId] = {
+            data: game,
             containsArt: true,
-            timeout: setTimeout(() => { exports.clearGameDataCache(game.id) }, CACHE_TIMEOUT)
+            timeout: setTimeout(() => { exports.clearGameDataCache(gameId) }, CACHE_TIMEOUT)
         };
 
-        return { success: true, payload: gameData };
+        return { success: true, payload: game };
     } 
     catch (error) {
         let status = 0; // Default status for no internet connection
@@ -151,4 +167,4 @@ exports.getAllGameData = async function (user) {
 ipcMain.on("reset-game-launch-settings", (event, game) => { exports.resetGameLaunchSettings(game); } )
 ipcMain.on("update-active-branch", (event, game, newBranchId) => { exports.updateActiveBranch(game, newBranchId) });
 ipcMain.on("clear-all-game-data-caches", (event) => { exports.clearAllGameDataCaches(); });
-ipcMain.on("set-current-game", (event, game) => { currentGame = game; });
+ipcMain.on("set-current-game-id", (event, gameId) => { exports.setCurrentGameId(gameId); });

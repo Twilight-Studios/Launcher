@@ -54,7 +54,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 games.forEach(game => {
                     let gameElement = createGameElement(game);
                     gameElement.querySelector('.open').addEventListener("click", (event) => { 
-                        ipcRenderer.send("set-current-game", game)
+                        ipcRenderer.send("set-current-game-id", game.id)
                         ipcRenderer.send('open-window-preset', 'game'); 
                     });
                 });

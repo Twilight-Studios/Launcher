@@ -82,14 +82,31 @@
     height: fit-content;
   }
 
+  .hero {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tags {
+    display: flex;
+    flex-direction: row;
+  }
+
   .tag {
-    background-color: var(--secondary-color);
+    margin-right: 4px;
+    background-color: white;
+    color: var(--secondary-color);
     padding: 8px;
     border-radius: 6px;
     width: fit-content;
     font-weight: 600;
     font-size: 10px;
     margin-bottom: 6px;
+  }
+
+  .tag:nth-child(1) {
+    background-color: var(--secondary-color);
+    color: white;
   }
 
   .title {
@@ -144,7 +161,7 @@
     </div>
     <div class="content">
         <div class="hero">
-            <div class="tag"></div>
+            <div class="tags"><div class="tag" id="type"></div><div class="tag" id="extra-info"></div></div>
             <span class="title"></span>
             <hr>
         </div>
