@@ -161,7 +161,29 @@
     width: 400px;
   }
 
-  .text > span {
+  .text > .title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .text > .title > i {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    color: white;
+    background-color: var(--secondary-color);
+    width: 14px;
+    height: 14px;
+    margin-right: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 4px;
+    transition: all ease-in-out 0.2s;
+  }
+
+  .text > .title > span {
     font-weight: 700;
     color: white;
     font-size: 20px;

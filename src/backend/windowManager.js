@@ -10,7 +10,7 @@ let currentWindowPreset;
 
 exports.getMainWindow = () => { return mainWindow; }
 
-exports.enableDevTools = false;
+exports.enableChromiumTools = false;
 exports.onWindowPresetOpened = null;
 exports.onPopoutWindowPresetOpened = null;
 
@@ -109,8 +109,8 @@ function createWindow(presetName, width, height, callback) {
     });
     
     mainWindow.loadFile(`./pages/${presetName}.html`);
-    mainWindow.setResizable(exports.enableDevTools);
-    if (!exports.enableDevTools) { Menu.setApplicationMenu(null); }
+    mainWindow.setResizable(exports.enableChromiumTools);
+    if (!exports.enableChromiumTools) { Menu.setApplicationMenu(null); }
 
     mainWindow.on('closed', () => {
         if (isMainWindowClosing) exports.closeAllPopoutWindows();  // Close all popout windows if closing
@@ -140,8 +140,8 @@ function createPopoutWindow(presetName, width, height, persistent, callback) {
     });
     
     popoutWindows[presetName].loadFile(`./pages/${presetName}.html`);
-    popoutWindows[presetName].setResizable(exports.enableDevTools);
-    if (!exports.enableDevTools) { Menu.setApplicationMenu(null); }
+    popoutWindows[presetName].setResizable(exports.enableChromiumTools);
+    if (!exports.enableChromiumTools) { Menu.setApplicationMenu(null); }
 
     popoutWindows[presetName].on('closed', () => {
         if (arePopoutWindowsClosing) { arePopoutWindowsClosing = false; return; }

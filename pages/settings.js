@@ -43,8 +43,10 @@ window.addEventListener('DOMContentLoaded', () => {
             if (action.type == 'toggle') button = localiser.getLocalString('toggle');
             if (action.type == 'input' || action.type == 'dropdown') button = localiser.getLocalString('change');
 
+            if (!action.icon) action.icon = "fa-solid fa-gear";
+
             setting.innerHTML = `<div class="text">
-                <span>${title}</span>
+                <div class="title"><i class="${action.icon}"></i><span>${title}</span></div>
                 <p>${desc}</p>
             </div>
             <div class="settingsbutton">${button}</div>`

@@ -33,24 +33,26 @@ window.addEventListener('DOMContentLoaded', () => {
 
         document.querySelector(".news").style.backgroundImage = `url('data:image/png;base64, ${game.patch}')`;
 
-        let activeBranchFound = false;
-        for (let branch of Object.values(game.branches)) {
-            if (branch.name == launchSettings.activeBranchId) activeBranchFound = branch; // Temporary fix
-            branches.push({ value: branch.name, alias: `${branch.id} [${branch.version}]`, selected: (branch.name == launchSettings.activeBranchId) });
+        for (let [id, branch] of Object.entries(game.branches)) {
+            branches.push({ value: id, alias: `${branch.name} [${branch.version}]`, selected: (id == launchSettings.activeBranchId) });
         }
         
-        if (!activeBranchFound) { // Should be !Object.keys(game.branches).includes(launchSettings.activeBranchId) but GitHub jsons are to be updated
+        if (!Object.keys(game.branches).includes(launchSettings.activeBranchId)) {
             ipcRenderer.send("reset-game-launch-settings", game);
             ipcRenderer.send("reload");
             return;
         }
-        activeBranch = activeBranchFound;
 
-        if (branches.length <= 1) branchButton.remove();
+        activeBranch = game.branches[launchSettings.activeBranchId];
 
-        document.querySelector(".tag").textContent = activeBranch.version;
+        document.querySelector(".tag").textContent = `${activeBranch.name} - ${activeBranch.version}`;
         document.querySelector("h3").textContent = game.patch_notes_metadata[activeBranch.version].title;
-        document.querySelector(".news").addEventListener("click", (event) => { ipcRenderer.send("open-popout-window-preset", "patchnotes") })
+        document.querySelector(".news").addEventListener("click", (event) => { ipcRenderer.send("open-popout-window-preset", "patchnotes") });
+
+        if (branches.length <= 1) { 
+            document.querySelector(".tag").textContent = activeBranch.version;
+            branchButton.remove(); 
+        }
 
         let platforms = ['windows', 'linux', 'macos'];
         let platformAliases = ['Windows 10/11', "Linux", "MacOS"];
@@ -146,7 +148,7 @@ window.addEventListener('DOMContentLoaded', () => {
             localiser.getLocalString("confirm"),
             false,
             ({ dropdownValue }) => {
-                ipcRenderer.send('update-active-branch', game, { name: dropdownValue }); // Update to ID once GitHub jsons are converted
+                ipcRenderer.send('update-active-branch', game, dropdownValue);
                 ipcRenderer.send('reload');
             },
             { dropdownOptions: branches }

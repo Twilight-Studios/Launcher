@@ -10,7 +10,7 @@ const fm = require("./src/fileManager.js");
 const DEFAULT_SERVER_URL = "http://127.0.0.1:5000"; // Only used as an automatic value for the server value for login
 
 // Dev/testing tools (MUST BE SET TO FALSE BEFORE LEAVING DEV ENVIRONMENT)
-wm.enableDevTools = false; // Used to provide access to chromium dev tools
+wm.enableChromiumTools = false; // Used to provide access to chromium dev tools
 let forceOpenCallbackConsole = false; // Used to force open a developer IPC callback console
 auth.bypassAuth = false; // Used to skip auth to access UI offline
 

@@ -4,6 +4,7 @@ exports.getSettingAction = function (key, value) {
             return {
                 type : "open",
                 button: "open",
+                icon: "fa-solid fa-folder",
                 target : "explorer",
                 path : value,
             };
@@ -12,6 +13,7 @@ exports.getSettingAction = function (key, value) {
                 type : "ipc",
                 valueInDesc: true,
                 button: "checkForUpdates",
+                icon: "fa-solid fa-wrench",
                 callbacks : [
                     ["set-window-forward", ['settings']],
                     ["open-window-preset", ['update']]
@@ -22,22 +24,24 @@ exports.getSettingAction = function (key, value) {
                 type : "ipc",
                 valueInDesc: false,
                 button: "clearCache",
+                icon: "fa-solid fa-sd-card",
                 callbacks : [
                     ["clear-all-game-data-caches", []],
                     ["reflect", ["notification", "[!:success]", "[!:clearedGameDataCache]", 3000]]
                 ]
             };
         case 'betaEnabled':
-            return { type : "toggle" };
+            return { type : "toggle", icon: "fa-solid fa-flask" };
         case 'autoUpdateEnabled':
-            return { type : "toggle" };
+            return { type : "toggle", icon: "fa-solid fa-cloud-arrow-down" };
         case 'updateServer':
-            return { type : "input" };
+            return { type : "input", icon: "fa-solid fa-server" };
         case 'authFailBehaviour':
-            return { type : "dropdown", options : [0,1,2] };
+            return { type : "dropdown", icon: "fa-solid fa-user-xmark", options : [0,1,2] };
         case 'language' : {
             return { 
                 type : "dropdown",
+                icon: "fa-solid fa-language",
                 options : ['en','ru']
             };
         }
@@ -46,12 +50,13 @@ exports.getSettingAction = function (key, value) {
                 type : "ipc",
                 valueInDesc: false,
                 button: "openDevConsole",
+                icon: "fa-solid fa-terminal",
                 callbacks : [
                     ["open-popout-window-preset", ["console"]]
                 ]
             };
         default:
-            return  {type: "unknown" };
+            return  { type: "unknown", icon: "fa-solid fa-question" };
     }
 }
 
