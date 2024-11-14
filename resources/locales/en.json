@@ -119,5 +119,19 @@
     "addArgumentPlaceholder": "Enter argument value (e.g. string, number, or object)",
     "addedArgument" : "Added argument: {argument}",
     "enterValidArgument" : "Please enter a valid argument",
-    "clearConsole": "Clear Console"
+    "clearConsole": "Clear Console",
+    "play": "Play",
+    "install": "Install",
+    "installing": "Installing",
+    "installUnavailable": "Cannot Install Game",
+    "otherGameInstalling": "Another game is already installing",
+    "branchChangeUnavailable": "Cannot Change Branch",
+    "cannotChangeBranchWhileInstall": "Branch changing is unavailable during installation",
+    "currentVersion": "Current version [{version}]",
+    "currentVersionForBranch": "Current version for branch [{version}]",
+    "currentVersionForAllBranches": "Current version for all branches",
+    "allInactiveVersions": "All installed unused versions",
+    "allVersions": "All installed versions",
+    "uninstallGame": "Uninstall Game",
+    "uninstallGameDesc": "Uninstall a specific set of versions for the game. This is an irreversible change, and versions that aren't currently used by a branch will be no longer accessible."
 }

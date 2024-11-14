@@ -78,3 +78,5 @@ ipcMain.handle('login', async (event, { playtesterId, serverUrl }) => {
 ipcMain.on('logout', (event) => {
     exports.logout(false);
 });
+
+ipcMain.handle('get-user', (event) => { return exports.getUser(); })

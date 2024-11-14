@@ -119,5 +119,19 @@
     "addArgumentPlaceholder": "Введите значение аргумента (например, строка, число или объект)",
     "addedArgument": "Добавлен аргумент: {argument}",
     "enterValidArgument": "Пожалуйста, введите действительное значение аргумента",
-    "clearConsole": "Очистить консоль"
+    "clearConsole": "Очистить консоль",
+    "play": "Играть",
+    "install": "Установить",
+    "installing": "Установка",
+    "installUnavailable": "Невозможно установить игру",
+    "otherGameInstalling": "Другая игра уже устанавливается",
+    "branchChangeUnavailable": "Невозможно сменить ветку",
+    "cannotChangeBranchWhileInstall": "Смена ветки недоступна во время установки",
+    "currentVersion": "Текущая версия [{version}]",
+    "currentVersionForBranch": "Текущая версия для ветки [{version}]",
+    "currentVersionForAllBranches": "Текущая версия для всех веток",
+    "allInactiveVersions": "Все установленные неиспользуемые версии",
+    "allVersions": "Все установленные версии",
+    "uninstallGame": "Удалить игру",
+    "uninstallGameDesc": "Удалите конкретный набор версий для игры. Это необратимое изменение, и версии, не используемые текущей веткой, больше не будут доступны."
 }

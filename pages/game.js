@@ -5,52 +5,60 @@ const localiser = require("../src/frontend/localiser");
 
 window.addEventListener('DOMContentLoaded', () => {
     let game = null;
-    let launchSettings = null;
+    let filesData = null;
     let gameLoaded = false;
     let reloadStarted = false;
     let activeBranch = null;
     let branches = [];
+    let actionButtonState = null;
 
     const libraryButton = document.querySelector("#library");
     const reloadButton = document.querySelector("#reload");
     const branchButton = document.querySelector("#branch");
+    const uninstallButton = document.querySelector("#uninstall");
     const logoutButton = document.querySelector("#logout");
+
+    const window = document.querySelector(".window");
+    const gameLogo = document.querySelector("img");
+
+    const patchNotes = document.querySelector(".news");
+    const patchNotesTag = document.querySelector(".tag");
+    const patchNotesTitle = document.querySelector("h3");
+
+    const actionButton = document.querySelector('.action-button');
 
     notification.injectUi();
     modal.injectUi();
     
-    ipcRenderer.on('game-loaded', (event, response) => {
+    ipcRenderer.on('game-loaded', async (event, response) => {
         document.querySelector('.loader-wrapper').classList.remove('active');
+
         gameLoaded = true;
         game = response.payload;
-        launchSettings = response.launchSettings;
-
-        ipcRenderer.send("set-current-game", game);
-
-        logo = document.querySelector("img");
-        logo.src = "data:image/png;base64, " + game.logo;
-        document.querySelector(".window").style.backgroundImage = `url('data:image/png;base64, ${game.background}')`;
-
-        document.querySelector(".news").style.backgroundImage = `url('data:image/png;base64, ${game.patch}')`;
+        filesData = response.filesData;
 
         for (let [id, branch] of Object.entries(game.branches)) {
-            branches.push({ value: id, alias: `${branch.name} [${branch.version}]`, selected: (id == launchSettings.activeBranchId) });
+            branches.push({ value: id, alias: `${branch.name} [${branch.version}]`, selected: (id == filesData.activeBranchId) });
         }
         
-        if (!Object.keys(game.branches).includes(launchSettings.activeBranchId)) {
-            ipcRenderer.send("reset-game-launch-settings", game);
+        if (!Object.keys(game.branches).includes(filesData.activeBranchId)) {
+            ipcRenderer.send("reset-game-files-data", game);
             ipcRenderer.send("reload");
             return;
         }
 
-        activeBranch = game.branches[launchSettings.activeBranchId];
+        activeBranch = game.branches[filesData.activeBranchId];
 
-        document.querySelector(".tag").textContent = `${activeBranch.name} - ${activeBranch.version}`;
-        document.querySelector("h3").textContent = game.patch_notes_metadata[activeBranch.version].title;
-        document.querySelector(".news").addEventListener("click", (event) => { ipcRenderer.send("open-popout-window-preset", "patchnotes") });
+        gameLogo.src = "data:image/png;base64, " + game.logo;
+        window.style.backgroundImage = `url('data:image/png;base64, ${game.background}')`;
+        
+        patchNotes.style.backgroundImage = `url('data:image/png;base64, ${game.patch}')`;
+        patchNotes.addEventListener("click", (event) => { ipcRenderer.send("open-popout-window-preset", "patchnotes") });
+        patchNotesTag.textContent = `${activeBranch.name} - ${activeBranch.version}`;
+        patchNotesTitle.textContent = game.patch_notes_metadata[activeBranch.version].title;
 
         if (branches.length <= 1) { 
-            document.querySelector(".tag").textContent = activeBranch.version;
+            patchNotesTag.textContent = activeBranch.version;
             branchButton.remove(); 
         }
 
@@ -106,11 +114,75 @@ window.addEventListener('DOMContentLoaded', () => {
                 tooltip.textContent = localiser.getLocalString("requiredLaunchDependency", { dependency: rAlias });
             }
         }
+        
+        let gameInInstallInfo = await ipcRenderer.invoke('get-game-in-install');
 
-        let actionButton = document.querySelector('.action-button');
-        actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-lock"></i>';
-        actionButton.querySelector('.text').innerHTML = `<h2>${localiser.getLocalString("unavailable")}</h2>`;
+        if (filesData.downloadedVersions.includes(activeBranch.version)) actionButtonState = 'installed';
+        else if (gameInInstallInfo && gameInInstallInfo.id == game.id) actionButtonState = 'installing';
+        else if (gameInInstallInfo) actionButtonState = 'otherGameInstalling'
+        else actionButtonState = 'notInstalled';
+
+        updateActionButton();
+        actionButton.addEventListener('click', onActionButtonClick);
     });
+
+    async function onActionButtonClick() {
+        switch (actionButtonState) {
+            case 'installed':
+                // Play the game
+                break;
+            case 'installing':
+                // Cancel the installation
+                break;
+            case 'otherGameInstalling':
+                notification.activate(
+                    localiser.getLocalString("installUnavailable"),
+                    localiser.getLocalString("otherGameInstalling"),
+                    3000
+                );
+                break;
+            case 'notInstalled':
+                actionButtonState = 'installing';
+                let userInfo = await ipcRenderer.invoke('get-user');
+                ipcRenderer.send('install-game', game.id, activeBranch.version, userInfo);
+                break;
+        }
+
+        updateActionButton();
+    }
+
+    function updateActionButton() {
+        switch (actionButtonState) {
+            case 'installed':
+                actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-play"></i>';
+                actionButton.querySelector('.text').innerHTML = `<h2>${localiser.getLocalString("play")}</h2>`;
+                break;
+            case 'installing':
+                actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-cloud-arrow-down fa-fade"></i>';
+                actionButton.querySelector('.text').innerHTML = `<h2>${localiser.getLocalString("installing")}</h2>`;
+                break;
+            case 'otherGameInstalling':
+                actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-lock"></i>';
+                actionButton.querySelector('.text').innerHTML = `<h2>${localiser.getLocalString("unavailable")}</h2>`;
+                break;
+            case 'notInstalled':
+                actionButton.querySelector('.status').innerHTML = '<i class="fa-solid fa-download"></i>';
+                actionButton.querySelector('.text').innerHTML = `<h2>${localiser.getLocalString("install")}</h2>`;
+                break;
+        }
+    }
+
+    ipcRenderer.on('install-finished', async (event) => {
+        
+        let gameInInstallInfo = await ipcRenderer.invoke('get-game-in-install');
+
+        if (filesData.downloadedVersions.includes(activeBranch.version)) actionButtonState = 'installed';
+        else if (gameInInstallInfo && gameInInstallInfo.id == game.id) actionButtonState = 'installing';
+        else if (gameInInstallInfo) actionButtonState = 'otherGameInstalling'
+        else actionButtonState = 'notInstalled';
+
+        updateActionButton();
+    })
 
     libraryButton.addEventListener("click", (event) => {
         if (reloadStarted) return;
@@ -134,11 +206,23 @@ window.addEventListener('DOMContentLoaded', () => {
         ipcRenderer.send("reload");
     });
 
-    branchButton.addEventListener("click", (event) => {
+    branchButton.addEventListener("click", async (event) => {
         if (reloadStarted) return;
 
         if (!gameLoaded) {
             notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000);
+            return;
+        }
+
+        let gameInInstallInfo = await ipcRenderer.invoke('get-game-in-install');
+
+        if (gameInInstallInfo && gameInInstallInfo.id == game.id) {
+            notification.activate(
+                localiser.getLocalString("branchChangeUnavailable"),
+                localiser.getLocalString("cannotChangeBranchWhileInstall"),
+                2000
+            );
+
             return;
         }
 
@@ -154,6 +238,39 @@ window.addEventListener('DOMContentLoaded', () => {
             { dropdownOptions: branches }
         );
     });
+
+    uninstallButton.addEventListener("click", (event) => {
+        if (reloadStarted) return;
+
+        if (!gameLoaded) {
+            if (!gameLoaded) notification.activate(localiser.getLocalString('wait'), localiser.getLocalString('gameLoadNotFinished'), 2000);
+            return;
+        }
+
+        let dropdownOptions = [ // Run proper checks on which ones are available
+            { alias: localiser.getLocalString("currentVersionForBranch", { version: activeBranch.version }), value: 0 },
+            { alias: localiser.getLocalString("currentVersionForAllBranches"), value: 1 },
+            { alias: localiser.getLocalString("allInactiveVersions"), value: 2 },
+            { alias: localiser.getLocalString("allVersions"), value: 3 },
+        ]
+
+        if (branches.length <= 1) {
+            dropdownOptions = [
+                { alias: localiser.getLocalString("currentVersion", { version: activeBranch.version }), value: 0 },
+                { alias: localiser.getLocalString("allInactiveVersions"), value: 2 },
+                { alias: localiser.getLocalString("allVersions"), value: 3 },
+            ]    
+        }
+
+        modal.activate(
+            localiser.getLocalString("uninstallGame"),
+            localiser.getLocalString("uninstallGameDesc"),
+            localiser.getLocalString("confirm"),
+            true,
+            null,
+            { dropdownOptions: dropdownOptions }
+        )
+    })
 
     logoutButton.addEventListener("click", (event) => {
         if (reloadStarted) return;

@@ -1,4 +1,4 @@
-const { app, ipcMain } = require('electron');
+const { app, ipcMain, globalShortcut } = require('electron');
 
 const wm = require("./src/backend/windowManager");
 const gm = require("./src/backend/gameManager");
@@ -70,7 +70,7 @@ wm.addWindowPreset('game', 1280, 720, async () => {
         return;
     }
 
-    gameData.launchSettings = gm.loadGameLaunchSettings(gameData.payload);
+    gameData.filesData = gm.loadGameFilesData(gameData.payload);
     wm.sendMessage("game-loaded", gameData);
 });
 
@@ -183,6 +183,16 @@ function onFailedRequest(code) {
     return false;
 }
 
+gm.onGameInstallProgress = (stage, progress) => {
+    if (stage == 'download') {
+        wm.sendMessage('download-progress', progress);
+    }
+
+    if (stage == 'finished') { // Actually get this properly communicated
+        wm.sendMessage('install-finished');
+    }
+}
+
 updateManager.onError = (error) => { wm.sendMessage('update-error', error.message) }
 
 app.on("ready", () => {
@@ -195,6 +205,8 @@ app.on("ready", () => {
     if (process.platform == 'win32') { app.setAppUserModelId("com.thenebulo.forgekitlauncher"); }
     wm.openWindowPreset('update');
     if (forceOpenCallbackConsole) wm.openPopoutWindowPreset('console');
+
+    globalShortcut.register('Alt+`', () => { if (wm.getMainWindow().isFocused()) wm.openPopoutWindowPreset('console'); }) // Might be a dev tool to enable idk
 });
 
 app.on('second-instance', (event, commandLine, workingDirectory) => {
@@ -205,6 +217,7 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
 });
 
 app.on('window-all-closed', () => {
+    gm.cancelInstall(true);
     if (process.platform !== 'darwin') { app.quit(); }
 });
 

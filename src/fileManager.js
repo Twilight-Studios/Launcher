@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { app } = require('electron');
+const axios = require('axios');
 
 exports.getAppDataPath = () => { return app.getPath('userData') }
 
@@ -65,3 +66,87 @@ exports.removePath = function (pathToRemove, inAppData) {
 exports.getPathInAppDir = function(pathInAppDir) {
     return path.join(app.getAppPath(), pathInAppDir);
 }
+
+exports.Downloader = class Downloader {
+    constructor(downloadUrl, outputPath, payload, progressCallback) {
+        this.downloadUrl = downloadUrl;
+        this.outputPath = outputPath;
+        this.payload = payload;
+        this.progressCallback = progressCallback;
+        this.cancelling = false;
+        this.finished = false;
+
+        this.startDownload();
+    }
+
+    async startDownload() {
+        try {
+            const response = await axios({
+                method: "post",
+                url: this.downloadUrl,
+                responseType: "stream",
+                data: this.payload,
+            });
+
+            const totalBytes = parseInt(response.headers["content-length"], 10);
+            let downloadedBytes = 0;
+
+            this.fileStream = fs.createWriteStream(this.outputPath);
+            response.data.pipe(this.fileStream);
+
+            response.data.on("data", (chunk) => {
+                if (this.cancelling) {
+                    this.fileStream.close(() => this._reportStatus("cancelled"));
+                    return;
+                }
+
+                downloadedBytes += chunk.length;
+                this._reportProgress(downloadedBytes, totalBytes);
+            });
+
+            this.fileStream.on("finish", () => {
+                if (!this.cancelling) this._reportStatus("success");
+                this._cleanUp();
+                this.finished = true;
+            });
+
+            this.fileStream.on("error", (err) => this._reportStatus("error", err.message));
+
+        } catch (error) {
+            this._reportStatus("error", error.message);
+        }
+    }
+
+    cancel() {
+        if (!this.fileStream) return;
+        this.cancelling = true;
+        this.fileStream.close(() => this._cleanUp());
+    }
+
+    get isFinished() {
+        return this.finished;
+    }
+
+    _reportProgress(downloadedBytes, totalBytes) {
+        if (this.progressCallback) {
+            this.progressCallback({
+                status: "progress",
+                downloadedBytes: downloadedBytes,
+                totalBytes: totalBytes,
+                progressPercent: ((downloadedBytes / totalBytes) * 100).toFixed(0),
+            });
+        }
+    }
+
+    _reportStatus(status, error = null) {
+        if (this.progressCallback) {
+            this.progressCallback({ status: status, error: error });
+        }
+    }
+
+    _cleanUp() {
+        if (this.fileStream) this.fileStream = null;
+        this.cancelling = false;
+    }
+}
+
