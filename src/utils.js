@@ -27,8 +27,7 @@ exports.getSettingAction = function (key, value) {
                 icon: "fa-solid fa-sd-card",
                 callbacks : [
                     ["clear-all-game-data-caches", []],
-                    ["reload"],
-                    ["reflect", ["notification", "[!:success]", "[!:clearedGameDataCache]", 3000]]
+                    ["reload", []],
                 ]
             };
         case 'betaEnabled':
@@ -43,7 +42,7 @@ exports.getSettingAction = function (key, value) {
             return { 
                 type : "dropdown",
                 icon: "fa-solid fa-language",
-                options : ['en','ru']
+                options : ['en','ru', 'cz']
             };
         }
         case 'devConsole':

@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron');
+const localiser = require('../src/frontend/localiser');
 
 window.addEventListener('DOMContentLoaded', () => {
     let patchNotes = null;
@@ -17,14 +18,14 @@ window.addEventListener('DOMContentLoaded', () => {
         document.querySelector("#type").textContent = type;
 
         if (typeof branchVersions == 'string') {
-            if (branchVersions == version) document.querySelector("#extra-info").textContent = `Current playable version`;
-            else document.querySelector("#extra-info").textContent = `Not currently playable`;
+            if (branchVersions == version) document.querySelector("#extra-info").textContent = localiser.getLocalString("currentlyPlayableVersion");
+            else document.querySelector("#extra-info").textContent = localiser.getLocalString("notCurrentlyPlayable");
         }
         else if (version in branchVersions) {
-            document.querySelector("#extra-info").textContent = `Available to play on branches: ${branchVersions[version].join(", ")}`;
+            document.querySelector("#extra-info").textContent = localiser.getLocalString("currentlyPlayableBranchesForVersion", { branches: branchVersions[version].join(", ") });
         } 
         else {
-            document.querySelector("#extra-info").textContent = `Not available to play on current branches`;
+            document.querySelector("#extra-info").textContent = localiser.getLocalString("notCurrentlyPlayableOnBranches");
         }
     }
 
@@ -43,8 +44,8 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById("left-swap").addEventListener('click', goBack);
     document.getElementById("right-swap").addEventListener('click', goForward);
 
-    ipcRenderer.on('patchnotes-loaded', (event, game) => {
-        patchNotes = game.patch_notes;
+    ipcRenderer.on('patchnotes-loaded', (event, game, passedPatchNotes) => {
+        patchNotes = passedPatchNotes;
         upperIndexBound = Object.keys(patchNotes).length - 1;
         
         document.querySelector('.name').textContent = game.name;

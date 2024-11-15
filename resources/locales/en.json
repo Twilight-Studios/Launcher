@@ -55,7 +55,6 @@
     "appVersionDesc": "The current version of the app is {value}",
     "gameDataCache": "Game Data Cache",
     "gameDataCacheDesc": "Cache for all game data requests",
-    "clearedGameDataCache": "Successfully cleared game data cache",
     "betaEnabled": "Experimental Branch",
     "betaEnabledDesc": "Use the experimental build of the launcher",
     "betaEnabledToggleOn": "By enabling the experimental branch, you may be using a non-stable version of the launcher with possible bugs.",
@@ -78,6 +77,7 @@
     "languageModalDesc": "Set your new application language. If content is unavailable in your language, it will be displayed in English by default.",
     "language_en": "English",
     "language_ru": "Русский",
+    "language_cz": "Čeština",
     "checkForUpdates": "Check For Updates",
     "checkingForUpdates": "Checking for Updates",
     "forceStop": "Force Stop",
@@ -133,5 +133,9 @@
     "allInactiveVersions": "All installed unused versions",
     "allVersions": "All installed versions",
     "uninstallGame": "Uninstall Game",
-    "uninstallGameDesc": "Uninstall a specific set of versions for the game. This is an irreversible change, and versions that aren't currently used by a branch will be no longer accessible."
+    "uninstallGameDesc": "Uninstall a specific set of versions for the game. This is an irreversible change, and versions that aren't currently used by a branch will be no longer accessible.",
+    "currentlyPlayableVersion": "Current playable version",
+    "notCurrentlyPlayable": "Not currently playable",
+    "currentlyPlayableBranchesForVersion": "Available to play on branches: {branches}",
+    "notCurrentlyPlayableOnBranches": "Not available to play on current branches"
 }

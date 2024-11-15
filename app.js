@@ -88,29 +88,26 @@ wm.addPopoutWindowPreset('patchnotes', 1000, 600, false, () => {
         return;
     }
 
-    let patch_notes = {};
+    let patchNotes = {};
     for (let i = 0; i < game.patch_notes.length; i++) {
         let version = Object.keys(game.patch_notes_metadata)[i];
         let { title, type } = Object.values(game.patch_notes_metadata)[i];
         let content = game.patch_notes[i];
 
-        patch_notes[version] = {
+        patchNotes[version] = {
             title: title,
             type: type,
             content: content
         };
     }
 
-    if (Object.keys(patch_notes).length == 0) {
+    if (Object.keys(patchNotes).length == 0) {
         wm.closePopoutWindow("patchnotes");
         wm.sendNotification("[!:patchNotesLoadFailed]", "[!:-1]", 3000);
         return;
     }
 
-    game.patch_notes = patch_notes;
-    delete game.patch_notes_metadata;
-
-    wm.sendPopoutMessage("patchnotes", "patchnotes-loaded", game);
+    wm.sendPopoutMessage("patchnotes", "patchnotes-loaded", game, patchNotes);
 })
 
 wm.addPopoutWindowPreset('console', 600, 900, forceOpenCallbackConsole);
@@ -206,7 +203,13 @@ app.on("ready", () => {
     wm.openWindowPreset('update');
     if (forceOpenCallbackConsole) wm.openPopoutWindowPreset('console');
 
-    globalShortcut.register('Alt+`', () => { if (wm.getMainWindow().isFocused()) wm.openPopoutWindowPreset('console'); }) // Might be a dev tool to enable idk
+    globalShortcut.register('Alt+`', () => {  // Might be a dev tool to enable idk
+        if (wm.getMainWindow().isFocused()) { wm.openPopoutWindowPreset('console'); return; }
+
+        Object.values(wm.getAllPopoutWindows()).forEach(popoutWindow => {
+            if (popoutWindow.isFocused()) { wm.openPopoutWindowPreset('console'); return; }
+        });
+    });
 });
 
 app.on('second-instance', (event, commandLine, workingDirectory) => {
@@ -217,6 +220,8 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
 });
 
 app.on('window-all-closed', () => {
+    wm.closeMainWindow();
+    wm.closeAllPopoutWindows();
     gm.cancelInstall(true);
     if (process.platform !== 'darwin') { app.quit(); }
 });

@@ -72,7 +72,7 @@ function _updateGameInDownloadProgress(progress) {
     if (!gameInInstall) return;
     gameInInstall.progress = progress;
 
-    if (progress.status = 'cancelled' && silentCancel) {
+    if (progress.status == 'cancelled' && silentCancel) {
         silentCancel = false;
         return;
     }
@@ -83,8 +83,12 @@ function _updateGameInDownloadProgress(progress) {
 exports.getGameInInstall = () => { return gameInInstall; }
 
 exports.clearAllGameDataCaches = () => {
-    for (let key in caches) clearTimeout(caches[key].timeout);
-    caches = {};
+    for (let key in caches) {
+        if (gameInInstall && key == gameInInstall.id) continue;
+        if (currentGameId == key) continue;
+        clearTimeout(caches[key].timeout);
+        delete caches[key];
+    }
 }
 
 exports.clearGameDataCache = (gameId) => { if (caches[gameId]) delete caches[gameId]; }

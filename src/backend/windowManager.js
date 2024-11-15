@@ -10,6 +10,13 @@ let currentWindowPreset;
 
 exports.getMainWindow = () => { return mainWindow; }
 
+exports.getPopoutWindow = (presetName) => {
+    if (presetName in popoutWindows) return popoutWindows[presetName];
+    return null;
+}
+
+exports.getAllPopoutWindows = () => { return popoutWindows; }
+
 exports.enableChromiumTools = false;
 exports.onWindowPresetOpened = null;
 exports.onPopoutWindowPresetOpened = null;
@@ -145,10 +152,8 @@ function createPopoutWindow(presetName, width, height, persistent, callback) {
 
     popoutWindows[presetName].on('closed', () => {
         if (arePopoutWindowsClosing) { arePopoutWindowsClosing = false; return; }
-        if (persistent) {
-            delete popoutWindows[presetName];
-            createPopoutWindow(presetName, width, height, persistent, callback);
-        }
+        delete popoutWindows[presetName];
+        if (persistent) createPopoutWindow(presetName, width, height, persistent, callback);
     });
 
     popoutWindows[presetName].webContents.once('did-finish-load', () => {
