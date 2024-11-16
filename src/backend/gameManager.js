@@ -220,7 +220,8 @@ exports.getAllGameData = async function (user) {
 
             caches[game.id] = {
                 data: game,
-                containsArt: (cached && caches[game.id].containsArt) ? true : false
+                containsArt: (cached && caches[game.id].containsArt) ? true : false,
+                timeout: null
             };
 
             if (currentGameId != game.id && (!gameInInstall || gameInInstall.id != game.id)) {
