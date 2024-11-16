@@ -174,8 +174,12 @@ exports.getGameData = async function (user, gameId) {
         caches[gameId] = {
             data: game,
             containsArt: true,
-            timeout: setTimeout(() => { exports.clearGameDataCache(gameId) }, CACHE_TIMEOUT)
+            timeout: null,
         };
+
+        if (currentGameId != gameId && (!gameInInstall || gameInInstall.id != gameId)) {
+            caches[gameId].timeout = setTimeout(() => { exports.clearGameDataCache(gameId) }, CACHE_TIMEOUT);
+        }
 
         return { success: true, payload: game };
     } 
@@ -216,9 +220,12 @@ exports.getAllGameData = async function (user) {
 
             caches[game.id] = {
                 data: game,
-                containsArt: (cached && caches[game.id].containsArt) ? true : false,
-                timeout: setTimeout(() => { exports.clearGameDataCache(game.id) }, CACHE_TIMEOUT)
+                containsArt: (cached && caches[game.id].containsArt) ? true : false
             };
+
+            if (currentGameId != game.id && (!gameInInstall || gameInInstall.id != game.id)) {
+                caches[game.id].timeout = setTimeout(() => { exports.clearGameDataCache(game.id) }, CACHE_TIMEOUT);
+            }
         }
 
         return { success: true, payload: gamesData };

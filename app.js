@@ -201,7 +201,7 @@ app.on("ready", () => {
 
     if (process.platform == 'win32') { app.setAppUserModelId("com.thenebulo.forgekitlauncher"); }
     wm.openWindowPreset('update');
-    if (forceOpenCallbackConsole) wm.openPopoutWindowPreset('console');
+    if (forceOpenCallbackConsole) { wm.openPopoutWindowPreset('console'); return; }
 
     globalShortcut.register('Alt+`', () => {  // Might be a dev tool to enable idk
         if (wm.getMainWindow().isFocused()) { wm.openPopoutWindowPreset('console'); return; }
