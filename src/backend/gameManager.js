@@ -21,7 +21,8 @@ exports.setCurrentGameId = (gameId) => {
     if (oldGameId && (!gameInInstall || gameInInstall.id != oldGameId)) caches[oldGameId].timeout = setTimeout(() => { exports.clearGameDataCache(oldGameId) }, CACHE_TIMEOUT);
 
     currentGameId = gameId;
-    clearTimeout(caches[currentGameId].timeout);
+    if (caches[currentGameId].timeout) clearTimeout(caches[currentGameId].timeout);
+    caches[currentGameId].timeout = null;
     return true;
 }
 
@@ -41,7 +42,8 @@ exports.installGame = (gameId, version, { serverUrl, playtesterId }) => {
         progress: null
     };
 
-    clearTimeout(caches[gameId].timeout);
+    if (caches[gameId].timeout) clearTimeout(caches[gameId].timeout);
+    caches[gameId].timeout = null;
 
     let downloadUrl = `${serverUrl}/api/download-game`;
 
@@ -85,13 +87,20 @@ exports.getGameInInstall = () => { return gameInInstall; }
 exports.clearAllGameDataCaches = () => {
     for (let key in caches) {
         if (gameInInstall && key == gameInInstall.id) continue;
-        if (currentGameId == key) continue;
+        if (currentGameId && currentGameId == key) continue;
         clearTimeout(caches[key].timeout);
         delete caches[key];
     }
 }
 
-exports.clearGameDataCache = (gameId) => { if (caches[gameId]) delete caches[gameId]; }
+exports.clearGameDataCache = (gameId) => { 
+    if (!caches[gameId]) return;
+
+    if (currentGameId && currentGameId == gameId) return;
+    if (gameInInstall && gameInInstall.id == gameId) return;
+    
+    delete caches[gameId]; 
+}
 
 exports.loadGameFilesData = function (game) {
     let gameSettings = fm.readJson(`games/${game.id}/settings.json`, true);
@@ -177,7 +186,7 @@ exports.getGameData = async function (user, gameId) {
             timeout: null,
         };
 
-        if (currentGameId != gameId && (!gameInInstall || gameInInstall.id != gameId)) {
+        if ((!currentGameId || currentGameId != gameId) && (!gameInInstall || gameInInstall.id != gameId)) {
             caches[gameId].timeout = setTimeout(() => { exports.clearGameDataCache(gameId) }, CACHE_TIMEOUT);
         }
 
@@ -224,7 +233,7 @@ exports.getAllGameData = async function (user) {
                 timeout: null
             };
 
-            if (currentGameId != game.id && (!gameInInstall || gameInInstall.id != game.id)) {
+            if ((!currentGameId || currentGameId != game.id) && (!gameInInstall || gameInInstall.id != game.id)) {
                 caches[game.id].timeout = setTimeout(() => { exports.clearGameDataCache(game.id) }, CACHE_TIMEOUT);
             }
         }
