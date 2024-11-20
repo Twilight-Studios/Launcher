@@ -220,8 +220,8 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
 });
 
 app.on('window-all-closed', () => {
-    wm.closeMainWindow();
     wm.closeAllPopoutWindows();
+    wm.closeMainWindow();
     gm.cancelInstall(true);
     if (process.platform !== 'darwin') { app.quit(); }
 });

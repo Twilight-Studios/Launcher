@@ -42,7 +42,7 @@ exports.getSettingAction = function (key, value) {
             return { 
                 type : "dropdown",
                 icon: "fa-solid fa-language",
-                options : ['en','ru', 'cz']
+                options : ['en','ru', 'cz', 'nl']
             };
         }
         case 'devConsole':
