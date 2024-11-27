@@ -164,15 +164,6 @@ exports.getGameData = async function (user, gameId) {
         const resp = await axios.post(`${user.serverUrl}/api/get-game`, payload);
         let game = resp.data;
 
-        Object.keys(game.branches).forEach(key => { // Temporary fix for server compatibility
-            let branchId = game.branches[key].name;
-            game.branches[branchId] = game.branches[key];
-            delete game.branches[key];
-
-            game.branches[branchId].name = game.branches[branchId].id;
-            delete game.branches[branchId].id;
-        });
-
         if (cached) {
             game = utils.mergeObjects(caches[gameId].data, game); // TODO: An additional version check should occur, to see if patch notes ant etc are to be reloaded, and gameFiles are to be rewritten
             clearTimeout(caches[gameId].timeout);
@@ -209,15 +200,6 @@ exports.getAllGameData = async function (user) {
 
         for (let game of rawGamesData) {
             let cached = caches[game.id] && caches[game.id].data;
-
-            Object.keys(game.branches).forEach(key => { // Temporary fix for server compatibility
-                let branchId = game.branches[key].name;
-                game.branches[branchId] = game.branches[key];
-                delete game.branches[key];
-    
-                game.branches[branchId].name = game.branches[branchId].id;
-                delete game.branches[branchId].id;
-            });
 
             if (cached) {
                 game = utils.mergeObjects(caches[game.id].data, game);
